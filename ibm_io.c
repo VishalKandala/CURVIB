@@ -3470,7 +3470,7 @@ PetscErrorCode ibm_read_Icem(IBMNodes *ibm, PetscInt ibi)
   MPI_Comm_rank(PETSC_COMM_WORLD, &rank);
   if(!rank) { // root processor read in the data
     FILE *fd;
-    PetscPrintf(PETSC_COMM_SELF, "READDD nlist, %le\n", L_dim);
+    PetscPrintf(PETSC_COMM_SELF, "READ nlist begins\n");
     char filen[80];  
     sprintf(filen,"nlist%2.2d" , ibi);
 
@@ -3548,6 +3548,7 @@ PetscErrorCode ibm_read_Icem(IBMNodes *ibm, PetscInt ibi)
 	
 	} // i(n_v) or lines in nlist.
       /*------- Print out a few lines */
+      PetscPrintf(PETSC_COMM_WORLD," nlist READ Complete \n");
       i=0;
       PetscPrintf(PETSC_COMM_WORLD, "co-ordinates(xyz) for node n=%d: %le %le %le\n",i, x_bp[i], y_bp[i], z_bp[i]);
       i=50;
@@ -3572,7 +3573,7 @@ PetscErrorCode ibm_read_Icem(IBMNodes *ibm, PetscInt ibi)
     } // for fd: nlist file open check.
 
     //Reading elements list
-    PetscPrintf(PETSC_COMM_SELF, "READ elist\n");
+    PetscPrintf(PETSC_COMM_SELF, "READ elist begins\n");
 
     sprintf(filen,"elist%2.2d" , ibi);
     fd = fopen(filen, "r"); if (!fd) SETERRQ(PETSC_COMM_SELF,1, "Cannot open IBM node file");
@@ -3618,18 +3619,19 @@ PetscErrorCode ibm_read_Icem(IBMNodes *ibm, PetscInt ibi)
       i=0;
       fgets(string, 128, fd);//skip one line 
       //    while(fgets(string, 128, fd)) {
-	itr = 0;	
+//	itr = 0;	
 
 	while (i<n_elmt) {
 	i++;
 
 	fscanf(fd, "%d %d %d %d %d %d %d %d %d %d %d %d %d %d %d\n", &ii,&ii,&ii,&ii,&ii,&ii,&ii,&ii,&ii,&ii,&ii,&nv1[i-1], &nv2[i-1], &nv3[i-1],&ii);
-	nv1[i-1] = nv1[i-1] - 1; nv2[i-1] = nv2[i-1]-1; nv3[i-1] = nv3[i-1] - 1;
+	nv1[i-1] = nv1[i-1] - 1; nv2[i-1] = nv2[i-1]-1; nv3[i-1] = nv3[i-1] - 1; // Adjusting for the first line of elist00 being the number of elements.
 
-	}
+	} // elements loop (or number of lines in elist)
 	//  } closing of first while loop
-      ibm->nv1 = nv1; ibm->nv2 = nv2; ibm->nv3 = nv3;
-
+      ibm->nv1 = nv1; ibm->nv2 = nv2; ibm->nv3 = nv3;  // The nodes(1,2,3) corresponding to each element are stored. 
+       /*------- Print out a few lines */
+      PetscPrintf(PETSC_COMM_WORLD," elist READ Complete \n");      
       i=0;
       PetscPrintf(PETSC_COMM_WORLD, "nv %d %d %d\n", nv1[i], nv2[i], nv3[i]);
       i=30;
@@ -3638,31 +3640,29 @@ PetscErrorCode ibm_read_Icem(IBMNodes *ibm, PetscInt ibi)
       PetscPrintf(PETSC_COMM_WORLD, "nv %d %d %d\n", nv1[i], nv2[i], nv3[i]);
 
       fclose(fd);
-    }
+    } // file elist open condition.
 
-    x_bp=ibm->x_bp;  y_bp=ibm->y_bp ; z_bp = ibm->z_bp ;
-    PetscPrintf(PETSC_COMM_WORLD, "cop nf!\n");      
+    x_bp=ibm->x_bp;  y_bp=ibm->y_bp ; z_bp = ibm->z_bp ; // The co-ordinates of every node are taken into local memory.  
     for (i=0; i<n_elmt; i++) {
-      //PetscPrintf(PETSC_COMM_WORLD, "cop nf %d !\n",i);       
-      n1e = nv1[i]; n2e =nv2[i]; n3e = nv3[i];
-      dx12 = x_bp[n2e] - x_bp[n1e];
-      dy12 = y_bp[n2e] - y_bp[n1e];
-      dz12 = z_bp[n2e] - z_bp[n1e];
+      // going through each element, the nodes of the element are considered, the x,y,z distances between each consecutive nodes of the element are measured.   
+      n1e = nv1[i]; n2e =nv2[i]; n3e = nv3[i]; 
+      dx12 = x_bp[n2e] - x_bp[n1e];  // x displacement between node 2 and 1
+      dy12 = y_bp[n2e] - y_bp[n1e];  // y """""""""""""""""""""""""""""""""
+      dz12 = z_bp[n2e] - z_bp[n1e];  // z """""""""""""""""""""""""""""""""
       
-      dx13 = x_bp[n3e] - x_bp[n1e];
-      dy13 = y_bp[n3e] - y_bp[n1e];
-      dz13 = z_bp[n3e] - z_bp[n1e];
-      
-      nf_x[i] = dy12 * dz13 - dz12 * dy13;
-      nf_y[i] = -dx12 * dz13 + dz12 * dx13;
-      nf_z[i] = dx12 * dy13 - dy12 * dx13;
-      
-      dr = sqrt(nf_x[i]*nf_x[i] + nf_y[i]*nf_y[i] + nf_z[i]*nf_z[i]);
-      
-      nf_x[i] /=dr; nf_y[i]/=dr; nf_z[i]/=dr;
-      
+      dx13 = x_bp[n3e] - x_bp[n1e];  // x displacement between node 2 and 1 
+      dy13 = y_bp[n3e] - y_bp[n1e];  // y displacement between node 3 and 1
+      dz13 = z_bp[n3e] - z_bp[n1e];  // z displacement between node 3 and 1
 
-
+      
+      nf_x[i] = dy12 * dz13 - dz12 * dy13;  // normal component(projected area) along x is calculated (un-normalized)
+      nf_y[i] = -dx12 * dz13 + dz12 * dx13; //""""""""""""""""""""""" y """""""""""""""""""""""""""""
+      nf_z[i] = dx12 * dy13 - dy12 * dx13;  //""""""""""""""""""""""" z """""""""""""""""""""""""""""
+      
+      dr = sqrt(nf_x[i]*nf_x[i] + nf_y[i]*nf_y[i] + nf_z[i]*nf_z[i]);  // area of parallelogram created by normals calculated  
+   
+      nf_x[i] /=dr; nf_y[i]/=dr; nf_z[i]/=dr; // normals are normalized using the area.
+      
       // Addedd 4/2/06 iman
       if ((((1.-nf_z[i])<=1e-6 )&((-1.+nf_z[i])<1e-6))|
 	  (((nf_z[i]+1.)<=1e-6 )&((-1.-nf_z[i])<1e-6))) {
@@ -3678,13 +3678,14 @@ PetscErrorCode ibm_read_Icem(IBMNodes *ibm, PetscInt ibi)
 	ns_y[i] = -nf_x[i]/ sqrt(nf_x[i]*nf_x[i] + nf_y[i]*nf_y[i]);     
 	ns_z[i] = 0. ;
 	
+        // tangents  are calculated likewise.
 	nt_x[i] = -nf_x[i]*nf_z[i]/ sqrt(nf_x[i]*nf_x[i] + nf_y[i]*nf_y[i]);
 	nt_y[i] = -nf_y[i]*nf_z[i]/ sqrt(nf_x[i]*nf_x[i] + nf_y[i]*nf_y[i]);
 	nt_z[i] = sqrt(nf_x[i]*nf_x[i] + nf_y[i]*nf_y[i]);
       }
-      
+ 
       //Added 4/1/06 iman
-      dA[i] = dr/2.; 
+      dA[i] = dr/2.;  // Area of element is also calculated.
       
       // Added 6/4/06 iman
       // Calc the center of the element
@@ -3694,18 +3695,17 @@ PetscErrorCode ibm_read_Icem(IBMNodes *ibm, PetscInt ibi)
 
  
     }
-          
-    PetscPrintf(PETSC_COMM_WORLD, "cop nf!\n"); 
-
-    ibm->nf_x = nf_x; ibm->nf_y = nf_y;  ibm->nf_z = nf_z;
     
+    ibm->nf_x = nf_x; ibm->nf_y = nf_y;  ibm->nf_z = nf_z; // Normals stored in ibm datastructure (global memory)
+     PetscPrintf(PETSC_COMM_WORLD,"Element Normals(nf_x,y,z) calculated");   
     //Added 4/1/06 iman
     ibm->dA = dA;
     ibm->nt_x = nt_x; ibm->nt_y = nt_y;  ibm->nt_z = nt_z;
     ibm->ns_x = ns_x; ibm->ns_y = ns_y;  ibm->ns_z = ns_z;  
+    PetscPrintf(PETSC_COMM_WORLD,"Element tangents(nt_x,y,z) and ns_x,y,z calculated");     
+    PetscPrintf(PETSC_COMM_WORLD,"Element centers(centt_x,y,z) and areas(dA) calculated");
 
-    PetscPrintf(PETSC_COMM_WORLD, "cop nf!\n"); 
-    
+    // The calculated normals,tangents,centers,areas and ns are all broadcast to all processors.
     MPI_Bcast(ibm->nv1, n_elmt, MPI_INT, 0, PETSC_COMM_WORLD);
     MPI_Bcast(ibm->nv2, n_elmt, MPI_INT, 0, PETSC_COMM_WORLD);
     MPI_Bcast(ibm->nv3, n_elmt, MPI_INT, 0, PETSC_COMM_WORLD);
@@ -3731,11 +3731,8 @@ PetscErrorCode ibm_read_Icem(IBMNodes *ibm, PetscInt ibi)
     MPI_Bcast(ibm->cent_y, n_elmt, MPIU_REAL, 0, PETSC_COMM_WORLD);
     MPI_Bcast(ibm->cent_z, n_elmt, MPIU_REAL, 0, PETSC_COMM_WORLD);
 
-    PetscPrintf(PETSC_COMM_WORLD, "cop nf!\n"); 
-
-
-
-// write the surface
+/***********************************************************************/
+// write the surface file.
     sprintf(filen, "surface_nf%3.3d_%2.2d.dat",0,ibi);
     fd = fopen(filen, "w");
     PetscFPrintf(PETSC_COMM_WORLD, fd, "Variables=x,y,z,n_x,n_y,n_z,nt_x,nt_y,nt_z,ns_x,ns_y,ns_z\n");
@@ -3779,19 +3776,14 @@ PetscErrorCode ibm_read_Icem(IBMNodes *ibm, PetscInt ibi)
     for (i=0; i<n_elmt; i++) {
       PetscFPrintf(PETSC_COMM_WORLD, fd, "%d %d %d\n", ibm->nv1[i]+1, ibm->nv2[i]+1, ibm->nv3[i]+1);
     }
-
-
-
-
     fclose(fd);
-
-
-  }
+    }// if(!rank) i.e for master processor
   else if (rank) {
+    /* All other processors just allocate memory for all the data being read in by master processor */
     MPI_Bcast(&(n_v), 1, MPI_INT, 0, PETSC_COMM_WORLD);
     ibm->n_v = n_v;
     
-    PetscMalloc(n_v*sizeof(PetscReal), &x_bp);
+    PetscMalloc(n_v*sizeof(PetscReal), &x_bp);  
     PetscMalloc(n_v*sizeof(PetscReal), &y_bp);
     PetscMalloc(n_v*sizeof(PetscReal), &z_bp);
     
@@ -3810,7 +3802,7 @@ PetscErrorCode ibm_read_Icem(IBMNodes *ibm, PetscInt ibi)
     PetscMalloc(n_v*sizeof(Cmpnts), &(ibm->u));
     PetscMalloc(n_v*sizeof(Cmpnts), &(ibm->uold));
     PetscMalloc(n_v*sizeof(Cmpnts), &(ibm->urm1));
-
+    /* All the velocities are initialized to zero*/
     for (i=0; i<n_v; i++) {
       ibm->u[i].x = 0.;
       ibm->u[i].y = 0.;
