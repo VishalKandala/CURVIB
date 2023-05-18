@@ -16,7 +16,7 @@ PetscErrorCode FormMetrics(UserCtx *user);
 PetscErrorCode MetricsDivergence(UserCtx *user);
 
 PetscErrorCode FormInitialize(UserCtx *user)
-{
+{ // All the vectors, nvert,ucont,P etc are initialized to zero.
   user->assignedA = PETSC_FALSE;
   user->multinullspace=PETSC_FALSE;
 
@@ -622,7 +622,7 @@ PetscErrorCode MG_Initial(UserMG *usermg, IBMNodes *ibm)
     PetscOptionsGetIntArray(PETSC_NULL, "-km", kmm, &nblk, PETSC_NULL);
   }
   
-  PetscPrintf(PETSC_COMM_WORLD,"im,jm,km: %d,%d,%d\n",imm[0],jmm[0],kmm[0]); 
+ // PetscPrintf(PETSC_COMM_WORLD,"im,jm,km: %d,%d,%d\n",imm[0],jmm[0],kmm[0]); 
   for (bi=0; bi<block_number; bi++) {
 
     //if (bi==0)  cl = 1.;
@@ -655,7 +655,7 @@ PetscErrorCode MG_Initial(UserMG *usermg, IBMNodes *ibm)
       user[bi].KM = KM;
     }
     
-    PetscPrintf(PETSC_COMM_WORLD, "READ GRID.dat %le, cl %le IM %d,JM %d,KM %d\n", L_dim, cl,IM,JM,KM);
+    PetscPrintf(PETSC_COMM_WORLD, "READ GRID.dat %d, cl %le IM %d,JM %d,KM %d\n", generate_grid, cl,IM,JM,KM);
 
     MGDACreate(usermg, bi);
 
