@@ -1,0 +1,1 @@
+What does cgrid signify? When Cgrid is expected in init.c->MG_Initialize() and not present in control.dat, the PetscGetIntarray() to read im,jm,km does not work, you either comment cgrid lines off of the file or provide cgrid in control.dat for the read to work, what is the reason? 
