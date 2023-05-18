@@ -3550,7 +3550,7 @@ PetscErrorCode ibm_read_Icem(IBMNodes *ibm, PetscInt ibi)
       /*------- Print out a few lines */
       i=0;
       PetscPrintf(PETSC_COMM_WORLD, "co-ordinates(xyz) for node n=%d: %le %le %le\n",i, x_bp[i], y_bp[i], z_bp[i]);
-      i=50
+      i=50;
       PetscPrintf(PETSC_COMM_WORLD, "co-ordinates(xyz) for node n=%d: %le %le %le\n",i, x_bp[i], y_bp[i], z_bp[i]);
       i=n_v-1;
       PetscPrintf(PETSC_COMM_WORLD, "co-ordinates(xyz) for node n=%d: %le %le %le\n",i, x_bp[i], y_bp[i], z_bp[i]);

@@ -681,7 +681,7 @@ int main(int argc, char **argv) {
   PetscOptionsGetInt(PETSC_NULL, "-orient", &orient, PETSC_NULL);
     
   PetscReal compute_time,time_start,time_end;
-  PetscPrintf(PETSC_COMM_WORLD, "tiout %d %le %le thin %d!\n",tiout, imp_atol,imp_rtol,thin);
+  PetscPrintf(PETSC_COMM_WORLD, "Data is output for ever  %d timesteps; Implicit Solver Tolerances: Absolute-%le; Relative- %le\n",tiout, imp_atol,imp_rtol);
   PetscTime(&time_start);
 
 // ------------- SETUP PARAMETERS ---------------------------------
@@ -711,7 +711,7 @@ int main(int argc, char **argv) {
 	InitIBMList(&(user[bi].ibmlist[ibi]));
       }
     }
-  }
+  
 //------------------ READ IBM DATA -------------------------------------------------
     if(LVAD){
 	ibi=0;  // set the number of blocks to be 1 i.e the first block has index 0;
@@ -744,12 +744,10 @@ int main(int argc, char **argv) {
 	  fsi[i].z_c +=i*2.;
 	PetscBarrier(PETSC_NULL);
       }
-    }
-  
-  if (immersed) {
+     }  
     ti = 0;
     if (rstart_flg) ti = tistart;
-  }
+    } // if immersed
   //--------------- RESTART setup: if Restarting -----------------------------------
   level = usermg.mglevels-1;
   user = usermg.mgctx[level].user;

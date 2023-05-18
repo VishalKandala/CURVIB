@@ -63,7 +63,7 @@ PetscErrorCode FormInitialize(UserCtx *user)
 
   user->st = 1.;//0.038406145;
   
-  PetscPrintf(PETSC_COMM_WORLD, "Re %le St %le dt %le \n",user->ren,user->st,user->dt);
+  PetscPrintf(PETSC_COMM_WORLD, "Reynolds Number(Re):  %le;  Stanton Number(St): %le; Timestep(dt) %le \n",user->ren,user->st,user->dt);
 
   return(0);
 }
