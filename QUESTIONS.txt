@@ -1,1 +1,3 @@
-What does cgrid signify? When Cgrid is expected in init.c->MG_Initialize() and not present in control.dat, the PetscGetIntarray() to read im,jm,km does not work, you either comment cgrid lines off of the file or provide cgrid in control.dat for the read to work, what is the reason? 
+1. What does cgrid signify? When Cgrid is expected in init.c->MG_Initialize() and not present in control.dat, the PetscGetIntarray() to read im,jm,km does not work, you either comment cgrid lines off of the file or provide cgrid in control.dat for the read to work, what is the reason? 
+
+2. in ibm_io.c/ibm_read_Icem() what does ns_x,ns_y and ns_z represent?

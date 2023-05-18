@@ -3481,31 +3481,31 @@ PetscErrorCode ibm_read_Icem(IBMNodes *ibm, PetscInt ibi)
 
     if (fd) {
       
-      fscanf(fd, "%i",&n_v);
+      fscanf(fd, "%i",&n_v);  // Read the first line of nlist, to get number of nodes
       PetscPrintf(PETSC_COMM_SELF, "number of nodes of list %d %d \n",ibi, n_v);
       
-      ibm->n_v = n_v;
+      ibm->n_v = n_v;   // No of nodes is designated as n_v. 
           
       
-      MPI_Bcast(&(ibm->n_v), 1, MPI_INT, 0, PETSC_COMM_WORLD);
+      MPI_Bcast(&(ibm->n_v), 1, MPI_INT, 0, PETSC_COMM_WORLD);  // Total number of nodes is broadcast to all processors (since the file reading is done by only the master processor).
     
-      PetscMalloc(n_v*sizeof(PetscReal), &x_bp);
+      PetscMalloc(n_v*sizeof(PetscReal), &x_bp);  // Memory allocation for x,y,z co-ordinate values.
       PetscMalloc(n_v*sizeof(PetscReal), &y_bp);
       PetscMalloc(n_v*sizeof(PetscReal), &z_bp);
       
-      PetscMalloc(n_v*sizeof(PetscReal), &(ibm->x_bp));
+      PetscMalloc(n_v*sizeof(PetscReal), &(ibm->x_bp));  // Memory allocation for x,y,z co-ordinate values in the datastructure ibm.
       PetscMalloc(n_v*sizeof(PetscReal), &(ibm->y_bp));
       PetscMalloc(n_v*sizeof(PetscReal), &(ibm->z_bp));
       
-      PetscMalloc(n_v*sizeof(PetscReal), &(ibm->x_bp_o));
+      PetscMalloc(n_v*sizeof(PetscReal), &(ibm->x_bp_o)); // Memory allocation for x,y,z co-ordinate values in ibm, for co-ordinates at previous timestep.
       PetscMalloc(n_v*sizeof(PetscReal), &(ibm->y_bp_o));
       PetscMalloc(n_v*sizeof(PetscReal), &(ibm->z_bp_o));
 
-      PetscMalloc(n_v*sizeof(PetscReal), &(ibm->x_bp0));
+      PetscMalloc(n_v*sizeof(PetscReal), &(ibm->x_bp0)); // Memory allocation for x,y,z co-ordinate values in ibm, for co-ordinates at initial timestep.
       PetscMalloc(n_v*sizeof(PetscReal), &(ibm->y_bp0));
       PetscMalloc(n_v*sizeof(PetscReal), &(ibm->z_bp0));
       
-      PetscMalloc(n_v*sizeof(Cmpnts), &(ibm->u));
+      PetscMalloc(n_v*sizeof(Cmpnts), &(ibm->u));       // u,u_old and urm-1 velocities with three components will be created (memory allocated), these are used for euler-lagrange modelling(FSI).
       PetscMalloc(n_v*sizeof(Cmpnts), &(ibm->uold));
       PetscMalloc(n_v*sizeof(Cmpnts), &(ibm->urm1));
 
@@ -3513,133 +3513,50 @@ PetscErrorCode ibm_read_Icem(IBMNodes *ibm, PetscInt ibi)
       i=-1;
          fgets(string,128, fd);// skip line one
 
-    	while (i+1<n_v) {
+    	while (i+1<n_v) {  // as number of lines in nlist is equal to n_v+1 and we skipped one line, we start i from -1  and go through each line to get co-ordinates for each node.
 
          i++;
 	 fscanf(fd, "%d %d %d %le %le %le\n", &ii, &ii,&ii,&(x_bp[i]), &(y_bp[i]), &(z_bp[i]));
 
-	 /* // Translation of Cylinder */
-	 PetscReal xd[3], clx=1., cly=1., clz=1.0;
-	 xd[0] = 0.; xd[1] = 0.; xd[2] = 0.;
+	 x_bp[i] = x_bp[i]/cl + CMx_c;
+	 y_bp[i] = y_bp[i]/cl + CMy_c;
+	 z_bp[i] = z_bp[i]/cl+ CMz_c;
 
-	 if (ibi == 3) {
-	   cl=.95; clz=.85;
-	   xd[0] = -0.01; xd[1] = -0.02; xd[2] = 0.04;
-	 /*   cl = 1.1; clx = 1.; cly = 1.; clz = 0.75; */
+	 ibm->x_bp[i] = x_bp[i]*L_dim;
+	 ibm->y_bp[i] = y_bp[i]*L_dim;
+	 ibm->z_bp[i] = z_bp[i]*L_dim;
 
+	 ibm->x_bp0[i] = x_bp[i]*L_dim;
+	 ibm->y_bp0[i] = y_bp[i]*L_dim;
+	 ibm->z_bp0[i] = z_bp[i]*L_dim;
 
-	 /*   if (x_bp[i]*x_bp[i]+y_bp[i]*y_bp[i]>.25) { */
-	 /*     clx = 1.4; */
-	 /*     cly = 1.4; */
-	 /*   } */
-	   //if (x_bp[i]>0 && z_bp[i]<0.15)  {xd[2] = 0.01;}
-	 }
-	 if (ibi==4) {cl = 1.;  xd[2] = -0.05;}
+	 ibm->x_bp_o[i] = x_bp[i]*L_dim;
+	 ibm->y_bp_o[i] = y_bp[i]*L_dim;
+	 ibm->z_bp_o[i] = z_bp[i]*L_dim;
 
-	 x_bp[i] = x_bp[i]/cl*clx + CMx_c + xd[0];//0.25 ;// 24.;
-	 y_bp[i] = y_bp[i]/cl*cly + CMy_c + xd[1];//2.;//8.;//6.;//2.   ;// 24.;
-	 z_bp[i] = z_bp[i]/cl*clz + CMz_c + xd[2];//2.;//8.;//15.;//2.   ;// 24.;
+	 ibm->u[i].x = 0.;
+	 ibm->u[i].y = 0.;
+	 ibm->u[i].z = 0.;
 
-	 /* //Rotation of Cylinder */
-	 PetscReal pi = 3.14159265359, angle, R[4][4], x[4], xn[4], u, v, w, a, b, c;
-	 PetscInt m,n;
-	 if (ibi==3) {
-
-	   if (orient == 0) {
-	     angle =0.;
-	   } else if (orient == 45) {
-	     angle = pi/4.;
-	   } else if (orient == 90) {
-	     angle = pi/2.;
-	   }
-	   
-	   u = 0.; v = 0.; w = 1.; //Rotation vector
-	   a = 0.065; b = -0.008; c = 0.180; //Rotation origin
-	   x[0] = x_bp[i]; x[1] = y_bp[i]; x[2] = z_bp[i]; x[3] = 1.;
-	   
-	   R[0][0] = u*u + (v*v + w*w)*cos(angle);
-	   R[0][1] = u*v*(1 - cos(angle)) - w*sin(angle);
-	   R[0][2] = u*w*(1 - cos(angle)) + v*sin(angle);
-	   R[0][3] = (a*(v*v + w*w) - u*(b*v + c*w))*(1 - cos(angle)) + (b*w -c*v)*sin(angle);
-	   
-	   R[1][0] = u*v*(1 - cos(angle)) + w*sin(angle);
-	   R[1][1] = v*v + (u*u + w*w)*cos(angle);
-	   R[1][2] = v*w*(1 - cos(angle)) - u*sin(angle);
-	   R[1][3] = (b*(u*u + w*w) - v*(a*u + c*w))*(1 - cos(angle)) + (c*u - a*w)*sin(angle);
-	   
-	   R[2][0] = u*w*(a - cos(angle)) - v*sin(angle);
-	   R[2][1] = v*w*(1 - cos(angle)) + u*sin(angle);
-	   R[2][2] = w*w + (u*u + v*v)*cos(angle);
-	   R[2][3] = (c*(u*u + v*v) - w*(a*u + b*v))*(1 - cos(angle)) + (a*v - b*u)*sin(angle);
-	   
-	   R[3][0] = 0.;
-	   R[3][1] = 0.;
-	   R[3][2] = 0.;
-	   R[3][3] = 1.;
-	   
-	   for (m=0; m<4; m++) {
-	     xn[m] = 0.;
-	     for (n=0; n<4; n++) {
-	       xn[m] += R[m][n]*x[n];
-	     }
-	   }
-	   x_bp[i] = xn[0]; y_bp[i] = xn[1]; z_bp[i] = xn[2];
-
-	   if (x_bp[i]>0 && z_bp[i]<0.15)  {z_bp[i] -= 0.03;}
-	 }
-
-	 
-	 /* // */
-
-	if (cop) {
-	ibm->x_bp[i] = y_bp[i]*L_dim;
-	ibm->y_bp[i] = z_bp[i]*L_dim;
-	ibm->z_bp[i] = x_bp[i]*L_dim;
-
-	ibm->x_bp0[i] = x_bp[i]*L_dim;
-	ibm->y_bp0[i] = y_bp[i]*L_dim;
-	ibm->z_bp0[i] = z_bp[i]*L_dim;
-
-	ibm->x_bp_o[i] = y_bp[i]*L_dim;
-	ibm->y_bp_o[i] = z_bp[i]*L_dim;
-	ibm->z_bp_o[i] = x_bp[i]*L_dim;
-	} else {
-	ibm->x_bp[i] = x_bp[i]*L_dim;
-	ibm->y_bp[i] = y_bp[i]*L_dim;
-	ibm->z_bp[i] = z_bp[i]*L_dim;
-
-	ibm->x_bp0[i] = x_bp[i]*L_dim;
-	ibm->y_bp0[i] = y_bp[i]*L_dim;
-	ibm->z_bp0[i] = z_bp[i]*L_dim;
-
-	ibm->x_bp_o[i] = x_bp[i]*L_dim;
-	ibm->y_bp_o[i] = y_bp[i]*L_dim;
-	ibm->z_bp_o[i] = z_bp[i]*L_dim;
-	}
-
-	ibm->u[i].x = 0.;
-	ibm->u[i].y = 0.;
-	ibm->u[i].z = 0.;
-
-	ibm->uold[i].x = 0.;
-	ibm->uold[i].y = 0.;
-	ibm->uold[i].z = 0.;
+	 ibm->uold[i].x = 0.;
+	 ibm->uold[i].y = 0.;
+	 ibm->uold[i].z = 0.;
       
-	ibm->urm1[i].x = 0.;
-	ibm->urm1[i].y = 0.;
-	ibm->urm1[i].z = 0.;      
-	}
-
+	 ibm->urm1[i].x = 0.;
+	 ibm->urm1[i].y = 0.;
+	 ibm->urm1[i].z = 0.;      
+	
+	} // i(n_v) or lines in nlist.
+      /*------- Print out a few lines */
       i=0;
-      PetscPrintf(PETSC_COMM_WORLD, "xyz_bp(nv=%d) %le %le %le\n",i, x_bp[i], y_bp[i], z_bp[i]);
-      i=30;
-      PetscPrintf(PETSC_COMM_WORLD, "xyz_bp(nv=%d) %le %le %le\n",i, x_bp[i], y_bp[i], z_bp[i]);
+      PetscPrintf(PETSC_COMM_WORLD, "co-ordinates(xyz) for node n=%d: %le %le %le\n",i, x_bp[i], y_bp[i], z_bp[i]);
+      i=50
+      PetscPrintf(PETSC_COMM_WORLD, "co-ordinates(xyz) for node n=%d: %le %le %le\n",i, x_bp[i], y_bp[i], z_bp[i]);
       i=n_v-1;
-      PetscPrintf(PETSC_COMM_WORLD, "xyz_bp(nv=%d) %le %le %le\n",i,x_bp[i], y_bp[i], z_bp[i]);
+      PetscPrintf(PETSC_COMM_WORLD, "co-ordinates(xyz) for node n=%d: %le %le %le\n",i, x_bp[i], y_bp[i], z_bp[i]);
+      //-------------------------------
 
-
-
-      MPI_Bcast(ibm->x_bp0, n_v, MPIU_REAL, 0, PETSC_COMM_WORLD);
+      MPI_Bcast(ibm->x_bp0, n_v, MPIU_REAL, 0, PETSC_COMM_WORLD);   // Broadcast co-ordinate values to all processors.
       MPI_Bcast(ibm->y_bp0, n_v, MPIU_REAL, 0, PETSC_COMM_WORLD);
       MPI_Bcast(ibm->z_bp0, n_v, MPIU_REAL, 0, PETSC_COMM_WORLD);
 
@@ -3652,7 +3569,7 @@ PetscErrorCode ibm_read_Icem(IBMNodes *ibm, PetscInt ibi)
       MPI_Bcast(ibm->z_bp_o, n_v, MPIU_REAL, 0, PETSC_COMM_WORLD);
 
       fclose(fd);
-    }
+    } // for fd: nlist file open check.
 
     //Reading elements list
     PetscPrintf(PETSC_COMM_SELF, "READ elist\n");
@@ -3663,36 +3580,36 @@ PetscErrorCode ibm_read_Icem(IBMNodes *ibm, PetscInt ibi)
     if (fd) {
      
       
-      fscanf(fd, "%i",&n_elmt);
+      fscanf(fd, "%i",&n_elmt);  // read first line of elist file
       PetscPrintf(PETSC_COMM_SELF, "number of element of list %d %d \n",ibi, n_elmt);
       
-      ibm->n_elmt = n_elmt;      
+      ibm->n_elmt = n_elmt;      // set number of elements to n_elmt.
      
       
-      MPI_Bcast(&(ibm->n_elmt), 1, MPI_INT, 0, PETSC_COMM_WORLD);
+      MPI_Bcast(&(ibm->n_elmt), 1, MPI_INT, 0, PETSC_COMM_WORLD);  // broadcast number of elements to all processors.
       
-      PetscMalloc(n_elmt*sizeof(PetscInt), &nv1);
+      PetscMalloc(n_elmt*sizeof(PetscInt), &nv1);    // Allocate memory for integer lists nv1,nv2 and nv3 each of which are the size of number of elements as nv1, nv2 and nv3 represent the indices of  first,second and third node that make up an element.
       PetscMalloc(n_elmt*sizeof(PetscInt), &nv2);
       PetscMalloc(n_elmt*sizeof(PetscInt), &nv3);
       
-      PetscMalloc(n_elmt*sizeof(PetscReal), &nf_x);
+      PetscMalloc(n_elmt*sizeof(PetscReal), &nf_x); // similary to nv1,nv2 and nv3, nfx,nfy and nfz represent the x,y and z components of normals of elements and hence are each real valued lists of length n_elmt.
       PetscMalloc(n_elmt*sizeof(PetscReal), &nf_y);
       PetscMalloc(n_elmt*sizeof(PetscReal), &nf_z);
       
       // Added 4/1/06 iman
-      PetscMalloc(n_elmt*sizeof(PetscReal), &dA); //Area
+      PetscMalloc(n_elmt*sizeof(PetscReal), &dA); //Area of each element.
       
-      PetscMalloc(n_elmt*sizeof(PetscReal), &nt_x);
+      PetscMalloc(n_elmt*sizeof(PetscReal), &nt_x); // similar to nf_x,nf_y and nf_z but for tangent.
       PetscMalloc(n_elmt*sizeof(PetscReal), &nt_y);
       PetscMalloc(n_elmt*sizeof(PetscReal), &nt_z);
       
-      PetscMalloc(n_elmt*sizeof(PetscReal), &ns_x);
+      PetscMalloc(n_elmt*sizeof(PetscReal), &ns_x);  // what is ns_x?? add to questions.txt
       PetscMalloc(n_elmt*sizeof(PetscReal), &ns_y);
       PetscMalloc(n_elmt*sizeof(PetscReal), &ns_z);
       
       // Added 6/4/06 iman
  
-      PetscMalloc(n_elmt*sizeof(PetscReal), &(ibm->cent_x));
+      PetscMalloc(n_elmt*sizeof(PetscReal), &(ibm->cent_x));  // cent_x,cent_y and cent_z represent geometric centres of each element.
       PetscMalloc(n_elmt*sizeof(PetscReal), &(ibm->cent_y));
       PetscMalloc(n_elmt*sizeof(PetscReal), &(ibm->cent_z));
       // end added
