@@ -80,6 +80,7 @@ PetscErrorCode MGDACreate(UserMG *usermg, PetscInt bi)
 
   PetscInt l;
   
+/* Coarsening is done by setting the no.of grid points to be half that of the previous finer level unless semi-coarsening is specified in that direction for that particular block. */
 
   for (l=usermg->mglevels-2; l>=0; l--) {
     user = mgctx[l].user;
@@ -104,20 +105,22 @@ PetscErrorCode MGDACreate(UserMG *usermg, PetscInt bi)
     else {
       user[bi].KM = (user_high[bi].KM + 1) / 2;
     }
+    PetscPrintf(PETSC_COMM_WORLD,"Distributed Array will generation for each MG level begins\n");
     PetscPrintf(PETSC_COMM_WORLD, "Grid dimension in i,j and k direction for level %d are %d %d %d :\n",l,user[bi].IM, user[bi].JM, user[bi].KM);
-    if (user[bi].IM*(2- (user[bi].isc))-(user_high[bi].IM+1-(user[bi].isc)) +
+    if (user[bi].IM*(2- (user[bi].isc))-(user_high[bi].IM+1-(user[bi].isc)) + 
 	user[bi].JM*(2- (user[bi].jsc))-(user_high[bi].JM+1-(user[bi].jsc)) +
 	user[bi].KM*(2- (user[bi].ksc))-(user_high[bi].KM+1-(user[bi].ksc))) {
       PetscPrintf(PETSC_COMM_WORLD, "Grid at level %d can't be further restricted!\n", l);
     }
   }
-
+// We thus have dimensions for the coarsest grid level.
   l = 0;
   user = mgctx[l].user;
 
   PetscInt M,N,P,m,n,p,s,MM,NN,PP, *lx, *ly, *lz;
   PetscInt *lxSum, *lySum, *lzSum;
   //Mohsen Jan 12 
+  // Periodic BCs are adressed
   
   s=3;
  
@@ -169,14 +172,14 @@ PetscErrorCode MGDACreate(UserMG *usermg, PetscInt bi)
   P=user[bi].KM+1;
 
   ierr=DMDACreate3d(PETSC_COMM_WORLD,xperiod,yperiod,zperiod,DMDA_STENCIL_BOX,M,N,P,PETSC_DECIDE,PETSC_DECIDE,PETSC_DECIDE,1,s,
-		  PETSC_NULL, PETSC_NULL, PETSC_NULL,&(user[bi].da)); //Mohsen Jan 12  
+		  PETSC_NULL, PETSC_NULL, PETSC_NULL,&(user[bi].da)); //Mohsen Jan 12    // DA is created here for all conditions. 
   PetscPrintf(PETSC_COMM_WORLD, "DA is Created for coarsest level and global dimension in i,j and k direction are %d %d %d :\n",M,N,P); 
  
   if (ierr) 
     SETERRQ1(PETSC_COMM_SELF,1, "problem creating DA %d",ierr);
   user[bi].aotopetsc = PETSC_FALSE;
-  DMDASetUniformCoordinates(user[bi].da, 0.0, 1.0, 0.0, 1.0, 0.0, 1.0);
-  DMGetCoordinateDM(user[bi].da, &(user[bi].fda));
+  DMDASetUniformCoordinates(user[bi].da, 0.0, 1.0, 0.0, 1.0, 0.0, 1.0);   // Uniform co-ordinates b/w 0-1 are created in all directions at all levels.
+  DMGetCoordinateDM(user[bi].da, &(user[bi].fda)); // The co-ordinate da is stored in "fda".
   DMDAGetLocalInfo(user[bi].da, &(user[bi].info));
   
   if (rans && usermg->mglevels-1==0) { // fda2 for k-omega at the finest level
@@ -187,12 +190,12 @@ PetscErrorCode MGDACreate(UserMG *usermg, PetscInt bi)
     if (ierr) SETERRQ1(PETSC_COMM_SELF,1, "problem creating FDA2 for RANS%d",ierr);
   }
   
-  for (l=1; l<usermg->mglevels; l++) {
+  for (l=1; l<usermg->mglevels; l++) { // loop through all mg-levels finer than the coarsest level.
     user = mgctx[l].user;
-    
-    // Get info about the coarse DA
+  PetscPrintf(PETSC_COMM_WORLD,"Finer DA distribution determination to ensure processors share  the same grid locations for successive MG levels initiated\n");
+    // Get info about the coarser DA
     DMDAGetInfo(mgctx[l-1].user[bi].da, PETSC_NULL, &MM,&NN,&PP,&m,&n,&p,PETSC_NULL,PETSC_NULL,PETSC_NULL, PETSC_NULL,PETSC_NULL,PETSC_NULL);
-    if (l==1) PetscPrintf(PETSC_COMM_WORLD, "Corresponing numberof procs in i,j and k direction are %d %d %d :\n",m,n,p);
+  //  if (l==1) PetscPrintf(PETSC_COMM_WORLD, "Corresponing number of procs for coarsest DA in i,j and k direction are %d %d %d :\n",m,n,p);
     // Find the distribution of the coarse DA
     PetscMalloc(m*sizeof(PetscInt), &lx);
     PetscMalloc(n*sizeof(PetscInt), &ly);
@@ -289,9 +292,9 @@ PetscErrorCode MGDACreate(UserMG *usermg, PetscInt bi)
     }
     user[bi].aotopetsc = PETSC_FALSE;
     DMDASetUniformCoordinates(user[bi].da, 0.0, 1.0, 0.0, 1.0, 0.0, 1.0);
-    DMGetCoordinateDM(user[bi].da, &(user[bi].fda));
+    DMGetCoordinateDM(user[bi].da, &(user[bi].fda)); // Scatters from global da to a local fda.
     DMDAGetLocalInfo(user[bi].da, &(user[bi].info));
-    
+    PetscPrintf(PETSC_COMM_WORLD," All DAs generated ensuring finer and coarser DAs allocate the same regions of domain to same processors\n");
     PetscFree(lx);PetscFree(ly);PetscFree(lz);  
     PetscFree(lxSum);PetscFree(lySum);PetscFree(lzSum);  
   }
@@ -322,7 +325,8 @@ PetscErrorCode MG_Initial(UserMG *usermg, IBMNodes *ibm)
   PetscReal cl=1.;
   
   PetscOptionsGetReal(PETSC_NULL, "-chact_leng", &cl, PETSC_NULL);
-  
+ 
+  // ---------- Setup Multigrid ----------------------- 
   /* How many MG levels, the default is 3 */
   if (poisson) 
     usermg->mglevels = 1;
@@ -354,8 +358,8 @@ PetscErrorCode MG_Initial(UserMG *usermg, IBMNodes *ibm)
     if (!rank) {
       fd = fopen("grid.dat", "r");
       
-      fscanf(fd, "%i\n", &block_number);
-      MPI_Bcast(&block_number, 1, MPI_INT, 0, PETSC_COMM_WORLD);
+      fscanf(fd, "%i\n", &block_number);   // read number of blocks in grid.dat
+      MPI_Bcast(&block_number, 1, MPI_INT, 0, PETSC_COMM_WORLD); // Broadcast to all processors
       /*     fclose(fd); */
     }
     else {
@@ -364,7 +368,7 @@ PetscErrorCode MG_Initial(UserMG *usermg, IBMNodes *ibm)
   }
   
   PetscInt ksc[block_number], jsc[block_number], isc[block_number], nblk=block_number;
-  PetscOptionsGetIntArray(PETSC_NULL, "-mg_k_semi", ksc, &nblk, PETSC_NULL);
+  PetscOptionsGetIntArray(PETSC_NULL, "-mg_k_semi", ksc, &nblk, PETSC_NULL);  // Read the semi-coarsening flag for each direction i,j,k for every block.
   PetscOptionsGetIntArray(PETSC_NULL, "-mg_j_semi", jsc, &nblk, PETSC_NULL);
   PetscOptionsGetIntArray(PETSC_NULL, "-mg_i_semi", isc, &nblk, PETSC_NULL);
  
@@ -376,8 +380,8 @@ PetscErrorCode MG_Initial(UserMG *usermg, IBMNodes *ibm)
 //  PetscOptionsGetIntArray(PETSC_NULL, "-cgrid",cgrid, &nblk, PETSC_NULL);  // What is c-grid? (boolean options for each block whether to turn on semi-coarsening?) is this redundant with isc,jsc,ksc?
  
   for (level=0; level<usermg->mglevels; level++) {
-    PetscMalloc(block_number*sizeof(UserCtx), &mgctx[level].user);
-    for (bi=0; bi<block_number; bi++) {
+    PetscMalloc(block_number*sizeof(UserCtx), &mgctx[level].user); // create a multigrid context datastructure for each level and a usercontext.
+    for (bi=0; bi<block_number; bi++) {  // Going through each block,enter the semi-coarsening flag in each direction.
       mgctx[level].user[bi].ibm = ibm;
       mgctx[level].user[bi].isc = isc[bi];//&usermg->isc;
       mgctx[level].user[bi].jsc = jsc[bi];//&usermg->jsc;
@@ -387,7 +391,7 @@ PetscErrorCode MG_Initial(UserMG *usermg, IBMNodes *ibm)
     //  if (level==0) PetscPrintf(PETSC_COMM_WORLD, "C-grid for block %d is %d\n", bi,cgrid[bi]);
     }
   }
-  
+  // ------------ Reading Interface Files -------------------------------------
   /* Read BC type and interface control file at the 
      finest grid level*/
   level = usermg->mglevels-1;
@@ -488,7 +492,8 @@ PetscErrorCode MG_Initial(UserMG *usermg, IBMNodes *ibm)
       }
       fclose(fd1);
     } // if block_number>1
-    
+   
+    //----------------- Reading BCS ------------------------------------ 
     /* Read in bcs.dat for boundary conditions at 6 boundary surfaces 
      First put the data onto the finest level and restrict to the coarser
      levels */
@@ -585,7 +590,7 @@ PetscErrorCode MG_Initial(UserMG *usermg, IBMNodes *ibm)
     }
   }
   
-  PetscPrintf(PETSC_COMM_WORLD, "i_periodic is %d  , j_periodic is %d and k_periodic is %d \n", i_periodic, j_periodic, k_periodic);
+  PetscPrintf(PETSC_COMM_WORLD, "Periodic BC Flags: i_periodic is %d  , j_periodic is %d and k_periodic is %d \n", i_periodic, j_periodic, k_periodic);
  
   /* The bcs.dat for boundary conditions at 6 boundary surfaces 
      on the finest level is restricted to the coarser
@@ -617,12 +622,13 @@ PetscErrorCode MG_Initial(UserMG *usermg, IBMNodes *ibm)
 
   PetscInt imm[block_number], kmm[block_number], jmm[block_number];
   if (generate_grid) {
-    PetscOptionsGetIntArray(PETSC_NULL, "-im", imm, &nblk, PETSC_NULL);
+    PetscOptionsGetIntArray(PETSC_NULL, "-im", imm, &nblk, PETSC_NULL); // Get the number of grid points in each direction for every block as an array blockwise.
     PetscOptionsGetIntArray(PETSC_NULL, "-jm", jmm, &nblk, PETSC_NULL);
     PetscOptionsGetIntArray(PETSC_NULL, "-km", kmm, &nblk, PETSC_NULL);
   }
   
  // PetscPrintf(PETSC_COMM_WORLD,"im,jm,km: %d,%d,%d\n",imm[0],jmm[0],kmm[0]); 
+ // ----------------- Grid and DA Generation ----------------------------------
   for (bi=0; bi<block_number; bi++) {
 
     //if (bi==0)  cl = 1.;
@@ -633,7 +639,7 @@ PetscErrorCode MG_Initial(UserMG *usermg, IBMNodes *ibm)
 	fscanf(fd, "%i %i %i\n", &(user[bi].IM),
 	     &(user[bi].JM), &(user[bi].KM));
       else {
-	user[bi].IM=imm[bi];
+	user[bi].IM=imm[bi];  // Set the grid size in each block along all three directions.
 	user[bi].JM=jmm[bi];
 	user[bi].KM=kmm[bi];
       }	
@@ -655,7 +661,7 @@ PetscErrorCode MG_Initial(UserMG *usermg, IBMNodes *ibm)
       user[bi].KM = KM;
     }
     
-    PetscPrintf(PETSC_COMM_WORLD, "READ GRID.dat %d, cl %le IM %d,JM %d,KM %d\n", generate_grid, cl,IM,JM,KM);
+//    if(generate_grid) PetscPrintf(PETSC_COMM_WORLD, "Generated grid is non-dimensionalized with %d and has  %le IM %d,JM %d,KM %d grid points.\n", generate_grid, cl,IM,JM,KM); // Is the grid assumed to be always between 0-1 and scaled?
 
     MGDACreate(usermg, bi);
 
@@ -666,11 +672,19 @@ PetscErrorCode MG_Initial(UserMG *usermg, IBMNodes *ibm)
     //    PetscInt	mx = info.mx, my = info.my, mz = info.mz;
 
     if (grid1d) PetscMalloc((IM+JM+KM)*sizeof(PetscReal), &gc);
-    else        PetscMalloc(3*(IM*JM*KM)*sizeof(PetscReal), &gc);
-  
+    else        PetscMalloc(3*(IM*JM*KM)*sizeof(PetscReal), &gc);  // Create a 3*IM*JM*KM array called gc and allocate PetscReal memory to each location in the array. 
     //DMGetGhostedCoordinates(user[bi].da, &Coor);
-    DMGetCoordinatesLocal(user[bi].da, &Coor);
-    VecSet(Coor,0.0);//Mohsen Feb 12//
+    
+    PetscReal L_x,L_y,L_z;
+    
+    if(generate_grid){
+    PetscOptionsGetReal(PETSC_NULL,"-L_x",&L_x,PETSC_NULL);   
+    PetscOptionsGetReal(PETSC_NULL,"-L_y",&L_y,PETSC_NULL);
+    PetscOptionsGetReal(PETSC_NULL,"-L_z",&L_z,PETSC_NULL);
+    }
+    
+    DMGetCoordinatesLocal(user[bi].da, &Coor); // These  co-ordinates  at this stage are 0-1 in all directions.
+    VecSet(Coor,0.0);//Mohsen Feb 12//  // coor has been reset to zero 
     DMDAVecGetArray(user[bi].fda, Coor, &coor);
     
     if (!rank) {
@@ -701,14 +715,13 @@ PetscErrorCode MG_Initial(UserMG *usermg, IBMNodes *ibm)
 	}
       
       } else { // if 3d gridgen file
-	PetscReal Lx=0.1,Ly=10,Lz=29.5,X0=0.1,Y0=-0.5,Z0=0.5;	
 	for (k=0; k<KM; k++) {
 	  for (j=0; j<JM; j++) {
 	    for (i=0; i<IM; i++) {
 	      if (!generate_grid)
 		fscanf(fd, "%le", gc + (k*(JM*IM) + j * IM + i)*3);
 	      else
-		*(gc+(k*JM*IM + j*IM + i)*3) = (Lx)/(IM-1.) * i+X0;	
+		*(gc+(k*JM*IM + j*IM + i)*3) = L_x/(IM-1.) * i;	 // The value at the memory location whose index is gc-index + (k*IM*JM + j*IM + i)*3 is  filled with dx*i  
 	    }
 	  }
 	}
@@ -719,7 +732,7 @@ PetscErrorCode MG_Initial(UserMG *usermg, IBMNodes *ibm)
 	      if (!generate_grid)
 		fscanf(fd, "%le", gc + (k*(JM*IM) + j * IM + i)*3 + 1);
 	      else
-		*(gc+(k*JM*IM + j*IM + i)*3+1) = (Ly)/(JM-1.) * j+Y0;
+		*(gc+(k*JM*IM + j*IM + i)*3+1) = (L_y)/(JM-1.) * j;  // The value at the memory location whose index is gc-index + (k*IM*JM + j*IM + i)*3 + 1 is  filled with dy*j
 	    }
 	  }
 	}
@@ -730,7 +743,7 @@ PetscErrorCode MG_Initial(UserMG *usermg, IBMNodes *ibm)
 	      if (!generate_grid)
 		fscanf(fd, "%le", gc + (k*(JM*IM) + j * IM + i)*3 + 2);
 	      else
-		*(gc+(k*JM*IM + j*IM + i)*3+2) = (Lz)/(KM-1.) * k+Z0 ;
+		*(gc+(k*JM*IM + j*IM + i)*3+2) = (L_z)/(KM-1.) * k ;  // The value at the memory location whose index is gc-index + (k*IM*JM + j*IM + i)*3 + 2 is  filled with dz*k
 	    }
 	  }
 	}
@@ -740,13 +753,13 @@ PetscErrorCode MG_Initial(UserMG *usermg, IBMNodes *ibm)
 	for (k=zs; k<ze; k++) {
 	  for (j=ys; j<ye; j++) {
 	    for (i=xs; i<xe; i++) {
-	      if (k<KM && j<JM && i<IM) {
+	      if (k<KM && j<JM && i<IM) {   // The coordinate values are scaled by  L_dim additionally and non-dimensionalized  using cl.
 		coor[k][j][i].x = *(gc + (k * (IM*JM) + j * IM + i) * 3  )/cl*L_dim;
 		coor[k][j][i].y = *(gc + (k * (IM*JM) + j * IM + i) * 3+1)/cl*L_dim;
 		coor[k][j][i].z = *(gc + (k * (IM*JM) + j * IM + i) * 3+2)/cl*L_dim;
 	      }
 	    }
-	  }
+	      }
 	}
 	
       } // grid-1d
@@ -784,6 +797,7 @@ PetscErrorCode MG_Initial(UserMG *usermg, IBMNodes *ibm)
 	}
       } // grid-1d
     }
+    if(generate_grid) PetscPrintf(PETSC_COMM_WORLD,"A grid with dimensions L_x=%le,L_y=%le,L_z=%le scaled by L_dim=%le and non-dimensionalized with cl=%le has been generated\n",L_x,L_y,L_z,L_dim,cl);
     PetscFree(gc);
     DMDAVecRestoreArray(user[bi].fda, Coor, &coor);
     

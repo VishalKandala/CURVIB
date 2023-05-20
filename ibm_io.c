@@ -3633,11 +3633,11 @@ PetscErrorCode ibm_read_Icem(IBMNodes *ibm, PetscInt ibi)
        /*------- Print out a few lines */
       PetscPrintf(PETSC_COMM_WORLD," elist READ Complete \n");      
       i=0;
-      PetscPrintf(PETSC_COMM_WORLD, "nv %d %d %d\n", nv1[i], nv2[i], nv3[i]);
+      PetscPrintf(PETSC_COMM_WORLD, "Elemtn n_elmt = %d is comprised of nodes nv = %d,%d and %d\n", i,nv1[i], nv2[i], nv3[i]);
       i=30;
-      PetscPrintf(PETSC_COMM_WORLD, "nv %d %d %d\n", nv1[i], nv2[i], nv3[i]);
+       PetscPrintf(PETSC_COMM_WORLD, "Elemtn n_elmt = %d is comprised of nodes nv = %d,%d and %d\n", i,nv1[i], nv2[i], nv3[i]);
       i=n_elmt-1;
-      PetscPrintf(PETSC_COMM_WORLD, "nv %d %d %d\n", nv1[i], nv2[i], nv3[i]);
+       PetscPrintf(PETSC_COMM_WORLD, "Elemtn n_elmt = %d is comprised of nodes nv = %d,%d and %d\n", i,nv1[i], nv2[i], nv3[i]); 
 
       fclose(fd);
     } // file elist open condition.
@@ -3697,13 +3697,13 @@ PetscErrorCode ibm_read_Icem(IBMNodes *ibm, PetscInt ibi)
     }
     
     ibm->nf_x = nf_x; ibm->nf_y = nf_y;  ibm->nf_z = nf_z; // Normals stored in ibm datastructure (global memory)
-     PetscPrintf(PETSC_COMM_WORLD,"Element Normals(nf_x,y,z) calculated");   
+     PetscPrintf(PETSC_COMM_WORLD,"Element Normals(nf_x,y,z) calculated\n");   
     //Added 4/1/06 iman
     ibm->dA = dA;
     ibm->nt_x = nt_x; ibm->nt_y = nt_y;  ibm->nt_z = nt_z;
     ibm->ns_x = ns_x; ibm->ns_y = ns_y;  ibm->ns_z = ns_z;  
-    PetscPrintf(PETSC_COMM_WORLD,"Element tangents(nt_x,y,z) and ns_x,y,z calculated");     
-    PetscPrintf(PETSC_COMM_WORLD,"Element centers(centt_x,y,z) and areas(dA) calculated");
+    PetscPrintf(PETSC_COMM_WORLD,"Element tangents(nt_x,y,z) and ns_x,y,z calculated\n");     
+    PetscPrintf(PETSC_COMM_WORLD,"Element centers(centt_x,y,z) and areas(dA) calculated\n");
 
     // The calculated normals,tangents,centers,areas and ns are all broadcast to all processors.
     MPI_Bcast(ibm->nv1, n_elmt, MPI_INT, 0, PETSC_COMM_WORLD);
