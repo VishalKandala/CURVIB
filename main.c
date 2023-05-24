@@ -687,9 +687,9 @@ int main(int argc, char **argv) {
 // ------------- SETUP PARAMETERS ---------------------------------
 
   if(LVAD){  // For LVAD; Set Characteristic Length to be 1.0, number of immersed boundaries to be 1 and also set the center of moment of the immersed boundary to be at 0,0,0.
-    L_dim=1.;
-    CMz_c=0.;CMy_c=0.;CMx_c=0.;
-  } 
+    L_dim=1.; 
+    CMz_c=0.;CMy_c=0.;CMx_c=0.;  // Geometric center of immersed   boundary. 
+} 
   else  L_dim=1.; 
 
   if (immersed) {  // If an immersed boundary exists, allocate memory for IBMNodes and FSInfo (data-types), then call the FsiInitialize() function.
@@ -755,7 +755,7 @@ int main(int argc, char **argv) {
     ti = tistart; tistart++;
     
     for (bi=0; bi<block_number; bi++) {
-      Ucont_P_Binary_Input(&(user[bi]));
+      Ucont_P_Binary_Input(&(user[bi])); // Read ucont from binary file stored at  tistart.
       
       DMGlobalToLocalBegin(user[bi].fda, user[bi].Ucont,INSERT_VALUES, user[bi].lUcont);
       DMGlobalToLocalEnd(user[bi].fda, user[bi].Ucont,INSERT_VALUES, user[bi].lUcont);
@@ -914,7 +914,7 @@ int main(int argc, char **argv) {
             } 
             else {
 	      ibm_search_advanced(&(user[bi]), &ibm[ibi], ibi);
-              PetscPrintf(PETSC_COMM_WORLD, "IBM_SERA ibi %d bi %d\n", ibi, bi); 
+              PetscPrintf(PETSC_COMM_WORLD, "IBM_SERA General ibi %d bi %d\n", ibi, bi); 
 	    }
 	} //ibi
 

@@ -96,7 +96,12 @@ PetscErrorCode ibm_search_advanced(UserCtx *user, IBMNodes *ibm,
 /*             happens if ibi==0--not anymore! set nvert=0 manually!*/
 {
   DM	da = user->da, fda = user->fda;
-
+  // mx,my,mz -- global number of grid points in each direction.
+  // xm,ym,zm -- number of grid  points on this processor,excluding ghosts.
+  // xe,ye,ze -- end point of  this processor in each direction,excluding ghost nodes.
+  // xs,ys,zs -- start point of this processor in each direction,excluding ghost nodes.
+  // gxs,gys.gzs -- start point of this processor including ghosts.
+  // gxm,gym,gzm --  number of grid points on this processor including ghosts.
   DMDALocalInfo	info = user->info;
   PetscInt	xs = info.xs, xe = info.xs + info.xm;
   PetscInt  	ys = info.ys, ye = info.ys + info.ym;
@@ -119,7 +124,7 @@ PetscErrorCode ibm_search_advanced(UserCtx *user, IBMNodes *ibm,
   PetscInt	iv_min, iv_max, jv_min, jv_max, kv_min, kv_max;
   PetscReal	***nvert;
   PetscInt	ic, jc, kc;
-
+  
   lxs = xs; lxe = xe;
   lys = ys; lye = ye;
   lzs = zs; lze = ze;
@@ -145,7 +150,7 @@ PetscErrorCode ibm_search_advanced(UserCtx *user, IBMNodes *ibm,
   zbp_min = 1.e23; zbp_max = -1.e23;
 
   for(i=0; i<n_v; i++) {
-
+//  The minimum and maximum  co-ordinates of the immersed boundary are determined.(Bounding box is determined)
     xbp_min = PetscMin(xbp_min, x_bp[i]);
     xbp_max = PetscMax(xbp_max, x_bp[i]);
 
@@ -155,29 +160,31 @@ PetscErrorCode ibm_search_advanced(UserCtx *user, IBMNodes *ibm,
     zbp_min = PetscMin(zbp_min, z_bp[i]);
     zbp_max = PetscMax(zbp_max, z_bp[i]);
   }
-
+ 
+// Tolerances to bounding box are added.
   xbp_min -= 0.05; xbp_max += 0.05;
   ybp_min -= 0.05; ybp_max += 0.05;
   zbp_min -= 0.05; zbp_max += 0.05;
  
-
+// Control cell size  in each direction is determined (ncx,ncy,ncz are the number of control cells in each direction).
   dcx = (xbp_max - xbp_min) / (ncx - 1.);
   dcy = (ybp_max - ybp_min) / (ncy - 1.);
   dcz = (zbp_max - zbp_min) / (ncz - 1.);
 
 /*   PetscPrintf(PETSC_COMM_WORLD, "zbp min max %le %le\n",zbp_min,zbp_max); */
-  PetscMalloc(ncz * ncy * ncx * sizeof(List), &cell_trg);
+  PetscMalloc(ncz * ncy * ncx * sizeof(List), &cell_trg);   // A list object  called  cell_trg with each control cell as an element is created,
   
   for (k=0; k<ncz; k++) {
     for (j=0; j<ncy; j++) {
       for (i=0; i<ncx; i++) {
-	initlist(&cell_trg[k*ncx*ncy + j*ncx + i]);
+	initlist(&cell_trg[k*ncx*ncy + j*ncx + i]);  //  The cell_trg list object is initialized.
       }
     }
   }
 
   for (ln_v=0; ln_v < ibm->n_elmt; ln_v++) {
-
+// Going through each element of the  immersed boundary, determine what control cell each element overlaps with.
+   // For each element, the min,max co-ordinate is identified in each direction.
     n1e = ibm->nv1[ln_v]; n2e = ibm->nv2[ln_v]; n3e = ibm->nv3[ln_v];
 
     xv_min = PetscMin(PetscMin(x_bp[n1e], x_bp[n2e]), x_bp[n3e]);
@@ -189,6 +196,7 @@ PetscErrorCode ibm_search_advanced(UserCtx *user, IBMNodes *ibm,
     zv_min = PetscMin(PetscMin(z_bp[n1e], z_bp[n2e]), z_bp[n3e]);
     zv_max = PetscMax(PetscMax(z_bp[n1e], z_bp[n2e]), z_bp[n3e]);
     
+    // The control cell that overlaps with min x,y,z for each element in immersed boundary as well as that which overlaps with max x.y,z are identified.
     iv_min = floor((xv_min - xbp_min) / dcx); //  +1???
     iv_max = floor((xv_max - xbp_min) / dcx) +1;
 
@@ -207,7 +215,7 @@ PetscErrorCode ibm_search_advanced(UserCtx *user, IBMNodes *ibm,
     kv_min = (kv_min<0) ? 0:kv_min;
     kv_max = (kv_max>ncz) ? ncz:kv_max;
 
-   
+   // All the control cells between the min and max in all directions are noted to be overlapping with the given element of the immersed boundary.
     // Insert IBM node information into a list
     for (k=kv_min; k<kv_max; k++) {
       for (j=jv_min; j<jv_max; j++) {
@@ -229,21 +237,23 @@ PetscErrorCode ibm_search_advanced(UserCtx *user, IBMNodes *ibm,
   
   // for this body nvert 4 is inside, 2 is near bndry
   // for previous bodies nvert 3 inside, 1 near bndry
-  for (k=lzs; k<lze; k++) {
+ // Going through all the cell centers(excluding boundary points which are at surface centers) 
+ for (k=lzs; k<lze; k++) {
     for (j=lys; j<lye; j++) {
       for (i=lxs; i<lxe; i++) {
 	if (ibi==0 && nvert[k][j][i]<5.) nvert[k][j][i] = 0; //reset nvert if new search
 
-	if (coor[k][j][i].x > xbp_min && coor[k][j][i].x < xbp_max &&
+	if (coor[k][j][i].x > xbp_min && coor[k][j][i].x < xbp_max &&     
 	    coor[k][j][i].y > ybp_min && coor[k][j][i].y < ybp_max &&
-	    coor[k][j][i].z > zbp_min && coor[k][j][i].z < zbp_max) {
+	    coor[k][j][i].z > zbp_min && coor[k][j][i].z < zbp_max) {            // Checking whether the grid point(fluid grid) is inside the bounding box.
 
-	  ic = floor((coor[k][j][i].x - xbp_min )/ dcx);
+	  // identifying  the control cell that the fluid grid point coincides with.
+          ic = floor((coor[k][j][i].x - xbp_min )/ dcx);   
 	  jc = floor((coor[k][j][i].y - ybp_min )/ dcy);
 	  kc = floor((coor[k][j][i].z - zbp_min )/ dcz);
 	  
 	  nvert[k][j][i] =  PetscMax(nvert[k][j][i],
-				     point_cell_advanced(coor[k][j][i], ic, jc, kc, ibm, ncx, ncy, ncz, dcx, dcy, xbp_min, ybp_min, zbp_max, cell_trg, flg));
+				     point_cell_advanced(coor[k][j][i], ic, jc, kc, ibm, ncx, ncy, ncz, dcx, dcy, xbp_min, ybp_min, zbp_max, cell_trg, flg)); // Setting nvert.
 	  if (nvert[k][j][i] < 0) nvert[k][j][i] = 0;
 	}
       }
@@ -300,26 +310,28 @@ PetscErrorCode ibm_search_advanced(UserCtx *user, IBMNodes *ibm,
   PetscInt ii, jj, kk;
 
   // Near boundary?
+  //
+  // Considering all the points,check whether it is classified as  a fluid node (i.e nvert = 0),  then  check if any of it's neighbours are classified as solid(nvert=4), then set this point to be a boundary point(nvert = 2).
   for (k=zs; k<ze; k++) {
     for (j=ys; j<ye; j++) {
       for (i=xs; i<xe; i++) {
 	//	if (ibi>0 && ibi<4 && i==39 && j==74 && k==124)   PetscPrintf(PETSC_COMM_SELF, "nvert [%d][%d][%d] %le \n", i, j, k,nvert[k][j][i]);
 	if (nvert[k][j][i] <0) nvert[k][j][i] = 0;
-	ip = (i<mx-1?(i+1):(i));
+	ip = (i<mx-1?(i+1):(i));  // neighbouring points i+1,i,i-1
 	im = (i>0   ?(i-1):(i));
 
-	jp = (j<my-1?(j+1):(j));
+	jp = (j<my-1?(j+1):(j));  // neighbouring points  j+1,j,j-1 
 	jm = (j>0   ?(j-1):(j));
 
-	kp = (k<mz-1?(k+1):(k));
+	kp = (k<mz-1?(k+1):(k));  // neighbouring points k+1,k,k-1
 	km = (k>0   ?(k-1):(k));
 
-	if ((int)(nvert[k][j][i]+0.5) != 4) {
+	if ((int)(nvert[k][j][i]+0.5) != 4) {  // check if i,j,k is  fluid.
 	  for (kk=km; kk<kp+1; kk++) {
 	    for (jj=jm; jj<jp+1; jj++) {
 	      for (ii=im; ii<ip+1; ii++) {
-		if ((int)(nvert[kk][jj][ii] +0.5) == 4) {
-		  nvert[k][j][i] = PetscMax(2, nvert[k][j][i]);
+		if ((int)(nvert[kk][jj][ii] +0.5) == 4) {  // if any neighbour is solid.
+		  nvert[k][j][i] = PetscMax(2, nvert[k][j][i]); // set i,j,k as boundary point.
 		}
 	      }
 	    }
@@ -331,6 +343,7 @@ PetscErrorCode ibm_search_advanced(UserCtx *user, IBMNodes *ibm,
 
   PetscBarrier(PETSC_NULL);
 
+// If there is a fluid node with boundaries around it in more than three directions (+x,-x,+y,-y,+z,-z), set it also to be a boundary point.
   PetscInt around, tmp;
   for (tmp=0;tmp<2; tmp++) {
     for (k=lzs; k<lze; k++) {
@@ -368,9 +381,9 @@ PetscErrorCode ibm_search_advanced(UserCtx *user, IBMNodes *ibm,
 	}
       }
     }
-  }
+  }  
 
-
+  // If there is a massive change in nvert at a location, point out phase change.
   PetscReal	***nvert_o;
   DMDAVecGetArray(da, user->lNvert_o, &nvert_o);
   if (ibi==NumberOfBodies-1)
@@ -403,13 +416,14 @@ PetscErrorCode ibm_search_advanced(UserCtx *user, IBMNodes *ibm,
 
   DMDAVecGetArray(da, user->lNvert, &nvert);
 
-  BoundingSphere(ibm); 
+  BoundingSphere(ibm);  // Find the radius and center of  bounding spheres for each element(qvec,radvec). 
 
   for (k=lzs; k<lze; k++) {
     for (j=lys; j<lye; j++) {
       for (i=lxs; i<lxe; i++) {
-	if ((int)(nvert[k][j][i]+0.5) == 2) {
+	if ((int)(nvert[k][j][i]+0.5) == 2) {  // For each boundary point.
 	  number ++;
+          // Find the control cell associated with the grid point.
 	  ic = (int)((coor[k][j][i].x - xbp_min) / dcx);
 	  jc = (int)((coor[k][j][i].y - ybp_min) / dcy);
 	  kc = (int)((coor[k][j][i].z - zbp_min) / dcz);
