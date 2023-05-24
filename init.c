@@ -797,11 +797,10 @@ PetscErrorCode MG_Initial(UserMG *usermg, IBMNodes *ibm)
 	}
       } // grid-1d
     }
-    if(generate_grid) PetscPrintf(PETSC_COMM_WORLD,"A grid with dimensions L_x=%le,L_y=%le,L_z=%le scaled by L_dim=%le and non-dimensionalized with cl=%le has been generated\n",L_x,L_y,L_z,L_dim,cl);
+    if(generate_grid) PetscPrintf(PETSC_COMM_WORLD,"A grid with dimensions L_x=%le,L_y=%le,L_z=%le scaled by L_dim=%le and non-dimensionalized with cl=%le has been generated for finest level.\ ",L_x,L_y,L_z,L_dim,cl);
     PetscFree(gc);
     DMDAVecRestoreArray(user[bi].fda, Coor, &coor);
     
-
     DMGetCoordinates(user[bi].da, &gCoor);
     DMLocalToGlobalBegin(user[bi].fda, Coor, INSERT_VALUES, gCoor);
     DMLocalToGlobalEnd(user[bi].fda, Coor, INSERT_VALUES, gCoor);
@@ -813,9 +812,10 @@ PetscErrorCode MG_Initial(UserMG *usermg, IBMNodes *ibm)
     // VecDestroy(&gCoor);
   } //bi
 
+ //-------- Grid Generation for coarser levels ---------------
   UserCtx *user_high;
-  for (level=usermg->mglevels-2; level>-1; level--) {
-    user = mgctx[level].user;
+  for (level=usermg->mglevels-2; level>-1; level--) {  //  starting with the second finest grid level,  loop through to the  coarsest.
+    user = mgctx[level].user; 
     user_high = mgctx[level+1].user;
     for (bi = 0; bi<block_number; bi++) {
       
@@ -826,8 +826,8 @@ PetscErrorCode MG_Initial(UserMG *usermg, IBMNodes *ibm)
       PetscInt	mx = info.mx, my = info.my, mz = info.mz;
       
       //DMGetGhostedCoordinates(user_high[bi].da, &Coor_high);
-      DMGetCoordinatesLocal(user_high[bi].da, &Coor_high);
-      DMGetCoordinates(user[bi].da, &Coor);
+      DMGetCoordinatesLocal(user_high[bi].da, &Coor_high);  //    Get local(indexing is from 0 where the processor realm begins)co-ordinates for the higher grid level(finer) than current
+      DMGetCoordinates(user[bi].da, &Coor);  //  Get  the global co-ordinates of the current grid level.
 
       DMDAVecGetArray(user_high[bi].fda,Coor_high, &coor_high);
       DMDAVecGetArray(user[bi].fda, Coor, &coor);
@@ -841,8 +841,8 @@ PetscErrorCode MG_Initial(UserMG *usermg, IBMNodes *ibm)
 	for (j=ys; j<ye; j++) {
 	  for (i=xs; i<xe; i++) {
 
-	    GridRestriction(i, j, k, &ih, &jh, &kh, &user[bi]);
-	    coor[k][j][i].x = coor_high[kh][jh][ih].x;
+	    GridRestriction(i, j, k, &ih, &jh, &kh, &user[bi]); //  obtain the co-ordinate index in the finer grid corresponding to the index i,j,k in current grid level.
+	    coor[k][j][i].x = coor_high[kh][jh][ih].x;  //  set the co-ordinate value of coarser grid level using finer grid level.
 	    coor[k][j][i].y = coor_high[kh][jh][ih].y;
 	    coor[k][j][i].z = coor_high[kh][jh][ih].z;
 	  }
@@ -853,7 +853,7 @@ PetscErrorCode MG_Initial(UserMG *usermg, IBMNodes *ibm)
       DMDAVecRestoreArray(user_high[bi].fda, Coor_high, &coor_high);
 
       // DMGetGhostedCoordinates(user[bi].da, &gCoor);
-      DMGetCoordinatesLocal(user[bi].da, &gCoor);
+      DMGetCoordinatesLocal(user[bi].da, &gCoor);  // create the global co-ordinates at current grid level.
 
       DMGlobalToLocalBegin(user[bi].fda, Coor, INSERT_VALUES, gCoor);
       DMGlobalToLocalEnd(user[bi].fda, Coor, INSERT_VALUES, gCoor);
@@ -869,7 +869,7 @@ PetscErrorCode MG_Initial(UserMG *usermg, IBMNodes *ibm)
 
 
   /* Create the global and local vectors at all grid levels */
-
+  PetscPrintf(PETSC_COMM_WORLD,"Creation of Global and Local vectors at all levels begins\n");  
   for (level=usermg->mglevels-1; level>=0; level--) {
     user = mgctx[level].user;
     
