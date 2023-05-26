@@ -33,7 +33,36 @@ typedef struct {
 
 typedef struct {
   Vec	Ubcs; // An ugly hack, waste of memory
-} BCS;
+  } BCS;
+
+typedef struct {
+  Vec  Res, x, Fext, Fint, Fdyn, disp, FJ, dis, V;
+  Vec  xn, xnm1, xd, xdsc, xdd, xddsc, dx, dxn, dxsc, xnsc, y, yn, xninner, yninner;  //y,yn are for Runge Kutta y=dx/dt
+ 
+  PetscReal  *StrainM, *StressM, *StrainB, *StressB, *Pf, *Pfn;
+  PetscReal  dt, wAit;
+
+  Vec  Mass, Dissip;
+  // contact
+    Vec        Fcnt;
+    Cmpnts     *qvec;
+    PetscReal  *radvec; 
+  ////Hossein
+    PetscInt   *ire, *irv, *val, *patch; //for subdivision surface method
+    PetscReal  *G, *G1, *G2;
+    PetscInt   *contact;
+  ////fem_ibm
+    PetscInt   n_v, n_elmt, ibi, n_edge, sum_n_bnodes, n_ghosts;
+    PetscReal  *x_bp, *y_bp, *z_bp, *x_bp0, *y_bp0, *z_bp0, *x_bpr, *y_bpr, *z_bpr;
+    PetscReal  *p4x, *p4y, *p4z, *p5x, *p5y, *p5z, *p6x ,*p6y, *p6z;
+    PetscReal  *p4x0, *p4y0, *p4z0, *p5x0, *p5y0, *p5z0, *p6x0, *p6y0, *p6z0;
+    PetscReal  *kve0, *kve;
+    PetscInt   *nv1, *nv2, *nv3, *nv4, *nv5, *nv6;
+    Cmpnts     *n_fib;
+    PetscInt   *bnodes, *n_bnodes, *belmts, *edgefrontnodes, *edgefrontnodesI, *belmtsedge;
+    PetscReal  *nf_x, *nf_y, *nf_z, *Nf_x, *Nf_y, *Nf_z;  // Normal direction
+    PetscReal  *dA, *dA0;         // area of an element
+  } FE;
 
 typedef struct {
   PetscInt	i1, j1, k1;

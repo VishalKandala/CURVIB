@@ -161,9 +161,9 @@ PetscErrorCode InflowFlux(UserCtx *user)
   
     // S-Calc uin
   if (inletprofile == 1) {
-    if(ti<100)
-      uin=0.01*ti;
-    else
+//    if(ti<100)
+//      uin=0.01*ti;
+//    else
       uin=1.;
   } else if (inletprofile == -1) {
     uin=-1.;
@@ -306,7 +306,7 @@ PetscErrorCode InflowFlux(UserCtx *user)
   FluxIn=0.0;
  for (fn=0; fn<6; fn++) {
   if (user->bctype[fn] == INLET) {
-
+    PetscPrintf(PETSC_COMM_WORLD,"Inlet detected at face: %d \n",fn);
     switch(fn){
       // face 0
     case 0:
@@ -473,7 +473,8 @@ PetscErrorCode InflowFlux(UserCtx *user)
 //Parallel
  MPI_Allreduce(&FluxIn,&FluxInSum,1,MPI_DOUBLE,MPI_SUM,PETSC_COMM_WORLD);
  PetscBarrier(PETSC_NULL);
- user->FluxInSum = FluxInSum;    
+ user->FluxInSum = FluxInSum;
+ PetscPrintf(PETSC_COMM_WORLD," Inflow Flux:  %le \n",FluxInSum);    
  FluxInSumB[user->_this]=FluxInSum;
 
   

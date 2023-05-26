@@ -27,6 +27,7 @@ PetscReal imp_atol=1e-7, imp_rtol=1e-4, imp_stol=1.e-8;
 PetscInt TwoD = 0;
 PetscInt STRONG_COUPLING=0;
 PetscInt rstart_fsi=0;
+//PetscInt rstart_fem=0;
 PetscInt cop=0, regime=1; // 1 escape regime --- 2 cruise regime
 PetscInt fish=0, fish_c=0, eel=0, fishcyl=0, rheology=0, aneurysm=0,turbine=0 , aneu_dom_bn=0;
 PetscInt wing=0, hydro=0;
@@ -61,6 +62,14 @@ int i_homo_filter=0;
 int j_homo_filter=0;
 int k_homo_filter=0;
 double poisson_tol=5.e-9;	// relative tolerance
+//----------   FEM Variables ---------------
+PetscReal  E=0.0, mu=0.0, rho=0.0, h0=0.0, dampfactor=0.0;
+PetscInt   dof=3, twod=0, damping=0, membrane=0, bending=0, outghost=0, ConstitutiveLawNonLinear=0;
+PetscInt   nbody=1, timeinteg=0, contact=0, explicit=0, initrest=0, innerloop=1, rstart_fem=0;
+//-------------------------------------------
+double time_flow[3000],flux_flow[3000];
+////IBMNodes	*ibm_ptr;
+double PI = 3.141592653589793;
 ///////////////////////////////////////
 PetscInt platelet=0;
 PetscInt STEPS=0;// for reading from file
@@ -595,6 +604,7 @@ int main(int argc, char **argv) {
   PetscInt   level;
   UserMG     usermg;
   PetscBool  flg;
+  FE	     *fem;
 
   PetscInitialize(&argc, &argv, (char *)0, help);
 // ------- INPUT PARAMETERS ----------------------
@@ -603,6 +613,7 @@ int main(int argc, char **argv) {
   PetscOptionsGetInt(PETSC_NULL, "-imm", &immersed, PETSC_NULL);
   PetscOptionsGetInt(PETSC_NULL, "-inv", &invicid, PETSC_NULL);
   PetscOptionsGetInt(PETSC_NULL, "-rstart", &tistart, &rstart_flg);
+  PetscOptionsGetInt(PETSC_NULL,"-rstart_fem",&rstart_fem,PETSC_NULL);
   PetscOptionsGetInt(PETSC_NULL, "-imp", &implicit, PETSC_NULL);
   PetscOptionsGetInt(PETSC_NULL, "-imp_type", &implicit_type, PETSC_NULL);
   PetscOptionsGetInt(PETSC_NULL, "-imp_MAX_IT", &imp_MAX_IT, PETSC_NULL);
@@ -990,7 +1001,7 @@ int main(int argc, char **argv) {
       itr_sc++;
       PetscPrintf(PETSC_COMM_WORLD, "SC LOOP itr # %d\n", itr_sc);
       if (immersed){
-      	Struc_Solver(&usermg, ibm, fsi,&cstart, itr_sc,tistart, &DoSCLoop);        //Structral Solver!       
+      	Struc_Solver(&usermg, ibm, fsi,&cstart, itr_sc,tistart, &DoSCLoop,fem);        //Structral Solver!       
       } else  DoSCLoop = PETSC_FALSE;
       Flow_Solver(&usermg, ibm, fsi);     //Flow Solver!
     }// End of while SC loop
