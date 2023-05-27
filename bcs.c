@@ -469,10 +469,10 @@ PetscErrorCode InflowFlux(UserCtx *user)
 	    //E-Calc covarient velocity componenet if it is inside
 	  }// location for loop
 	}// location for loop
-
+   
       }else{
              FluxIn=0;
-              lAreaIn=0;
+             lAreaIn=0;
 	    } 
       break;
     }//end switch
@@ -482,9 +482,10 @@ PetscErrorCode InflowFlux(UserCtx *user)
 
 //Parallel
  MPI_Allreduce(&FluxIn,&FluxInSum,1,MPI_DOUBLE,MPI_SUM,PETSC_COMM_WORLD);
+ MPI_Allreduce(&lAreaIn,&AreaSumIn,1,MPI_DOUBLE,MPI_SUM,PETSC_COMM_WORLD);
  PetscBarrier(PETSC_NULL);
  user->FluxInSum = FluxInSum;
- PetscPrintf(PETSC_COMM_WORLD," Inflow Flux:  %le \n",FluxInSum);    
+ PetscPrintf(PETSC_COMM_WORLD," Inflow Flux - Area:  %le - %le \n",FluxInSum,AreaSumIn);    
  FluxInSumB[user->_this]=FluxInSum;
 
   
