@@ -454,10 +454,11 @@ PetscErrorCode InflowFlux(UserCtx *user)
 	k = mz-2;
 	for (j=lys; j<lye; j++) {
 	  for (i=lxs; i<lxe; i++) {
-	    d=sqrt(zet[k][j][i].z*zet[k][j][i].z + zet[k][j][i].y*zet[k][j][i].y + zet[k][j][i].x*zet[k][j][i].x);
 	    //S-Calc covarient velocity componenet if it is inside
 	    if (nvert[k][j][i]<0.1) {
-	      ucont[k][j][i].z = uin*d;
+	      d=sqrt(zet[k][j][i].z*zet[k][j][i].z + zet[k][j][i].y*zet[k][j][i].y + zet[k][j][i].x*zet[k][j][i].x);
+	      lAreaIn+=d;
+              ucont[k][j][i].z = uin*d;
 	      ubcs[k+1][j][i].x = uin*zet[k][j][i].x/d;
 	      ubcs[k+1][j][i].y = uin*zet[k][j][i].y/d;
 	      ubcs[k+1][j][i].z = uin*zet[k][j][i].z/d;
