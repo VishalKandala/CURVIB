@@ -1096,7 +1096,7 @@ PetscErrorCode Flow_Solver(UserMG *usermg,IBMNodes *ibm,
   }
   PetscTime(&tpr_e);
   
-   Resistance(&(user[0]));
+//   Resistance(&(user[0]));
 
    for (bi=0; bi<block_number; bi++) {
     

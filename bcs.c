@@ -5705,14 +5705,6 @@ PetscErrorCode ForceSolidBoundary(UserCtx *user)
   }// end outlet check
   }// end face counter 
 
-
-
-
-
-
-
-
-
   DMDAVecRestoreArray(fda, user->Ucont,  &ucont);
   if (flag)
     Contra2Cart(user); 
