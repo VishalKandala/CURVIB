@@ -110,7 +110,8 @@ PetscReal InletInterpolation(PetscReal r, UserCtx *user)
 PetscErrorCode InflowFlux(UserCtx *user) 
 {
   PetscInt     i, j, k;
-  PetscReal    FluxIn,r, uin0, uin, xc, yc,zc,***RR;
+  PetscReal    FluxIn,r, uin0, uin, xc, yc,zc,***RR ;
+  PetscReal    lAreaIn,AreaSumIn;
   Vec          Coor;
   Cmpnts       ***ucont, ***ubcs, ***ucat, ***coor, ***csi, ***eta, ***zet, ***cent;  
   
@@ -304,21 +305,22 @@ PetscErrorCode InflowFlux(UserCtx *user)
   
   PetscInt fn;PetscReal d;
   FluxIn=0.0;
- for (fn=0; fn<6; fn++) {
-  if (user->bctype[fn] == INLET) {
+  lAreaIn=0.0;
+  for (fn=0; fn<6; fn++) {
+   if (user->bctype[fn] == INLET) {
     PetscPrintf(PETSC_COMM_WORLD,"Inlet detected at face: %d \n",fn);
     switch(fn){
       // face 0
     case 0:
-      if (xs==0) {
-
+       if (xs==0) {
        	i = 0;
 	for (k=lzs; k<lze; k++) {
 	  for (j=lys; j<lye; j++) {
-	    d=sqrt(csi[k][j][i].z*csi[k][j][i].z + csi[k][j][i].y*csi[k][j][i].y + csi[k][j][i].x*csi[k][j][i].x);
 	    //S-Calc covarient velocity componenet if it is inside
 	    if (nvert[k][j][i+1]<0.1) {
-	      ucont[k][j][i].x = uin*d;
+	      d=sqrt(csi[k][j][i].z*csi[k][j][i].z + csi[k][j][i].y*csi[k][j][i].y + csi[k][j][i].x*csi[k][j][i].x);
+              lAreaIn+=d;
+              ucont[k][j][i].x = uin*d;
 	      ubcs[k][j][i].x = uin*csi[k][j][i].x/d;
 	      ubcs[k][j][i].y = uin*csi[k][j][i].y/d;
 	      ubcs[k][j][i].z = uin*csi[k][j][i].z/d;
@@ -326,12 +328,17 @@ PetscErrorCode InflowFlux(UserCtx *user)
 	      ucat[k][j][i+1].y = ubcs[k][j][i].y;
 	      ucat[k][j][i+1].z = ubcs[k][j][i].z;
 	      FluxIn += -ucont[k][j][i].x;
-	    }
+            
+	    } // nvert  
 	    //E-Calc covarient velocity componenet if it is inside
 	  }// location for loop
 	}// location for loop
 
-      }
+      } // if statement
+      else{
+              FluxIn=0;
+              lAreaIn=0;
+	    } 
       break;
       // face 1
     case 1:
@@ -340,10 +347,11 @@ PetscErrorCode InflowFlux(UserCtx *user)
 	i = mx-2;
 	for (k=lzs; k<lze; k++) {
 	  for (j=lys; j<lye; j++) {
-	    d=sqrt(csi[k][j][i].z*csi[k][j][i].z + csi[k][j][i].y*csi[k][j][i].y + csi[k][j][i].x*csi[k][j][i].x);
 	    //S-Calc covarient velocity componenet if it is inside
 	    if (nvert[k][j][i]<0.1) {
-	      ucont[k][j][i].x = uin*d;
+              d=sqrt(csi[k][j][i].z*csi[k][j][i].z + csi[k][j][i].y*csi[k][j][i].y + csi[k][j][i].x*csi[k][j][i].x);
+	      lAreaIn+=d;
+              ucont[k][j][i].x = uin*d;
 	      ubcs[k][j][i+1].x = uin*csi[k][j][i].x/d;
 	      ubcs[k][j][i+1].y = uin*csi[k][j][i].y/d;
 	      ubcs[k][j][i+1].z = uin*csi[k][j][i].z/d;
@@ -355,7 +363,6 @@ PetscErrorCode InflowFlux(UserCtx *user)
 	    //E-Calc covarient velocity componenet if it is inside
 	  }// location for loop
 	}// location for loop
-
       }
       break;
       // face 2
@@ -463,7 +470,10 @@ PetscErrorCode InflowFlux(UserCtx *user)
 	  }// location for loop
 	}// location for loop
 
-      }
+      }else{
+             FluxIn=0;
+              lAreaIn=0;
+	    } 
       break;
     }//end switch
 
