@@ -471,7 +471,7 @@ PetscErrorCode InflowFlux(UserCtx *user)
      //  else{
      //        FluxIn=0;
      //        lAreaIn=0;
-	    } 
+//	    } 
       break;
     }//end switch
 
@@ -514,8 +514,8 @@ PetscErrorCode OutflowFlux(UserCtx *user) {
   PetscInt      i, j, k;
   PetscReal     FluxOut;
   Cmpnts	***ucont, ***ucat, ***csi, ***eta, ***zet;
-
-  DM            fda = user->fda;
+  PetscReal     ***nvert;
+  DM            da = user->da, fda = user->fda;
   DMDALocalInfo	info = user->info;
   PetscInt	xs = info.xs, xe = info.xs + info.xm;
   PetscInt  	ys = info.ys, ye = info.ys + info.ym;
@@ -539,7 +539,7 @@ PetscErrorCode OutflowFlux(UserCtx *user) {
 
   DMDAVecGetArray(fda, user->Ucont, &ucont);
   DMDAVecGetArray(fda, user->Ucat,  &ucat);
-  
+  DMDAVecGetArray(da, user->lNvert, &nvert);
   DMDAVecGetArray(fda, user->lCsi,  &csi);
   DMDAVecGetArray(fda, user->lEta,  &eta);
   DMDAVecGetArray(fda, user->lZet,  &zet);
@@ -672,7 +672,7 @@ PetscErrorCode OutflowFlux(UserCtx *user) {
 
   DMDAVecRestoreArray(fda, user->Ucont, &ucont);
   DMDAVecRestoreArray(fda, user->Ucat,  &ucat);
- 
+  DMDAVecRestoreArray(da, user->lNvert, &nvert);
   DMDAVecRestoreArray(fda, user->lCsi,  &csi);
   DMDAVecRestoreArray(fda, user->lEta,  &eta);
   DMDAVecRestoreArray(fda, user->lZet,  &zet);
