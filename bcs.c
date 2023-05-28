@@ -327,7 +327,7 @@ PetscErrorCode InflowFlux(UserCtx *user)
 	      ucat[k][j][i+1].x = ubcs[k][j][i].x;
 	      ucat[k][j][i+1].y = ubcs[k][j][i].y;
 	      ucat[k][j][i+1].z = ubcs[k][j][i].z;
-	      FluxIn += -ucont[k][j][i].x;
+	      FluxIn += ucont[k][j][i].x;
             
 	    } // nvert  
 	    //E-Calc covarient velocity componenet if it is inside
@@ -351,7 +351,7 @@ PetscErrorCode InflowFlux(UserCtx *user)
 	    if (nvert[k][j][i]<0.1) {
               d=sqrt(csi[k][j][i].z*csi[k][j][i].z + csi[k][j][i].y*csi[k][j][i].y + csi[k][j][i].x*csi[k][j][i].x);
 	      lAreaIn+=d;
-              ucont[k][j][i].x = uin*d;
+              ucont[k][j][i].x = -1.0*uin*d;
 	      ubcs[k][j][i+1].x = uin*csi[k][j][i].x/d;
 	      ubcs[k][j][i+1].y = uin*csi[k][j][i].y/d;
 	      ubcs[k][j][i+1].z = uin*csi[k][j][i].z/d;
@@ -383,7 +383,7 @@ PetscErrorCode InflowFlux(UserCtx *user)
 	      ucat[k][j+1][i].x = ubcs[k][j][i].x;
 	      ucat[k][j+1][i].y = ubcs[k][j][i].y;
 	      ucat[k][j+1][i].z = ubcs[k][j][i].z;
-	      FluxIn += -ucont[k][j][i].y;
+	      FluxIn += ucont[k][j][i].y;
 	    }
 	    //E-Calc covarient velocity componenet if it is inside
 	  }// location for loop
@@ -402,7 +402,7 @@ PetscErrorCode InflowFlux(UserCtx *user)
 	    if (nvert[k][j][i]<0.1) {
  	      d=sqrt(eta[k][j][i].z*eta[k][j][i].z + eta[k][j][i].y*eta[k][j][i].y + eta[k][j][i].x*eta[k][j][i].x);   
 	      lAreaIn+=d;
-              ucont[k][j][i].y = uin*d;
+              ucont[k][j][i].y = -1.0*uin*d;
 	      ubcs[k][j+1][i].x = uin*eta[k][j][i].x/d;
 	      ubcs[k][j+1][i].y = uin*eta[k][j][i].y/d;
 	      ubcs[k][j+1][i].z = uin*eta[k][j][i].z/d;
@@ -435,7 +435,7 @@ PetscErrorCode InflowFlux(UserCtx *user)
 	      ucat[k+1][j][i].x = ubcs[k][j][i].x;
 	      ucat[k+1][j][i].y = ubcs[k][j][i].y;
 	      ucat[k+1][j][i].z = ubcs[k][j][i].z;
-	      FluxIn += -ucont[k][j][i].z;
+	      FluxIn += ucont[k][j][i].z;
 	    }
 	    //E-Calc covarient velocity componenet if it is inside
 	  }// location for loop
@@ -454,7 +454,7 @@ PetscErrorCode InflowFlux(UserCtx *user)
 	    if (nvert[k][j][i]<0.1) {
 	      d=sqrt(zet[k][j][i].z*zet[k][j][i].z + zet[k][j][i].y*zet[k][j][i].y + zet[k][j][i].x*zet[k][j][i].x);
 	      lAreaIn+=d;
-              ucont[k][j][i].z = uin*d;
+              ucont[k][j][i].z = -1.0*uin*d;
 	      ubcs[k+1][j][i].x = uin*zet[k][j][i].x/d;
 	      ubcs[k+1][j][i].y = uin*zet[k][j][i].y/d;
 	      ubcs[k+1][j][i].z = uin*zet[k][j][i].z/d;
