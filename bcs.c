@@ -559,7 +559,7 @@ PetscErrorCode OutflowFlux(UserCtx *user) {
 	  for (k=lzs; k<lze; k++) {
 	    for (j=lys; j<lye; j++) {
               if(nvert[k][j][i+1]<0.1){
-	        FluxOut += -ucont[k][j][i].x;
+	        FluxOut += ucont[k][j][i].x;
 	        lArea += sqrt( (csi[k][j][i].x) * (csi[k][j][i].x) +
 			     (csi[k][j][i].y) * (csi[k][j][i].y) +
 			     (csi[k][j][i].z) * (csi[k][j][i].z));
@@ -595,7 +595,7 @@ PetscErrorCode OutflowFlux(UserCtx *user) {
 	  for (k=lzs; k<lze; k++) {
 	    for (i=lxs; i<lxe; i++) {
               if(nvert[k][j+1][i]<0.1){
-	      FluxOut += -ucont[k][j][i].y;
+	      FluxOut += ucont[k][j][i].y;
 	      lArea += sqrt( (eta[k][j][i].x) * (eta[k][j][i].x) +
 			     (eta[k][j][i].y) * (eta[k][j][i].y) +
 			     (eta[k][j][i].z) * (eta[k][j][i].z));
@@ -631,7 +631,7 @@ PetscErrorCode OutflowFlux(UserCtx *user) {
 	  for (j=lys; j<lye; j++) {
 	    for (i=lxs; i<lxe; i++) {
 	     if(nvert[k+1][j][i]<0.1){
-                FluxOut += -ucont[k][j][i].z;
+                FluxOut += ucont[k][j][i].z;
                 lArea += sqrt( (zet[k][j][i].x) * (zet[k][j][i].x) +
 			     (zet[k][j][i].y) * (zet[k][j][i].y) +
 			     (zet[k][j][i].z) * (zet[k][j][i].z));
