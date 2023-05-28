@@ -372,10 +372,11 @@ PetscErrorCode InflowFlux(UserCtx *user)
 	j = 0;
 	for (k=lzs; k<lze; k++) {
 	  for (i=lxs; i<lxe; i++) {
-	    d=sqrt(eta[k][j][i].z*eta[k][j][i].z + eta[k][j][i].y*eta[k][j][i].y + eta[k][j][i].x*eta[k][j][i].x);
 	    //S-Calc covarient velocity componenet if it is inside
 	    if (nvert[k][j+1][i]<0.1) {
-	      ucont[k][j][i].y = uin*d;
+	      d=sqrt(eta[k][j][i].z*eta[k][j][i].z + eta[k][j][i].y*eta[k][j][i].y + eta[k][j][i].x*eta[k][j][i].x);
+              lAreaIn+=d; 
+              ucont[k][j][i].y = uin*d;
 	      ubcs[k][j][i].x = uin*eta[k][j][i].x/d;
 	      ubcs[k][j][i].y = uin*eta[k][j][i].y/d;
 	      ubcs[k][j][i].z = uin*eta[k][j][i].z/d;
@@ -397,10 +398,11 @@ PetscErrorCode InflowFlux(UserCtx *user)
 	j = my-2;
 	for (k=lzs; k<lze; k++) {
 	  for (i=lxs; i<lxe; i++) {
-	    d=sqrt(eta[k][j][i].z*eta[k][j][i].z + eta[k][j][i].y*eta[k][j][i].y + eta[k][j][i].x*eta[k][j][i].x);
 	    //S-Calc covarient velocity componenet if it is inside
 	    if (nvert[k][j][i]<0.1) {
-	      ucont[k][j][i].y = uin*d;
+ 	      d=sqrt(eta[k][j][i].z*eta[k][j][i].z + eta[k][j][i].y*eta[k][j][i].y + eta[k][j][i].x*eta[k][j][i].x);   
+	      lAreaIn+=d;
+              ucont[k][j][i].y = uin*d;
 	      ubcs[k][j+1][i].x = uin*eta[k][j][i].x/d;
 	      ubcs[k][j+1][i].y = uin*eta[k][j][i].y/d;
 	      ubcs[k][j+1][i].z = uin*eta[k][j][i].z/d;
@@ -422,17 +424,11 @@ PetscErrorCode InflowFlux(UserCtx *user)
 	k = 0;
 	for (j=lys; j<lye; j++) {
 	  for (i=lxs; i<lxe; i++) {
-	    d=sqrt(zet[k][j][i].z*zet[k][j][i].z + zet[k][j][i].y*zet[k][j][i].y + zet[k][j][i].x*zet[k][j][i].x);
-	    xc = (coor[k][j][i  ].x + coor[k][j-1][i  ].x +
-		  coor[k][j][i-1].x + coor[k][j-1][i-1].x) * 0.25;
-	    yc = (coor[k][j][i  ].y + coor[k][j-1][i  ].y +
-		  coor[k][j][i-1].y + coor[k][j-1][i-1].y) * 0.25;
 	    //S-Calc covarient velocity componenet if it is inside
-	    if (nvert[k+1][j][i]<0.1 &&  sqrt(cent[k+1][j][i].x*cent[k+1][j][i].x+cent[k+1][j][i].y*cent[k+1][j][i].y)<= 0.5) {
-	      if (inletprofile == 4){ uin= 2.*(1.-4*RR[k][j][i]*RR[k][j][i]); } //uin=2*uave*(1-(r/R)^2)
-	      if (inletprofile == 5){ uin= InletInterpolation(sqrt(xc * xc+yc * yc), user); }//Womersly inlet velocity
-	      if (inletprofile == 101){uin= uin0*(1.-4*RR[k][j][i]*RR[k][j][i]); } //uin=uwave*(1-(r/R)^2)
-	      ucont[k][j][i].z = uin*d;
+	    if (nvert[k+1][j][i]<0.1) {
+	      d=sqrt(zet[k][j][i].z*zet[k][j][i].z + zet[k][j][i].y*zet[k][j][i].y + zet[k][j][i].x*zet[k][j][i].x);
+	      lAreaIn+=d;
+              ucont[k][j][i].z = uin*d;
 	      ubcs[k][j][i].x = uin*zet[k][j][i].x/d;
 	      ubcs[k][j][i].y = uin*zet[k][j][i].y/d;
 	      ubcs[k][j][i].z = uin*zet[k][j][i].z/d;
@@ -471,9 +467,10 @@ PetscErrorCode InflowFlux(UserCtx *user)
 	  }// location for loop
 	}// location for loop
    
-      }else{
-             FluxIn=0;
-             lAreaIn=0;
+      }
+     //  else{
+     //        FluxIn=0;
+     //        lAreaIn=0;
 	    } 
       break;
     }//end switch
