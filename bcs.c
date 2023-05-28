@@ -549,7 +549,7 @@ PetscErrorCode OutflowFlux(UserCtx *user) {
   FluxOut = 0.;PetscReal lArea=0.0,lAreaSum=0.0;
   for (fn=0; fn<6; fn++) {
     if (user->bctype[fn] == 4) {
-      
+      PetscPrintf(PETSC_COMM_WORLD,"Outlet detected at face: %d",fn); 
       switch(fn){
 	// face 0
       case 0:
@@ -558,11 +558,13 @@ PetscErrorCode OutflowFlux(UserCtx *user) {
 	  i = 0;
 	  for (k=lzs; k<lze; k++) {
 	    for (j=lys; j<lye; j++) {
-	      FluxOut += -ucont[k][j][i].x;
-	      lArea += sqrt( (csi[k][j][i].x) * (csi[k][j][i].x) +
+              if(nvert[k][j][i+1]<0.1){
+	        FluxOut += -ucont[k][j][i].x;
+	        lArea += sqrt( (csi[k][j][i].x) * (csi[k][j][i].x) +
 			     (csi[k][j][i].y) * (csi[k][j][i].y) +
 			     (csi[k][j][i].z) * (csi[k][j][i].z));
-	    }// location for loop
+	       } // nvert if condition.
+             }// location for loop
 	  }// location for loop
 	  
 	}
@@ -574,11 +576,13 @@ PetscErrorCode OutflowFlux(UserCtx *user) {
 	  i = mx-2;
 	  for (k=lzs; k<lze; k++) {
 	    for (j=lys; j<lye; j++) {
-	      FluxOut += ucont[k][j][i].x;
-	      lArea += sqrt( (csi[k][j][i].x) * (csi[k][j][i].x) +
+	      if(nvert[k][j][i]<0.1){
+                FluxOut += ucont[k][j][i].x;
+	        lArea += sqrt( (csi[k][j][i].x) * (csi[k][j][i].x) +
 			     (csi[k][j][i].y) * (csi[k][j][i].y) +
 			     (csi[k][j][i].z) * (csi[k][j][i].z));
-	    }// location for loop
+	      } // nvert
+            }// location for loop
 	  }// location for loop
 	  
 	}
@@ -590,11 +594,13 @@ PetscErrorCode OutflowFlux(UserCtx *user) {
 	  j = 0;
 	  for (k=lzs; k<lze; k++) {
 	    for (i=lxs; i<lxe; i++) {
+              if(nvert[k][j+1][i]<0.1){
 	      FluxOut += -ucont[k][j][i].y;
 	      lArea += sqrt( (eta[k][j][i].x) * (eta[k][j][i].x) +
 			     (eta[k][j][i].y) * (eta[k][j][i].y) +
 			     (eta[k][j][i].z) * (eta[k][j][i].z));
-	    }// location for loop
+	      } // nvert
+            }// location for loop
 	  }// location for loop
 	  
 	}
@@ -606,11 +612,13 @@ PetscErrorCode OutflowFlux(UserCtx *user) {
 	  j = my-2;
 	  for (k=lzs; k<lze; k++) {
 	    for (i=lxs; i<lxe; i++) {
-	      FluxOut += ucont[k][j][i].y;
-              lArea += sqrt( (eta[k][j][i].x) * (eta[k][j][i].x) +
+	      if(nvert[k][j][i]<0.1){
+                FluxOut += ucont[k][j][i].y;
+                lArea += sqrt( (eta[k][j][i].x) * (eta[k][j][i].x) +
 			     (eta[k][j][i].y) * (eta[k][j][i].y) +
 			     (eta[k][j][i].z) * (eta[k][j][i].z));
-	    }// location for loop
+	      } // nvert
+            }// location for loop
 	  }// location for loop
 	  
 	}
@@ -622,11 +630,13 @@ PetscErrorCode OutflowFlux(UserCtx *user) {
 	  k = 0;
 	  for (j=lys; j<lye; j++) {
 	    for (i=lxs; i<lxe; i++) {
-	      FluxOut += -ucont[k][j][i].z;
-              lArea += sqrt( (zet[k][j][i].x) * (zet[k][j][i].x) +
+	     if(nvert[k+1][j][i]<0.1){
+                FluxOut += -ucont[k][j][i].z;
+                lArea += sqrt( (zet[k][j][i].x) * (zet[k][j][i].x) +
 			     (zet[k][j][i].y) * (zet[k][j][i].y) +
 			     (zet[k][j][i].z) * (zet[k][j][i].z));
-	    }// location for loop
+	      } //nvert
+            }// location for loop
 	  }// location for loop
 	  
 	}
@@ -638,11 +648,13 @@ PetscErrorCode OutflowFlux(UserCtx *user) {
 	  k = mz-2;
 	  for (j=lys; j<lye; j++) {
 	    for (i=lxs; i<lxe; i++) {
-	      FluxOut += ucont[k][j][i].z;
-              lArea += sqrt( (zet[k][j][i].x) * (zet[k][j][i].x) +
+	      if(nvert[k][j][i]<0.1){
+                 FluxOut += ucont[k][j][i].z;
+                 lArea += sqrt( (zet[k][j][i].x) * (zet[k][j][i].x) +
 			     (zet[k][j][i].y) * (zet[k][j][i].y) +
 			     (zet[k][j][i].z) * (zet[k][j][i].z));
-	    }// location for loop
+	      } // nvert
+            }// location for loop
 	  }// location for loop
 	}
 	break;
@@ -653,7 +665,7 @@ PetscErrorCode OutflowFlux(UserCtx *user) {
   
   MPI_Allreduce(&lArea,&lAreaSum,1,MPI_DOUBLE,MPI_SUM,PETSC_COMM_WORLD);
   MPI_Allreduce(&FluxOut,&FluxOutSum,1,MPI_DOUBLE,MPI_SUM,PETSC_COMM_WORLD);
-  
+  PetscPrintf(PETSC_COMM_WORLD," Outflow Flux - Area:  %le - %le \n",FluxOutSum,lAreaSum);    
   user->FluxOutSum = FluxOutSum;
   FluxOutSumB[user->_this]=FluxOutSum;
   AreaOutB[user->_this]=lAreaSum;
