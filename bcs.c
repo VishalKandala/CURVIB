@@ -4455,12 +4455,40 @@ DM            da = user->da, fda = user->fda;
 
          break;
 	case 4:
-              PetscPrintf(PETSC_COMM_WORLD,"Condition yet to be implemented \n");
+//              PetscPrintf(PETSC_COMM_WORLD,"Condition yet to be implemented \n");
+         if(zs==0){
+	   k=zs;
+           for(j=lys;j<lye;j++){
+             for(i=lxs;i<lxe;i++){
+               FluxOut +=(ucat[k+1][j][i].x*(zet[k][j][i].x) + 
+                          ucat[k+1][j][i].y*(zet[k][j][i].y) + 
+                          ucat[k+1][j][i].z*(zet[k][j][i].z)); 
 
+               lArea += sqrt( (zet[k][j][i].x) * (zet[k][j][i].x) +
+			     (zet[k][j][i].y) * (zet[k][j][i].y) +
+			     (zet[k][j][i].z) * (zet[k][j][i].z));
+              }
+            }
+          }
 	 break;
 	case 5:
-              PetscPrintf(PETSC_COMM_WORLD,"Condition yet to be implemented \n");
+//              PetscPrintf(PETSC_COMM_WORLD,"Condition yet to be implemented \n");
+          if(ze==mz){
+	   i=ze-1;
+           for(j=lys;j<lye;j++){
+             for(i=lxs;i<lxe;i++){
+	       if(nvert[k-1][j][i]<0.1){
+                FluxOut +=(ucat[k-1][j][i].x*(zet[k][j][i].x) +
+                           ucat[k-1][j][i].y*(zet[k][j][i].y) +
+                           ucat[k-1][j][i].z*(zet[k][j][i].z)); 
 
+               lArea += sqrt( (zet[k][j][i].x) * (zet[k][j][i].x) +
+			     (zet[k][j][i].y) * (zet[k][j][i].y) +
+			     (zet[k][j][i].z) * (zet[k][j][i].z));
+               }
+              }
+            }
+          } 
 	 break;
       }  
     }
