@@ -4411,7 +4411,7 @@ DM            da = user->da, fda = user->fda;
   PetscReal psys=0.273;
   PetscOptionsGetInt(PETSC_NULL, "-period", &period, PETSC_NULL);
   PetscInt fn;
-  Fluxout=0.0,lArea=0.0,lAreaSum=0.0;
+  FluxOut=0.0,lArea=0.0,AreaSum=0.0;
   for(fn=0;fn<6;fn++){
     if(user->bctype[fn]==4){
       switch(fn){
@@ -4488,7 +4488,7 @@ DM            da = user->da, fda = user->fda;
            for(k=lzs;k<lze;k++){
              for(j=lys;j<lye;j++){
                if(nvert[k][j][i+1]<0.1){
-                ubcs[k][j][i]+.x=ucat[k][j][i+1].x;
+                ubcs[k][j][i].x=ucat[k][j][i+1].x;
                 ubcs[k][j][i].y=ucat[k][j][i+1].y;
                 ubcs[k][j][i].z=ucat[k][j][i+1].z;
                 
