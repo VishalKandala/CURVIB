@@ -797,7 +797,7 @@ PetscErrorCode MG_Initial(UserMG *usermg, IBMNodes *ibm)
 	}
       } // grid-1d
     }
-    if(generate_grid) PetscPrintf(PETSC_COMM_WORLD,"A grid with dimensions L_x=%le,L_y=%le,L_z=%le scaled by L_dim=%le and non-dimensionalized with cl=%le has been generated for finest level.\ ",L_x,L_y,L_z,L_dim,cl);
+    if(generate_grid) PetscPrintf(PETSC_COMM_WORLD,"A grid with dimensions L_x=%le,L_y=%le,L_z=%le scaled by L_dim=%le and non-dimensionalized with cl=%le has been generated for finest level.\n ",L_x,L_y,L_z,L_dim,cl);
     PetscFree(gc);
     DMDAVecRestoreArray(user[bi].fda, Coor, &coor);
     
