@@ -334,11 +334,7 @@ PetscErrorCode InflowFlux(UserCtx *user)
 	  }// location for loop
 	}// location for loop
 
-      } // if statement
-      else{
-              FluxIn=0;
-              lAreaIn=0;
-	    } 
+      } // if statement 
       break;
       // face 1
     case 1:
@@ -546,10 +542,11 @@ PetscErrorCode OutflowFlux(UserCtx *user) {
   
   //fn is face number which is 0 to 5
   PetscInt fn;
-  FluxOut = 0.;PetscReal lArea=0.0,lAreaSum=0.0;
+  FluxOut = 0.0;
+  PetscReal lArea=0.0,lAreaSum=0.0;
   for (fn=0; fn<6; fn++) {
     if (user->bctype[fn] == 4) {
-      PetscPrintf(PETSC_COMM_WORLD,"Outlet detected at face: %d",fn); 
+      PetscPrintf(PETSC_COMM_WORLD,"Outlet detected at face: %d \n",fn); 
       switch(fn){
 	// face 0
       case 0:
@@ -578,7 +575,7 @@ PetscErrorCode OutflowFlux(UserCtx *user) {
 	    for (j=lys; j<lye; j++) {
 	      if(nvert[k][j][i]<0.1){
                 FluxOut += ucont[k][j][i].x;
-	        lArea += sqrt( (csi[k][j][i].x) * (csi[k][j][i].x) +
+	        lArea += sqrt((csi[k][j][i].x) * (csi[k][j][i].x) +
 			     (csi[k][j][i].y) * (csi[k][j][i].y) +
 			     (csi[k][j][i].z) * (csi[k][j][i].z));
 	      } // nvert
@@ -665,7 +662,7 @@ PetscErrorCode OutflowFlux(UserCtx *user) {
   
   MPI_Allreduce(&lArea,&lAreaSum,1,MPI_DOUBLE,MPI_SUM,PETSC_COMM_WORLD);
   MPI_Allreduce(&FluxOut,&FluxOutSum,1,MPI_DOUBLE,MPI_SUM,PETSC_COMM_WORLD);
-  PetscPrintf(PETSC_COMM_WORLD," Outflow Flux - Area:  %le - %le \n",FluxOutSum,lAreaSum);    
+  PetscPrintf(PETSC_COMM_WORLD,"Outflow Flux - Area:  %le - %le \n",FluxOutSum,lAreaSum);    
   user->FluxOutSum = FluxOutSum;
   FluxOutSumB[user->_this]=FluxOutSum;
   AreaOutB[user->_this]=lAreaSum;
@@ -6097,7 +6094,7 @@ PetscErrorCode SetInitialGuessToOne(UserCtx *user)
   DMDAVecGetArray(da, user->lNvert, &nvert);
   
   extern PetscInt InitialGuessOne;
-
+  PetscPrintf(PETSC_COMM_WORLD,"Inlet Profile: %d, InitialGuess: %d \n", inletprofile,InitialGuessOne); 
   for (k=zs ; k<lze; k++) {
     for (j=lys; j<lye; j++) {
       for (i=lxs; i<lxe; i++) {	
@@ -6109,7 +6106,6 @@ PetscErrorCode SetInitialGuessToOne(UserCtx *user)
 		coor[k][j][i-1].z + coor[k][j-1][i-1].z) * 0.25-CMz_c;
 	  //	  r = sqrt(xc * xc + yc * yc);
 	  r = sqrt(zc * zc + yc * yc);
-	  
 	  if (inletprofile == 4) { //fully-developed pipe flow
 	    uin = 1.;
 	    //	    uin = -2.*(1.-4.*r*r);
@@ -6139,11 +6135,13 @@ PetscErrorCode SetInitialGuessToOne(UserCtx *user)
 	  } else if (InitialGuessOne==1) {
 	    ucont[k][j][i].x  = 0.;
 	    ucont[k][j][i].y  = 0.;
+            ucont[k][j][i].z  = 0.;
+           
 	    //if (nvert[k][j][i]+nvert[k+1][j][i]<0.1) 
-	    ucont[k][j][i].z  	    
-	      = uin* sqrt( (zet[k][j][i].x) * (zet[k][j][i].x) +
-			   (zet[k][j][i].y) * (zet[k][j][i].y) +
-			   (zet[k][j][i].z) * (zet[k][j][i].z));
+	  //  ucont[k][j][i].z  	    
+	  //    = uin* sqrt( (zet[k][j][i].x) * (zet[k][j][i].x) +
+	//		   (zet[k][j][i].y) * (zet[k][j][i].y) +
+	//		   (zet[k][j][i].z) * (zet[k][j][i].z));
 	  }
       }
     }
