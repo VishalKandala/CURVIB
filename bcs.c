@@ -4493,11 +4493,12 @@ DM            da = user->da, fda = user->fda;
       } // switch
     } // face check 
   } //faces loop.
+  
   MPI_Allreduce(&FluxOut,&FluxOutSum,1,MPI_DOUBLE,MPI_SUM,PETSC_COMM_WORLD);
   MPI_Allreduce(&lArea,&AreaSum,1,MPI_DOUBLE,MPI_SUM,PETSC_COMM_WORLD);
   user->FluxOutSum = FluxOutSum;
   user->AreaOutSum = AreaSum;
-
+  PetscPrintf(PETSC_COMM_WORLD,"FormBCS Pre-correction - Outflow: Flux - %le, Area - %le",FluxOutSum,AreaSum);
    // Correction 
   FluxIn = FluxInSum + FarFluxInSum + user->FluxIntpSum;
   ratio = (FluxIn - FluxOutSum)/AreaSum;
