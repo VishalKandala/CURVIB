@@ -262,7 +262,7 @@ PetscErrorCode InflowFlux(UserCtx *user)
       if (t==0.0){ uin0=u_array[0];}
 
       if (zs==0){
-	k=0;
+	k=zs;
 	for (j=lys; j<lye; j++) {
 	  for (i=lxs; i<lxe; i++) {
 	    xc = (coor[k][j][i  ].x + coor[k][j-1][i  ].x +
@@ -313,7 +313,7 @@ PetscErrorCode InflowFlux(UserCtx *user)
       // face 0
     case 0:
        if (xs==0) {
-       	i = 0;
+       	i = xs;
 	for (k=lzs; k<lze; k++) {
 	  for (j=lys; j<lye; j++) {
 	    //S-Calc covarient velocity componenet if it is inside
@@ -364,7 +364,6 @@ PetscErrorCode InflowFlux(UserCtx *user)
       // face 2
     case 2:
       if (ys==0) {
-
 	j = 0;
 	for (k=lzs; k<lze; k++) {
 	  for (i=lxs; i<lxe; i++) {
@@ -550,9 +549,8 @@ PetscErrorCode OutflowFlux(UserCtx *user) {
       switch(fn){
 	// face 0
       case 0:
-	if (xs==0) {
-	  
-	  i = 0;
+	if (xs==0) {	  
+	  i = xs;
 	  for (k=lzs; k<lze; k++) {
 	    for (j=lys; j<lye; j++) {
               if(nvert[k][j][i+1]<0.1){
@@ -586,9 +584,8 @@ PetscErrorCode OutflowFlux(UserCtx *user) {
 	break;
 	// face 2
       case 2:
-	if (ys==0) {
-	  
-	  j = 0;
+	if (ys==0) { 
+	  j = ys;
 	  for (k=lzs; k<lze; k++) {
 	    for (i=lxs; i<lxe; i++) {
               if(nvert[k][j+1][i]<0.1){
@@ -604,8 +601,7 @@ PetscErrorCode OutflowFlux(UserCtx *user) {
 	break;
 	// face 3
       case 3:
-	if (ye==my) {
-	  
+	if (ye==my) { 
 	  j = my-2;
 	  for (k=lzs; k<lze; k++) {
 	    for (i=lxs; i<lxe; i++) {
@@ -622,9 +618,8 @@ PetscErrorCode OutflowFlux(UserCtx *user) {
 	break;
 	// face 4
       case 4:
-	if (zs==0) {
-	  
-	  k = 0;
+	if (zs==0) { 
+	  k = zs;
 	  for (j=lys; j<lye; j++) {
 	    for (i=lxs; i<lxe; i++) {
 	     if(nvert[k+1][j][i]<0.1){
@@ -640,8 +635,7 @@ PetscErrorCode OutflowFlux(UserCtx *user) {
 	break;
 	// face 5
       case 5:
-	if (ze==mz) {
-	  
+	if (ze==mz) { 
 	  k = mz-2;
 	  for (j=lys; j<lye; j++) {
 	    for (i=lxs; i<lxe; i++) {
@@ -3913,9 +3907,9 @@ DM            da = user->da, fda = user->fda;
   PetscReal	***p;
    Cmpnts	***ucont, ***ubcs, ***ucat, ***coor, ***csi, ***eta, ***zet,***ucont_o;
    Cmpnts	***cent,***centx,***centy,***centz;
-  PetscScalar	FluxIn, FluxOut, r, uin, ratio, xc, yc;
+  PetscScalar	FluxIn, r, uin, ratio, xc, yc;
+  PetscReal     FluxOut;
   PetscScalar   lArea, AreaSum;
-  PetscScalar   FluxOutSum;
   //  PetscReal     absn, n_x,n_y,n_z;
   PetscScalar   FarFluxIn=0., FarFluxOut=0., FarFluxInSum, FarFluxOutSum;
   PetscScalar   FarAreaIn=0., FarAreaOut=0., FarAreaInSum, FarAreaOutSum;
@@ -4432,13 +4426,13 @@ DM            da = user->da, fda = user->fda;
          break;
         case 1:
           if(xe==mx){
-	   i=xe-1;
+	   i=xe-2;
            for(k=lzs;k<lze;k++){
              for(j=lys;j<lye;j++){
-	       if(nvert[k][j][i-1]<0.1){
-                FluxOut +=(ucat[k][j][i-1].x*(csi[k][j][i].x) +
-                           ucat[k][j][i-1].y*(csi[k][j][i].y) +
-                           ucat[k][j][i-1].z*(csi[k][j][i].z)); 
+	       if(nvert[k][j][i]<0.1){
+                FluxOut +=(ucat[k][j][i].x*(csi[k][j][i].x) +
+                           ucat[k][j][i].y*(csi[k][j][i].y) +
+                           ucat[k][j][i].z*(csi[k][j][i].z)); 
 
                lArea += sqrt( (csi[k][j][i].x) * (csi[k][j][i].x) +
 			     (csi[k][j][i].y) * (csi[k][j][i].y) +
@@ -4449,11 +4443,42 @@ DM            da = user->da, fda = user->fda;
           }       
          break;
         case 2:
-              PetscPrintf(PETSC_COMM_WORLD,"Condition yet to be implemented \n");
+//              PetscPrintf(PETSC_COMM_WORLD,"Condition yet to be implemented \n");
+         if(ys==0){
+	   j=ys;
+           for(k=lzs;k<lze;k++){
+             for(i=lxs;i<lxe;i++){
+               FluxOut +=(ucat[k][j+1][i].x*(eta[k][j][i].x) + 
+                          ucat[k][j+1][i].y*(eta[k][j][i].y) + 
+                          ucat[k][j+1][i].z*(eta[k][j][i].z)); 
+
+               lArea += sqrt( (eta[k][j][i].x) * (eta[k][j][i].x) +
+			     (eta[k][j][i].y) * (eta[k][j][i].y) +
+			     (eta[k][j][i].z) * (eta[k][j][i].z));
+
+              }
+            }
+          }
+ 
          break;
         case 3:
-             PetscPrintf(PETSC_COMM_WORLD,"Condition yet to be implemented \n");
+//             PetscPrintf(PETSC_COMM_WORLD,"Condition yet to be implemented \n");
+          if(ye==my){
+	   j=ye-2;
+           for(k=lzs;k<lze;k++){
+             for(i=lxs;i<lxe;i++){
+	       if(nvert[k][j][i]<0.1){
+                FluxOut +=(ucat[k][j][i].x*(eta[k][j][i].x) +
+                           ucat[k][j][i].y*(eta[k][j][i].y) +
+                           ucat[k][j][i].z*(eta[k][j][i].z)); 
 
+               lArea += sqrt( (eta[k][j][i].x) * (eta[k][j][i].x) +
+			     (eta[k][j][i].y) * (eta[k][j][i].y) +
+			     (eta[k][j][i].z) * (eta[k][j][i].z));
+               }
+              }
+            }
+          }
          break;
 	case 4:
 //              PetscPrintf(PETSC_COMM_WORLD,"Condition yet to be implemented \n");
@@ -4475,13 +4500,13 @@ DM            da = user->da, fda = user->fda;
 	case 5:   
 //              PetscPrintf(PETSC_COMM_WORLD,"Condition yet to be implemented \n");
           if(ze==mz){
-	   i=ze-1;
+	   k=ze-2;
            for(j=lys;j<lye;j++){
              for(i=lxs;i<lxe;i++){
-	       if(nvert[k-1][j][i]<0.1){
-                FluxOut +=(ucat[k-1][j][i].x*(zet[k][j][i].x) +
-                           ucat[k-1][j][i].y*(zet[k][j][i].y) +
-                           ucat[k-1][j][i].z*(zet[k][j][i].z)); 
+	       if(nvert[k][j][i]<0.1){
+                FluxOut +=(ucat[k][j][i].x*(zet[k][j][i].x) +
+                           ucat[k][j][i].y*(zet[k][j][i].y) +
+                           ucat[k][j][i].z*(zet[k][j][i].z)); 
 
                lArea += sqrt( (zet[k][j][i].x) * (zet[k][j][i].x) +
 			     (zet[k][j][i].y) * (zet[k][j][i].y) +
@@ -4495,8 +4520,9 @@ DM            da = user->da, fda = user->fda;
     } // face check 
   } //faces loop.
   
-  PetscPrintf(PETSC_COMM_WORLD,"FormBCS check 1 \n"); 
+//  PetscPrintf(PETSC_COMM_WORLD,"FormBCS check 1 \n"); 
   MPI_Allreduce(&FluxOut,&FluxOutSum,1,MPI_DOUBLE,MPI_SUM,PETSC_COMM_WORLD);
+//  PetscPrintf(PETSC_COMM_WORLD,"FormBCS check 2 \n"); 
   MPI_Allreduce(&lArea,&AreaSum,1,MPI_DOUBLE,MPI_SUM,PETSC_COMM_WORLD);
   user->FluxOutSum = FluxOutSum;
   user->AreaOutSum = AreaSum;
@@ -4534,21 +4560,21 @@ DM            da = user->da, fda = user->fda;
          break;
         case 1:
           if(xe==mx){
-	   i=xe-1;
+	   i=xe-2;
            for(k=lzs;k<lze;k++){
              for(j=lys;j<lye;j++){
-	       if(nvert[k][j][i-1]<0.1){                
-                ubcs[k][j][i].x=ucat[k][j][i-1].x;
-                ubcs[k][j][i].y=ucat[k][j][i-1].y;
-                ubcs[k][j][i].z=ucat[k][j][i-1].z;
+	       if(nvert[k][j][i]<0.1){                
+                ubcs[k][j][i].x=ucat[k][j][i].x;
+                ubcs[k][j][i].y=ucat[k][j][i].y;
+                ubcs[k][j][i].z=ucat[k][j][i].z;
                 
-                ucont[k][j][i-1].x = (ubcs[k][j][i].x*(csi[k][j][i-1].x) +
-                                      ubcs[k][j][i].y*(csi[k][j][i-1].y) +
-                                      ubcs[k][j][i].z*(csi[k][j][i-1].z)) + 
+                ucont[k][j][i].x = (ubcs[k][j][i].x*(csi[k][j][i].x) +
+                                      ubcs[k][j][i].y*(csi[k][j][i].y) +
+                                      ubcs[k][j][i].z*(csi[k][j][i].z)) + 
                                       ratio*sqrt( (csi[k][j][i].x) * (csi[k][j][i].x) +
 			                          (csi[k][j][i].y) * (csi[k][j][i].y) +
 			                          (csi[k][j][i].z) * (csi[k][j][i].z));
-                FluxOut+= ucont[k][j][i-1].x;
+                FluxOut+= ucont[k][j][i].x;
                }
               }
             }
@@ -4556,10 +4582,49 @@ DM            da = user->da, fda = user->fda;
          break;
         case 2:
               PetscPrintf(PETSC_COMM_WORLD,"Condition yet to be implemented \n");
+         if(ys==0){
+	   j=ys;
+           for(k=lzs;k<lze;k++){
+             for(i=lxs;i<lxe;i++){
+               if(nvert[k][j+1][i]<0.1){
+                ubcs[k][j][i].x=ucat[k][j+1][i].x;
+                ubcs[k][j][i].y=ucat[k][j+1][i].y;
+                ubcs[k][j][i].z=ucat[k][j+1][i].z;
+                
+                ucont[k][j][i].y = (ubcs[k][j][i].x*(eta[k][j][i].x) +
+                                      ubcs[k][j][i].y*(eta[k][j][i].y) +
+                                      ubcs[k][j][i].z*(eta[k][j][i].z)) + 
+                                      ratio*sqrt( (eta[k][j][i].x) * (eta[k][j][i].x) +
+			                          (eta[k][j][i].y) * (eta[k][j][i].y) +
+			                          (eta[k][j][i].z) * (eta[k][j][i].z));
+                FluxOut+= ucont[k][j][i].y;
+               }
+              }
+            }
+          } 
          break;
         case 3:
-             PetscPrintf(PETSC_COMM_WORLD,"Condition yet to be implemented \n");
-
+//             PetscPrintf(PETSC_COMM_WORLD,"Condition yet to be implemented \n");
+          if(ye==my){
+	   j=ye-2;
+           for(k=lzs;k<lze;k++){
+             for(i=lxs;i<lxe;i++){
+	       if(nvert[k][j][i]<0.1){                
+                ubcs[k][j][i].x=ucat[k][j][i].x;
+                ubcs[k][j][i].y=ucat[k][j][i].y;
+                ubcs[k][j][i].z=ucat[k][j][i].z;
+                
+                ucont[k][j][i].y = (ubcs[k][j][i].x*(eta[k][j][i].x) +
+                                      ubcs[k][j][i].y*(eta[k][j][i].y) +
+                                      ubcs[k][j][i].z*(eta[k][j][i].z)) + 
+                                      ratio*sqrt( (eta[k][j][i].x) * (eta[k][j][i].x) +
+			                          (eta[k][j][i].y) * (eta[k][j][i].y) +
+			                          (eta[k][j][i].z) * (eta[k][j][i].z));
+                FluxOut+= ucont[k][j][i].y;
+               }
+              }
+            }
+          } 
          break;
 	case 4:
 //              PetscPrintf(PETSC_COMM_WORLD,"Condition yet to be implemented \n");
@@ -4588,21 +4653,21 @@ DM            da = user->da, fda = user->fda;
 	case 5:
 //              PetscPrintf(PETSC_COMM_WORLD,"Condition yet to be implemented \n");
           if(ze==mz){
-	   i=ze-1;
+	   i=ze-2;
            for(j=lys;j<lye;j++){
              for(i=lxs;i<lxe;i++){
-	       if(nvert[k-1][j][i]<0.1){                
-                ubcs[k][j][i].x=ucat[k-1][j][i].x;
-                ubcs[k][j][i].y=ucat[k-1][j][i].y;
-                ubcs[k][j][i].z=ucat[k-1][j][i].z;
+	       if(nvert[k][j][i]<0.1){                
+                ubcs[k][j][i].x=ucat[k][j][i].x;
+                ubcs[k][j][i].y=ucat[k][j][i].y;
+                ubcs[k][j][i].z=ucat[k][j][i].z;
                 
-                ucont[k-1][j][i].x = (ubcs[k][j][i].x*(csi[k-1][j][i].x) +
-                                      ubcs[k][j][i].y*(csi[k-1][j][i].y) +
-                                      ubcs[k][j][i].z*(csi[k-1][j][i].z)) + 
+                ucont[k][j][i].z = (ubcs[k][j][i].x*(zet[k][j][i].x) +
+                                      ubcs[k][j][i].y*(zet[k][j][i].y) +
+                                      ubcs[k][j][i].z*(zet[k][j][i].z)) + 
                                       ratio*sqrt( (zet[k][j][i].x) * (zet[k][j][i].x) +
 			                          (zet[k][j][i].y) * (zet[k][j][i].y) +
 			                          (zet[k][j][i].z) * (zet[k][j][i].z));
-                FluxOut+= ucont[k-1][j][i].z;
+                FluxOut+= ucont[k][j][i].z;
                }
               }
             }
@@ -4616,7 +4681,7 @@ DM            da = user->da, fda = user->fda;
   MPI_Allreduce(&lArea,&AreaSum,1,MPI_DOUBLE,MPI_SUM,PETSC_COMM_WORLD);
   user->FluxOutSum = FluxOutSum;
   user->AreaOutSum = AreaSum;
-
+  PetscPrintf(PETSC_COMM_WORLD,"FormBCS Post-correction - Outflow: Flux - %le, Area - %le \n",FluxOutSum,AreaSum);
   DMDAVecRestoreArray(fda, user->Ucont, &ucont);
   DMGlobalToLocalBegin(fda, user->Ucont, INSERT_VALUES, user->lUcont);
   DMGlobalToLocalEnd(fda, user->Ucont, INSERT_VALUES, user->lUcont);
