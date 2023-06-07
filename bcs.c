@@ -3915,6 +3915,7 @@ DM            da = user->da, fda = user->fda;
    Cmpnts	***cent,***centx,***centy,***centz;
   PetscScalar	FluxIn, FluxOut, r, uin, ratio, xc, yc;
   PetscScalar   lArea, AreaSum;
+  PetscScalar   FluxOutSum;
   //  PetscReal     absn, n_x,n_y,n_z;
   PetscScalar   FarFluxIn=0., FarFluxOut=0., FarFluxInSum, FarFluxOutSum;
   PetscScalar   FarAreaIn=0., FarAreaOut=0., FarAreaInSum, FarAreaOutSum;
@@ -4494,12 +4495,12 @@ DM            da = user->da, fda = user->fda;
     } // face check 
   } //faces loop.
   
-  PetscPrintf(PETSC_COMM_WORLD,"FormBCS check 1 /n"); 
+  PetscPrintf(PETSC_COMM_WORLD,"FormBCS check 1 \n"); 
   MPI_Allreduce(&FluxOut,&FluxOutSum,1,MPI_DOUBLE,MPI_SUM,PETSC_COMM_WORLD);
   MPI_Allreduce(&lArea,&AreaSum,1,MPI_DOUBLE,MPI_SUM,PETSC_COMM_WORLD);
   user->FluxOutSum = FluxOutSum;
   user->AreaOutSum = AreaSum;
-  PetscPrintf(PETSC_COMM_WORLD,"FormBCS Pre-correction - Outflow: Flux - %le, Area - %le",FluxOutSum,AreaSum);
+  PetscPrintf(PETSC_COMM_WORLD,"FormBCS Pre-correction - Outflow: Flux - %le, Area - %le \n",FluxOutSum,AreaSum);
    // Correction 
   FluxIn = FluxInSum + FarFluxInSum + user->FluxIntpSum;
   ratio = (FluxIn - FluxOutSum)/AreaSum;
