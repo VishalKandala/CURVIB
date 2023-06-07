@@ -4494,6 +4494,7 @@ DM            da = user->da, fda = user->fda;
     } // face check 
   } //faces loop.
   
+  PetscPrintf(PETSC_COMM_WORLD,"FormBCS check 1 /n"); 
   MPI_Allreduce(&FluxOut,&FluxOutSum,1,MPI_DOUBLE,MPI_SUM,PETSC_COMM_WORLD);
   MPI_Allreduce(&lArea,&AreaSum,1,MPI_DOUBLE,MPI_SUM,PETSC_COMM_WORLD);
   user->FluxOutSum = FluxOutSum;
