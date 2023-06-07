@@ -347,7 +347,7 @@ PetscErrorCode InflowFlux(UserCtx *user)
 	    if (nvert[k][j][i]<0.1) {
               d=sqrt(csi[k][j][i].z*csi[k][j][i].z + csi[k][j][i].y*csi[k][j][i].y + csi[k][j][i].x*csi[k][j][i].x);
 	      lAreaIn+=d;
-              ucont[k][j][i].x = -1.0*uin*d;
+              ucont[k][j][i].x = 1.0*uin*d;
 	      ubcs[k][j][i+1].x = uin*csi[k][j][i].x/d;
 	      ubcs[k][j][i+1].y = uin*csi[k][j][i].y/d;
 	      ubcs[k][j][i+1].z = uin*csi[k][j][i].z/d;
@@ -398,7 +398,7 @@ PetscErrorCode InflowFlux(UserCtx *user)
 	    if (nvert[k][j][i]<0.1) {
  	      d=sqrt(eta[k][j][i].z*eta[k][j][i].z + eta[k][j][i].y*eta[k][j][i].y + eta[k][j][i].x*eta[k][j][i].x);   
 	      lAreaIn+=d;
-              ucont[k][j][i].y = -1.0*uin*d;
+              ucont[k][j][i].y = 1.0*uin*d;
 	      ubcs[k][j+1][i].x = uin*eta[k][j][i].x/d;
 	      ubcs[k][j+1][i].y = uin*eta[k][j][i].y/d;
 	      ubcs[k][j+1][i].z = uin*eta[k][j][i].z/d;
@@ -450,7 +450,7 @@ PetscErrorCode InflowFlux(UserCtx *user)
 	    if (nvert[k][j][i]<0.1) {
 	      d=sqrt(zet[k][j][i].z*zet[k][j][i].z + zet[k][j][i].y*zet[k][j][i].y + zet[k][j][i].x*zet[k][j][i].x);
 	      lAreaIn+=d;
-              ucont[k][j][i].z = -1.0*uin*d;
+              ucont[k][j][i].z = 1.0*uin*d;
 	      ubcs[k+1][j][i].x = uin*zet[k][j][i].x/d;
 	      ubcs[k+1][j][i].y = uin*zet[k][j][i].y/d;
 	      ubcs[k+1][j][i].z = uin*zet[k][j][i].z/d;
@@ -4471,7 +4471,7 @@ DM            da = user->da, fda = user->fda;
             }
           }
 	 break;
-	case 5:
+	case 5:   
 //              PetscPrintf(PETSC_COMM_WORLD,"Condition yet to be implemented \n");
           if(ze==mz){
 	   i=ze-1;
@@ -4487,12 +4487,12 @@ DM            da = user->da, fda = user->fda;
 			     (zet[k][j][i].z) * (zet[k][j][i].z));
                }
               }
-            }
+	   }
           } 
 	 break;
-      }  
-    }
-  }
+      } // switch
+    } // face check 
+  } //faces loop.
   MPI_Allreduce(&FluxOut,&FluxOutSum,1,MPI_DOUBLE,MPI_SUM,PETSC_COMM_WORLD);
   MPI_Allreduce(&lArea,&AreaSum,1,MPI_DOUBLE,MPI_SUM,PETSC_COMM_WORLD);
   user->FluxOutSum = FluxOutSum;
@@ -4588,7 +4588,7 @@ DM            da = user->da, fda = user->fda;
 	   i=ze-1;
            for(j=lys;j<lye;j++){
              for(i=lxs;i<lxe;i++){
-	       if(nvert[k][j][i-1]<0.1){                
+	       if(nvert[k-1][j][i]<0.1){                
                 ubcs[k][j][i].x=ucat[k-1][j][i].x;
                 ubcs[k][j][i].y=ucat[k-1][j][i].y;
                 ubcs[k][j][i].z=ucat[k-1][j][i].z;
@@ -4604,12 +4604,10 @@ DM            da = user->da, fda = user->fda;
               }
             }
           }       
- 
 	 break;
-      }  
-    }
-  }
-  
+      } // switch  
+    }  // face check
+  } // faces loop.
   
   MPI_Allreduce(&FluxOut,&FluxOutSum,1,MPI_DOUBLE,MPI_SUM,PETSC_COMM_WORLD);
   MPI_Allreduce(&lArea,&AreaSum,1,MPI_DOUBLE,MPI_SUM,PETSC_COMM_WORLD);
