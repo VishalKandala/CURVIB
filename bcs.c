@@ -6,11 +6,11 @@
 #include "petsctime.h"
 
 extern PetscInt ti, moveframe, blank;
-extern PetscReal FluxInSum, FluxOutSum;
+extern PetscReal FluxInSum,FluxOutSum;
 extern PetscReal Flux_in, angle,CMy_c, CMx_c,CMz_c;
 extern PetscInt block_number;
 extern PetscInt inletprofile;
-
+extern PetscInt inletface,outletface;
 PetscReal FluxInSumB[5],FluxOutSumB[5],AreaOutB[5],OFC[5];  // Maximum block number assumed 5,OFC:Outlet Flux Coefficient
 PetscErrorCode Contra2Cart(UserCtx *user);
 PetscErrorCode VTKOut(UserCtx *user);
@@ -177,7 +177,8 @@ PetscErrorCode InflowFlux(UserCtx *user)
   lAreaIn=0.0;
   for (fn=0; fn<6; fn++) {
    if (user->bctype[fn] == INLET) {
-    PetscPrintf(PETSC_COMM_WORLD,"Inlet detected at face: %d \n",fn);
+      inletface = fn;
+    PetscPrintf(PETSC_COMM_WORLD,"Inlet detected at face: %d \n",inletface);
     switch(fn){
       // face 0
     case 0:
@@ -352,7 +353,15 @@ PetscErrorCode InflowFlux(UserCtx *user)
       break;
     }//end switch
 
-  }// end inlet check
+   }// end inlet check
+   else if(user->bctype[fn]==SOLIDWALL){
+      PetscPrintf(PETSC_COMM_WORLD,"Solid Wall detected at face: %d \n",fn);
+  }
+  else if(user->bctype[fn]==OUTLET){
+      outletface=fn;
+      PetscPrintf(PETSC_COMM_WORLD,"Outlet  detected at face: %d \n",outletface);
+ }
+          
 //    PetscPrintf(PETSC_COMM_WORLD,"face: %di \n",fn);
   }// end face counter 
 
@@ -361,7 +370,7 @@ PetscErrorCode InflowFlux(UserCtx *user)
  MPI_Allreduce(&lAreaIn,&AreaSumIn,1,MPI_DOUBLE,MPI_SUM,PETSC_COMM_WORLD);
  PetscBarrier(PETSC_NULL);
  user->FluxInSum = FluxInSum;
- PetscPrintf(PETSC_COMM_WORLD," Inflow Flux - Area:  %le - %le \n",FluxInSum,AreaSumIn);    
+ PetscPrintf(PETSC_COMM_WORLD,"Inflow Flux - Area:  %le - %le \n",FluxInSum,AreaSumIn);    
  FluxInSumB[user->_this]=FluxInSum;
 
   
@@ -426,10 +435,11 @@ PetscErrorCode OutflowFlux(UserCtx *user) {
   PetscInt fn;
   FluxOut = 0.0;
   PetscReal lArea=0.0,lAreaSum=0.0;
-  for (fn=0; fn<6; fn++) {
-    if (user->bctype[fn] == 4) {
-      PetscPrintf(PETSC_COMM_WORLD,"Outlet detected at face: %d \n",fn); 
-      switch(fn){
+//  for (fn=0; fn<6; fn++) {
+//    if (user->bctype[fn] == 4) {
+//      outletface=fn;
+//      PetscPrintf(PETSC_COMM_WORLD,"Outlet detected at face: %d \n",outletface); 
+      switch(outletface){
 	// face 0
       case 0:
 	if (xs==0) {	  
@@ -535,8 +545,8 @@ PetscErrorCode OutflowFlux(UserCtx *user) {
 	break;
       }//end switch
       
-    }// end outlet check
-  }// end face counter 
+ //   }// end outlet check
+ // }// end face counter 
   
   MPI_Allreduce(&lArea,&lAreaSum,1,MPI_DOUBLE,MPI_SUM,PETSC_COMM_WORLD);
   MPI_Allreduce(&FluxOut,&FluxOutSum,1,MPI_DOUBLE,MPI_SUM,PETSC_COMM_WORLD);
@@ -3792,7 +3802,7 @@ DM            da = user->da, fda = user->fda;
    Cmpnts	***ucont, ***ubcs, ***ucat, ***coor, ***csi, ***eta, ***zet,***ucont_o;
    Cmpnts	***cent,***centx,***centy,***centz;
   PetscScalar	FluxIn, r, uin, ratio, xc, yc;
-  PetscReal     FluxOut;
+  PetscReal     FluxOut,FluxOutSumcont;
   PetscScalar   lArea, AreaSum;
   //  PetscReal     absn, n_x,n_y,n_z;
   PetscScalar   FarFluxIn=0., FarFluxOut=0., FarFluxInSum, FarFluxOutSum;
@@ -4287,10 +4297,11 @@ DM            da = user->da, fda = user->fda;
   PetscReal psys=0.273;
   PetscOptionsGetInt(PETSC_NULL, "-period", &period, PETSC_NULL);
   PetscInt fn;
+  PetscReal FluxOut2=0.0;
   FluxOut=0.0,lArea=0.0,AreaSum=0.0;
-  for(fn=0;fn<6;fn++){
-    if(user->bctype[fn]==4){
-      switch(fn){
+//  for(fn=0;fn<6;fn++){
+//    if(user->bctype[fn]==4){
+      switch(outletface){
         case 0:  // outlet at x=0;
          if(xs==0){
 	   i=xs;
@@ -4299,6 +4310,8 @@ DM            da = user->da, fda = user->fda;
                FluxOut +=(ucat[k][j][i+1].x*(csi[k][j][i].x) + 
                           ucat[k][j][i+1].y*(csi[k][j][i].y) + 
                           ucat[k][j][i+1].z*(csi[k][j][i].z)); 
+
+               FluxOut2 +=ucont[k][j][i].x;
 
                lArea += sqrt( (csi[k][j][i].x) * (csi[k][j][i].x) +
 			     (csi[k][j][i].y) * (csi[k][j][i].y) +
@@ -4318,7 +4331,10 @@ DM            da = user->da, fda = user->fda;
                            ucat[k][j][i].y*(csi[k][j][i].y) +
                            ucat[k][j][i].z*(csi[k][j][i].z)); 
 
-               lArea += sqrt( (csi[k][j][i].x) * (csi[k][j][i].x) +
+                
+                FluxOut2 +=ucont[k][j][i].x;
+                 
+                lArea += sqrt( (csi[k][j][i].x) * (csi[k][j][i].x) +
 			     (csi[k][j][i].y) * (csi[k][j][i].y) +
 			     (csi[k][j][i].z) * (csi[k][j][i].z));
                }
@@ -4336,6 +4352,10 @@ DM            da = user->da, fda = user->fda;
                           ucat[k][j+1][i].y*(eta[k][j][i].y) + 
                           ucat[k][j+1][i].z*(eta[k][j][i].z)); 
 
+                
+                FluxOut2 +=ucont[k][j][i].y;
+                 
+             
                lArea += sqrt( (eta[k][j][i].x) * (eta[k][j][i].x) +
 			     (eta[k][j][i].y) * (eta[k][j][i].y) +
 			     (eta[k][j][i].z) * (eta[k][j][i].z));
@@ -4356,6 +4376,9 @@ DM            da = user->da, fda = user->fda;
                            ucat[k][j][i].y*(eta[k][j][i].y) +
                            ucat[k][j][i].z*(eta[k][j][i].z)); 
 
+                
+                FluxOut2 +=ucont[k][j][i].y;
+                 
                lArea += sqrt( (eta[k][j][i].x) * (eta[k][j][i].x) +
 			     (eta[k][j][i].y) * (eta[k][j][i].y) +
 			     (eta[k][j][i].z) * (eta[k][j][i].z));
@@ -4374,6 +4397,9 @@ DM            da = user->da, fda = user->fda;
                           ucat[k+1][j][i].y*(zet[k][j][i].y) + 
                           ucat[k+1][j][i].z*(zet[k][j][i].z)); 
 
+                
+                FluxOut2 +=ucont[k][j][i].z;
+                 
                lArea += sqrt( (zet[k][j][i].x) * (zet[k][j][i].x) +
 			     (zet[k][j][i].y) * (zet[k][j][i].y) +
 			     (zet[k][j][i].z) * (zet[k][j][i].z));
@@ -4392,6 +4418,9 @@ DM            da = user->da, fda = user->fda;
                            ucat[k][j][i].y*(zet[k][j][i].y) +
                            ucat[k][j][i].z*(zet[k][j][i].z)); 
 
+                
+                FluxOut2 +=ucont[k][j][i].z;
+                 
                lArea += sqrt( (zet[k][j][i].x) * (zet[k][j][i].x) +
 			     (zet[k][j][i].y) * (zet[k][j][i].y) +
 			     (zet[k][j][i].z) * (zet[k][j][i].z));
@@ -4401,26 +4430,49 @@ DM            da = user->da, fda = user->fda;
           } 
 	 break;
       } // switch
-    } // face check 
-  } //faces loop.
+//    } // face check 
+//  } //faces loop.
   
 //  PetscPrintf(PETSC_COMM_WORLD,"FormBCS check 1 \n"); 
   MPI_Allreduce(&FluxOut,&FluxOutSum,1,MPI_DOUBLE,MPI_SUM,PETSC_COMM_WORLD);
+  MPI_Allreduce(&FluxOut2,&FluxOutSumcont,1,MPI_DOUBLE,MPI_SUM,PETSC_COMM_WORLD);
 //  PetscPrintf(PETSC_COMM_WORLD,"FormBCS check 2 \n"); 
   MPI_Allreduce(&lArea,&AreaSum,1,MPI_DOUBLE,MPI_SUM,PETSC_COMM_WORLD);
   user->FluxOutSum = FluxOutSum;
   user->AreaOutSum = AreaSum;
-  PetscPrintf(PETSC_COMM_WORLD,"FormBCS Pre-correction - Outflow: Flux - %le, Area - %le \n",FluxOutSum,AreaSum);
+  PetscPrintf(PETSC_COMM_WORLD,"FormBCS Pre-correction - Outflow: Cartesian-Flux - %le, Contravariant-Flux - %le, Area - %le \n",FluxOutSum,FluxOutSumcont,AreaSum);
    // Correction 
   FluxIn = FluxInSum + FarFluxInSum + user->FluxIntpSum;
-  ratio = (FluxIn - FluxOutSum)/AreaSum;
-  PetscPrintf(PETSC_COMM_WORLD,"FormBCS Correction Ratio - %le",ratio);
+  // ratio conditions for generalized BCS --- Vishal Kandala
+ //------------------------------------------------------------------------------------------------------- 
+ if(inletface==outletface) PetscPrintf(PETSC_COMM_WORLD,"Inlet and Outlet cannot be at the same surface !!!!!!!!!!!!!!!!!!!!!!!!!");
+  
+  if(inletface%2!=0){ // Inlet is at +x,+y or +z
+     if((inletface*outletface)%2!=0) ratio = (-FluxIn -FluxOutSum)/AreaSum; // if outlet is also at +x,+y or +z
+     else ratio = (FluxIn - FluxOutSum)/AreaSum; // if outlet is at -x,-y or -z
+   }
+  else{ // if inlet is at -x,-y or -z
+   if(inletface==0){ // if inlet at -x 
+     if(outletface==1 || outletface==3 || outletface==5) ratio = (FluxIn - FluxOutSum)/AreaSum; // outlet at +x,+y or +z
+     else ratio = (-FluxIn - FluxOutSum)/AreaSum; // if outlet at -y or -z.
+    } // inlet at -x
+    else if(inletface==2){ // if inlet at -y
+     if(outletface==0 || outletface==4) ratio = (-FluxIn - FluxOutSum)/AreaSum;  // outlet at -x or -z.
+     else ratio = (FluxIn - FluxOutSum)/AreaSum; // outlet at +x,+y or +z.
+    } // inlet at -y
+   else if(inletface==4){ // if inlet at -z
+     if(outletface==0 || outletface==2) ratio = (-FluxIn - FluxOutSum)/AreaSum;  // outlet at -x or -y 
+     else ratio = (FluxIn - FluxOutSum)/AreaSum; // outlet at +x,+y,+z
+    } // inlet at -z
+   } // inlet at -x,-y or -z 
+ //-------------------------------------------------------------------------------------------------- 
+  PetscPrintf(PETSC_COMM_WORLD,"FormBCS Correction Ratio - %le \n",ratio);
   user->FluxOutSum=0.0;
   FluxOut=0.0;
   
-  for(fn=0;fn<6;fn++){
-    if(user->bctype[fn]==4){
-      switch(fn){
+//  for(fn=0;fn<6;fn++){
+//    if(user->bctype[fn]==4){
+      switch(outletface){
         case 0:  // outlet at x=0;
          if(xs==0){
 	   i=xs;
@@ -4559,8 +4611,8 @@ DM            da = user->da, fda = user->fda;
           }       
 	 break;
       } // switch  
-    }  // face check
-  } // faces loop.
+//    }  // face check
+//  } // faces loop.
   
   MPI_Allreduce(&FluxOut,&FluxOutSum,1,MPI_DOUBLE,MPI_SUM,PETSC_COMM_WORLD);
   MPI_Allreduce(&lArea,&AreaSum,1,MPI_DOUBLE,MPI_SUM,PETSC_COMM_WORLD);

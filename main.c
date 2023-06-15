@@ -20,6 +20,7 @@ PetscBool rstart_flg;
 PetscInt implicit = 0,implicit_type=0;
 PetscInt imp_MAX_IT = 50; 
 PetscInt radi=10;
+PetscInt inletface=0,outletface=1;
 PetscInt inletprofile=2, InitialGuessOne=0;
 PetscReal CMx_c=0., CMy_c=0., CMz_c=0.;
 PetscInt  mg_MAX_IT=30, mg_idx=1, mg_preItr=1, mg_poItr=1;
