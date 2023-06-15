@@ -709,7 +709,7 @@ PetscErrorCode ibm_search_advanced_rev(UserCtx *user, IBMNodes *ibm,
   for (k=lzs; k<lze; k++) {
     for (j=lys; j<lye; j++) {
       for (i=lxs; i<lxe; i++) {
-	//	if (ibi==0) nvert[k][j][i] = 0; //reset nvert if new search
+		if (ibi==0) nvert[k][j][i] = 0; //reset nvert if new search
 
 	if (coor[k][j][i].x > xbp_min && coor[k][j][i].x < xbp_max &&
 	    coor[k][j][i].y > ybp_min && coor[k][j][i].y < ybp_max &&
@@ -746,50 +746,6 @@ PetscErrorCode ibm_search_advanced_rev(UserCtx *user, IBMNodes *ibm,
   DMGlobalToLocalEnd(da, user->Nvert, INSERT_VALUES, user->lNvert);
 
   DMDAVecGetArray(da, user->lNvert, &nvert);
-
-  if (thin) {
-  PetscPrintf(PETSC_COMM_WORLD, "IBM thin  %d %d %le %le %le %le %le %le\n", ibm->n_v, ibm->n_elmt, xbp_max, xbp_min, ybp_max, ybp_min, zbp_max, zbp_min);
-    PetscInt cutthrough;
-    for (k=lzs; k<lze; k++) {
-      for (j=lys; j<lye; j++) {
-	for (i=lxs; i<lxe; i++) {
-	  if (coor[k][j][i].x > xbp_min && coor[k][j][i].x < xbp_max &&
-	      coor[k][j][i].y > ybp_min && coor[k][j][i].y < ybp_max &&
-	      coor[k][j][i].z > zbp_min && coor[k][j][i].z < zbp_max) {
-
-	    ic = floor((coor[k][j][i].x - xbp_min )/ dcx);
-	    jc = floor((coor[k][j][i].y - ybp_min )/ dcy);
-	    kc = floor((coor[k][j][i].z - zbp_min )/ dcz);
-	    
-/* 	  if (rank==3) PetscPrintf(PETSC_COMM_SELF, "test01 %d %d %d %d %d %d %d\n",i,j,k,ys,ye,zs,ze); */
-/* 	  if (i==1 && j==132 && k==119) { */
-/* 	    flg=1; */
-/* 	    PetscPrintf(PETSC_COMM_SELF, "test01 %d %d %d %d %d %d %d\n",i,j,k,ys,ye,zs,ze); */
-/* 	  } else */
-/* 	    flg=0; */
-
-	    cutthrough = point_cell_thin(coor[k][j][i],coor[k][j][i+1],
-					 coor[k][j+1][i],coor[k+1][j][i],
-					 coor[k+1][j+1][i+1], ic, jc, kc, 
-					 ibm, ncx, ncy, ncz, dcx, dcy, 
-					 xbp_min, ybp_min, zbp_max, cell_trg, flg);
-
-	    if (cutthrough) {
-	      if (nvert[k  ][j  ][i  ] < 0.5) nvert[k  ][j  ][i  ]=2.;
-	      if (nvert[k  ][j  ][i+1] < 0.5) nvert[k  ][j  ][i+1]=2.;
-	      if (nvert[k  ][j+1][i  ] < 0.5) nvert[k  ][j+1][i  ]=2.;
-	      if (nvert[k  ][j+1][i+1] < 0.5) nvert[k  ][j+1][i+1]=2.;
-
-	      if (nvert[k+1][j  ][i  ] < 0.5) nvert[k+1][j  ][i  ]=2.;
-	      if (nvert[k+1][j  ][i+1] < 0.5) nvert[k+1][j  ][i+1]=2.;
-	      if (nvert[k+1][j+1][i  ] < 0.5) nvert[k+1][j+1][i  ]=2.;
-	      if (nvert[k+1][j+1][i+1] < 0.5) nvert[k+1][j+1][i+1]=2.;
-	    }
-	  }
-	}
-      }
-    }    
-  }
 
   //PetscPrintf(PETSC_COMM_SELF, "test010\n");
   //PetscPrintf(PETSC_COMM_SELF, "test010\n");
@@ -834,7 +790,9 @@ PetscErrorCode ibm_search_advanced_rev(UserCtx *user, IBMNodes *ibm,
     }
   }
   PetscBarrier(PETSC_NULL);
-  PetscPrintf(PETSC_COMM_WORLD, "test11\n");
+//  PetscPrintf(PETSC_COMM_WORLD, "test11\n");
+  
+// --- Phase Change ---------------------
   PetscReal	***nvert_o;
   DMDAVecGetArray(da, user->lNvert_o, &nvert_o);
   if (ibi==NumberOfBodies-1)
@@ -1069,7 +1027,7 @@ PetscInt point_cell_advanced(Cmpnts p, PetscInt ip, PetscInt jp, PetscInt kp,
   PetscReal	epsilon = 1.e-8;
 
   PetscBool	*Element_Searched;
-  j = jp; i = ip;
+  j = jp; i = ip;   // cell search happening along k direction.
 
   PetscBool NotDecided = PETSC_TRUE, Singularity = PETSC_FALSE;
   PetscReal t, u, v;
