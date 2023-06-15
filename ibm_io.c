@@ -3477,8 +3477,8 @@ PetscErrorCode ibm_read_Icem(IBMNodes *ibm, PetscInt ibi)
 
     fd = fopen(filen, "r"); if (!fd) SETERRQ(PETSC_COMM_WORLD,1, "Cannot open IBM node file");
  
-  
-
+    PetscPrintf(PETSC_COMM_WORLD, "Geometric Center of Immersed Boundary:  x_c = %le,y_c = %le,z_c = %le \n",CMx_c,CMy_c,CMz_c);
+    
     if (fd) {
       
       fscanf(fd, "%i",&n_v);  // Read the first line of nlist, to get number of nodes

@@ -644,7 +644,12 @@ PetscErrorCode VTKOut(UserCtx *user) {
 	for (j=0; j<my-1; j++) {
 	  for (i=0; i<mx-1; i++) {
 	    PetscInt Iloc = i+(mx-1)*(j+(my-1)*k);
-	    array[Iloc] = nvert[k][j][i];
+//	    array[Iloc] = nvert[k][j][i];  // non-averaged nvert
+	    array[Iloc] = 0.125 *
+	   (nvert[k][j][i] + nvert[k][j][i+1] +
+	    nvert[k][j+1][i] + nvert[k][j+1][i+1] +
+	    nvert[k+1][j][i] + nvert[k+1][j][i+1] +
+	    nvert[k+1][j+1][i] + nvert[k+1][j+1][i+1]);
 	  }
 	}
       }

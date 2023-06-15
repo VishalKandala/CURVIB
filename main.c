@@ -700,7 +700,7 @@ int main(int argc, char **argv) {
 
   if(LVAD){  // For LVAD; Set Characteristic Length to be 1.0, number of immersed boundaries to be 1 and also set the center of moment of the immersed boundary to be at 0,0,0.
     L_dim=1.; 
-    CMz_c=0.;CMy_c=0.;CMx_c=0.;  // Geometric center of immersed   boundary. 
+//    CMz_c=0.;CMy_c=0.;CMx_c=0.;  // Geometric center of immersed   boundary. 
 } 
   else  L_dim=1.; 
 
@@ -742,7 +742,7 @@ int main(int argc, char **argv) {
 	
 	else{
 	  L_dim=1.;
-	  CMz_c=0.0;CMy_c=0.0;CMx_c=0.0;
+//	  CMz_c=0.0;CMy_c=0.0;CMx_c=0.0;
 	  ibm_read_Icem(&ibm[i],i);	 
 	  ibm_surface_VTKOut(&ibm[i],i,0);
 	}	// init for fsi
