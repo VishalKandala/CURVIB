@@ -109,7 +109,7 @@ PetscReal InletInterpolation(PetscReal r, UserCtx *user)
 
 PetscErrorCode InflowFlux(UserCtx *user) 
 {
-  PetscInt     i, j, k;
+  PetscInt     i, j, k,rank;
   PetscReal    FluxIn,r, uin0, uin, xc, yc,zc,***RR ;
   PetscReal    lAreaIn,AreaSumIn;
   Vec          Coor;
@@ -124,9 +124,9 @@ PetscErrorCode InflowFlux(UserCtx *user)
   PetscInt	mx = info.mx, my = info.my, mz = info.mz;
   PetscInt	lxs, lxe, lys, lye, lzs, lze;
   PetscReal	***nvert; //local working array
-
+  MPI_Comm_rank(MPI_COMM_WORLD,&rank);
   VecDuplicate(user->lNvert,&user->RFC);
-
+//  PetscPrintf(PETSC_COMM_SELF,"xs,xe,mx,rank: %d,%d,%d,%d \n",xs,xe,mx,rank);
   // PetscMalloc(block_number*sizeof(PetscReal), &FluxInSumB);
   lxs = xs; lxe = xe;
   lys = ys; lye = ye;
@@ -155,154 +155,23 @@ PetscErrorCode InflowFlux(UserCtx *user)
   DMDAVecGetArray(fda, user->lEta,  &eta);
   DMDAVecGetArray(fda, user->lZet,  &zet);
 
-  if (user->bctype[4] == FARFIELD) FluxIn=0.;
-  if (user->bctype[4] == SOLIDWALL) FluxIn=0.;
-  if (user->bctype[4] == SYMMETRIC) FluxIn=0.;
+//  if (user->bctype[4] == FARFIELD) FluxIn=0.;
+//  if (user->bctype[4] == SOLIDWALL) FluxIn=0.;
+//  if (user->bctype[4] == SYMMETRIC) FluxIn=0.;
 
   
     // S-Calc uin
   if (inletprofile == 1) {
-//    if(ti<100)
-//      uin=0.01*ti;
-//    else
       uin=1.;
-  } else if (inletprofile == -1) {
-    uin=-1.;
-  } else if (inletprofile == 3 || inletprofile == 6 || inletprofile == 8) {
-    uin = InletInterpolation(r, user);
-    uin = 0.01;
-  }else if(inletprofile == 10 || inletprofile == -10){
-    //----------------------------------------------------------------------------------
-    PetscInt	n_p,ie=0,rank;
-    PetscReal	*t_array , *u_array;
-    PetscReal t,ts,te,tcyc,us,ue;
-    char string[128];
-    
-    MPI_Comm_rank(PETSC_COMM_WORLD, &rank);
-    
-    //Reading the flow rate 
-      FILE *fd;
-      fd = fopen("flow00", "r");
-      fscanf(fd, "%i",&n_p);
-      
-      PetscMalloc(n_p*sizeof(PetscReal), &t_array);
-      PetscMalloc(n_p*sizeof(PetscReal), &u_array);
-      
-      i=-1;
-      fgets(string,128, fd);// skip line one
-      while (i+1<n_p) {
-	i++;
-      fscanf(fd, " %le %le\n", &t_array[i], &u_array[i]);
-      }//end while
-      fclose(fd);
-      //end reading 
-      tcyc=t_array[n_p-1];
-     
-      t=(user->dt)*(ti);
-      t=t-((PetscInt)(t/tcyc))*tcyc;
-      
-      for (i=0;i<n_p;i++){
-      
-	if( t_array[i]<=t){
-	  ts=t_array[i];    us=u_array[i];  
-	  ie=i+1;
-	}
-	te=t_array[ie];    ue=u_array[ie];
-   
-      }
-      
-      uin=us+((ue-us)/(te-ts))*(t-ts);
-      if (t==0.0){ uin=u_array[0];}
-      if (inletprofile == -10){ uin=-uin;}
-      if(rank==0) { // root processor read in the data
-	//	PetscPrintf(PETSC_COMM_SELF, "uin(t:%le) = %le,tcyc=%le\n",t,uin,tcyc);
-      }//end rank
-      //--------------------------------------------------------------------------------
-  }else if(inletprofile == 101){
-    //-----------------------------------------------Fully developed pipe flow with prescribed waveform (This is written only for z=0)
-    PetscInt	n_p,ie=0,rank;
-    PetscReal	*t_array , *u_array;
-    PetscReal t,ts,te,tcyc,us,ue;
-    char string[128];
-    
-    MPI_Comm_rank(PETSC_COMM_WORLD, &rank);
-    
-    //Reading the flow rate 
-      FILE *fd;
-      fd = fopen("flow00", "r");
-      fscanf(fd, "%i",&n_p);
-      
-      PetscMalloc(n_p*sizeof(PetscReal), &t_array);
-      PetscMalloc(n_p*sizeof(PetscReal), &u_array);
-      
-      i=-1;
-      fgets(string,128, fd);// skip line one
-      while (i+1<n_p) {
-	i++;
-      fscanf(fd, " %le %le\n", &t_array[i], &u_array[i]);
-      }//end while
-      fclose(fd);
-      //end reading 
-      tcyc=t_array[n_p-1];
-     
-      t=(user->dt)*(ti);
-      t=t-((PetscInt)(t/tcyc))*tcyc;
-      
-      for (i=0;i<n_p;i++){
-      
-	if( t_array[i]<=t){
-	  ts=t_array[i];    us=u_array[i];  
-	  ie=i+1;
-	}
-	te=t_array[ie];    ue=u_array[ie];
-   
-      }
-      
-      uin0=us+((ue-us)/(te-ts))*(t-ts);
-      if (t==0.0){ uin0=u_array[0];}
-
-      if (zs==0){
-	k=zs;
-	for (j=lys; j<lye; j++) {
-	  for (i=lxs; i<lxe; i++) {
-	    xc = (coor[k][j][i  ].x + coor[k][j-1][i  ].x +
-		coor[k][j][i-1].x + coor[k][j-1][i-1].x) * 0.25-CMx_c;
-	    yc = (coor[k][j][i  ].y + coor[k][j-1][i  ].y +
-		coor[k][j][i-1].y + coor[k][j-1][i-1].y) * 0.25-CMy_c;
-	    zc = (coor[k][j][i  ].z + coor[k][j-1][i  ].z +
-	  	coor[k][j][i-1].z + coor[k][j-1][i-1].z) * 0.25-CMz_c + 1.65;//(0,0,-1.65) location of center of circular inflow
-	    RR[k][j][i] = sqrt(xc * xc+zc * zc + yc * yc);
-	  }
-	}
-      }
-      //--------------------------------------------------------------------------------
-  }else if (inletprofile == 4 || inletprofile == 5) {  //fully-developed pipe flow(This is written only for z=0)
-   
-    if (zs==0){
-      k=0;
-  	for (j=lys; j<lye; j++) {
-	  for (i=lxs; i<lxe; i++) {
-	    xc = (coor[k][j][i  ].x + coor[k][j-1][i  ].x +
-		  coor[k][j][i-1].x + coor[k][j-1][i-1].x) * 0.25-CMx_c;
-	    yc = (coor[k][j][i  ].y + coor[k][j-1][i  ].y +
-		  coor[k][j][i-1].y + coor[k][j-1][i-1].y) * 0.25-CMy_c;
-	    zc = (coor[k][j][i  ].z + coor[k][j-1][i  ].z +
-		  coor[k][j][i-1].z + coor[k][j-1][i-1].z) * 0.25-CMz_c;
-	    RR[k][j][i] = sqrt(xc * xc+zc * zc + yc * yc);
-	 	   
-	  }
-	}
-      }
-    //------------------------------------------------------------------------------
-  }else {
+  }     
+ //------------------------------------------------------------------------------
+  else {
     PetscPrintf(PETSC_COMM_SELF, "WRONG INLET PROFILE TYPE!!!! U_in = 0\n");
     uin = 0.;
   }
   // E-Calc uin
-
-   
   //fn is face number which is 0 to 5
-  
+  PetscPrintf(PETSC_COMM_WORLD,"Inlet Velocity : %le \n",uin);  
   PetscInt fn;PetscReal d;
   FluxIn=0.0;
   lAreaIn=0.0;
@@ -313,6 +182,7 @@ PetscErrorCode InflowFlux(UserCtx *user)
       // face 0
     case 0:
        if (xs==0) {
+//	PetscPrintf(PETSC_COMM_WORLD,"Case 0 entered \n");
        	i = xs;
 	for (k=lzs; k<lze; k++) {
 	  for (j=lys; j<lye; j++) {
@@ -339,7 +209,7 @@ PetscErrorCode InflowFlux(UserCtx *user)
       // face 1
     case 1:
       if (xe==mx) {
-	
+//	PetscPrintf(PETSC_COMM_SELF,"Case 1 entered \n");
 	i = mx-2;
 	for (k=lzs; k<lze; k++) {
 	  for (j=lys; j<lye; j++) {
@@ -347,13 +217,25 @@ PetscErrorCode InflowFlux(UserCtx *user)
 	    if (nvert[k][j][i]<0.1) {
               d=sqrt(csi[k][j][i].z*csi[k][j][i].z + csi[k][j][i].y*csi[k][j][i].y + csi[k][j][i].x*csi[k][j][i].x);
 	      lAreaIn+=d;
-              ucont[k][j][i].x = 1.0*uin*d;
-	      ubcs[k][j][i+1].x = uin*csi[k][j][i].x/d;
-	      ubcs[k][j][i+1].y = uin*csi[k][j][i].y/d;
-	      ubcs[k][j][i+1].z = uin*csi[k][j][i].z/d;
+              ucont[k][j][i].x = -uin*d;
+
+	      ubcs[k][j][i+1].x = -uin*csi[k][j][i].x/d;
+	      ubcs[k][j][i+1].y = -uin*csi[k][j][i].y/d;
+	      ubcs[k][j][i+1].z = -uin*csi[k][j][i].z/d;
+//------------------------------------------------------
+//             if(k<=(PetscInt)(ceil((lze-lzs)/2)+5) &&  k>=(PetscInt)(ceil((lze-lzs)/2)-5) && j >= (PetscInt)(ceil((lye-lys)/2)-5) && j <= (PetscInt)(ceil((lye-lys)/2)+5)){
+//              PetscPrintf(PETSC_COMM_SELF,"ubcs.x=%le,csi.x =%le \n",ubcs[k][j][i+1].x,csi[k][j][i].x);
+//                }
+//------------------------------------------------------
 	      ucat[k][j][i].x = ubcs[k][j][i+1].x;
 	      ucat[k][j][i].y = ubcs[k][j][i+1].y;
 	      ucat[k][j][i].z = ubcs[k][j][i+1].z;
+
+// ---------- diagnostics ---------- Vishal Kandala 
+//             if(k<=(PetscInt)(ceil((lze-lzs)/2)+5) &&  k>=(PetscInt)(ceil((lze-lzs)/2)-5) && j >= (PetscInt)(ceil((lye-lys)/2)-5) && j <= (PetscInt)(ceil((lye-lys)/2)+5)){
+//              PetscPrintf(PETSC_COMM_SELF,"ucat.x=%le \n",ucat[k][j][i].x);
+//                }
+// -----------------------------------------------
 	      FluxIn += ucont[k][j][i].x;
 	    }
 	    //E-Calc covarient velocity componenet if it is inside
@@ -397,10 +279,10 @@ PetscErrorCode InflowFlux(UserCtx *user)
 	    if (nvert[k][j][i]<0.1) {
  	      d=sqrt(eta[k][j][i].z*eta[k][j][i].z + eta[k][j][i].y*eta[k][j][i].y + eta[k][j][i].x*eta[k][j][i].x);   
 	      lAreaIn+=d;
-              ucont[k][j][i].y = 1.0*uin*d;
-	      ubcs[k][j+1][i].x = uin*eta[k][j][i].x/d;
-	      ubcs[k][j+1][i].y = uin*eta[k][j][i].y/d;
-	      ubcs[k][j+1][i].z = uin*eta[k][j][i].z/d;
+              ucont[k][j][i].y = -1.0*uin*d;
+	      ubcs[k][j+1][i].x = -uin*eta[k][j][i].x/d;
+	      ubcs[k][j+1][i].y = -uin*eta[k][j][i].y/d;
+	      ubcs[k][j+1][i].z = -uin*eta[k][j][i].z/d;
 	      ucat[k][j][i].x = ubcs[k][j+1][i].x;
 	      ucat[k][j][i].y = ubcs[k][j+1][i].y;
 	      ucat[k][j][i].z = ubcs[k][j+1][i].z;
@@ -449,10 +331,10 @@ PetscErrorCode InflowFlux(UserCtx *user)
 	    if (nvert[k][j][i]<0.1) {
 	      d=sqrt(zet[k][j][i].z*zet[k][j][i].z + zet[k][j][i].y*zet[k][j][i].y + zet[k][j][i].x*zet[k][j][i].x);
 	      lAreaIn+=d;
-              ucont[k][j][i].z = 1.0*uin*d;
-	      ubcs[k+1][j][i].x = uin*zet[k][j][i].x/d;
-	      ubcs[k+1][j][i].y = uin*zet[k][j][i].y/d;
-	      ubcs[k+1][j][i].z = uin*zet[k][j][i].z/d;
+              ucont[k][j][i].z = -uin*d;
+	      ubcs[k+1][j][i].x = -uin*zet[k][j][i].x/d;
+	      ubcs[k+1][j][i].y = -uin*zet[k][j][i].y/d;
+	      ubcs[k+1][j][i].z = -uin*zet[k][j][i].z/d;
 	      ucat[k][j][i].x = ubcs[k+1][j][i].x;
 	      ucat[k][j][i].y = ubcs[k+1][j][i].y;
 	      ucat[k][j][i].z = ubcs[k+1][j][i].z;
@@ -471,6 +353,7 @@ PetscErrorCode InflowFlux(UserCtx *user)
     }//end switch
 
   }// end inlet check
+//    PetscPrintf(PETSC_COMM_WORLD,"face: %di \n",fn);
   }// end face counter 
 
 //Parallel
@@ -607,6 +490,7 @@ PetscErrorCode OutflowFlux(UserCtx *user) {
 	    for (i=lxs; i<lxe; i++) {
 	      if(nvert[k][j][i]<0.1){
                 FluxOut += ucont[k][j][i].y;
+                PetscPrintf(PETSC_COMM_SELF,"ucont.x,y,z=%le,%le,%le \n",ucont[k][j][i].x,ucont[k][j][i].y,ucont[k][j][i].z);
                 lArea += sqrt( (eta[k][j][i].x) * (eta[k][j][i].x) +
 			     (eta[k][j][i].y) * (eta[k][j][i].y) +
 			     (eta[k][j][i].z) * (eta[k][j][i].z));
@@ -4530,6 +4414,7 @@ DM            da = user->da, fda = user->fda;
    // Correction 
   FluxIn = FluxInSum + FarFluxInSum + user->FluxIntpSum;
   ratio = (FluxIn - FluxOutSum)/AreaSum;
+  PetscPrintf(PETSC_COMM_WORLD,"FormBCS Correction Ratio - %le",ratio);
   user->FluxOutSum=0.0;
   FluxOut=0.0;
   
@@ -4581,7 +4466,7 @@ DM            da = user->da, fda = user->fda;
           }       
          break;
         case 2:
-              PetscPrintf(PETSC_COMM_WORLD,"Condition yet to be implemented \n");
+//              PetscPrintf(PETSC_COMM_WORLD,"Condition yet to be implemented \n");
          if(ys==0){
 	   j=ys;
            for(k=lzs;k<lze;k++){
@@ -5822,45 +5707,11 @@ PetscErrorCode SetInitialGuessToOne(UserCtx *user)
   DMDAVecGetArray(da, user->lNvert, &nvert);
   
   extern PetscInt InitialGuessOne;
-  PetscPrintf(PETSC_COMM_WORLD,"Inlet Profile: %d, InitialGuess: %d \n", inletprofile,InitialGuessOne); 
+  PetscPrintf(PETSC_COMM_WORLD,"InitialGuess: %d \n",InitialGuessOne); 
   for (k=zs ; k<lze; k++) {
     for (j=lys; j<lye; j++) {
       for (i=lxs; i<lxe; i++) {	
-	  xc = (coor[k][j][i  ].x + coor[k][j-1][i  ].x +
-		coor[k][j][i-1].x + coor[k][j-1][i-1].x) * 0.25-CMx_c;
-	  yc = (coor[k][j][i  ].y + coor[k][j-1][i  ].y +
-		coor[k][j][i-1].y + coor[k][j-1][i-1].y) * 0.25-CMy_c;
-	  zc = (coor[k][j][i  ].z + coor[k][j-1][i  ].z +
-		coor[k][j][i-1].z + coor[k][j-1][i-1].z) * 0.25-CMz_c;
-	  //	  r = sqrt(xc * xc + yc * yc);
-	  r = sqrt(zc * zc + yc * yc);
-	  if (inletprofile == 4) { //fully-developed pipe flow
-	    uin = 1.;
-	    //	    uin = -2.*(1.-4.*r*r);
-	    // if (r>0.5) uin=0.; 
-	    //	    PetscPrintf(PETSC_COMM_SELF, "y_c %le r %le uin %le\n", CMy_c, r, uin);
-	  } else if (inletprofile == -1) {
-	    uin = -1.;
-	  } else if (inletprofile == 7) {
-	    uin = 1.5*(1.-4.*yc*yc);
-	  } else if (inletprofile == 11) {
-	    uin = 0.185;//0.2654;//
-	  } else {
-	    uin=1.;
-	  }
-	 
-	  if (InitialGuessOne==2) {
-	    ucont[k][j][i].x  = csi[k][j][i].x;
-	    ucont[k][j][i].y  = eta[k][j][i].y;
-	    ucont[k][j][i].z  = zet[k][j][i].z;
-	  } else if (InitialGuessOne==3) {
-	    // if (nvert[k][j][i]+nvert[k][j][i+1]<0.1) 
-	    ucont[k][j][i].x  = uin*csi[k][j][i].z;
-	    // if (nvert[k][j][i]+nvert[k][j+1][i]<0.1) 
-	    ucont[k][j][i].y  = uin*eta[k][j][i].z;
-	    // if (nvert[k][j][i]+nvert[k+1][j][i]<0.1)
-	    ucont[k][j][i].z  = uin*zet[k][j][i].z;	    
-	  } else if (InitialGuessOne==1) {
+        if (InitialGuessOne==1) {
 	    ucont[k][j][i].x  = 0.;
 	    ucont[k][j][i].y  = 0.;
             ucont[k][j][i].z  = 0.;
@@ -5874,90 +5725,6 @@ PetscErrorCode SetInitialGuessToOne(UserCtx *user)
       }
     }
   }
-
- 
-
-  if (InitialGuessOne==5) {
-    for (k=zs ; k<lze; k++) {
-      for (j=lys; j<lye; j++) {
-	for (i=lxs; i<lxe; i++) {
-	  if (nvert[k][j][i]<9.5){
-	    ucont[k][j][i].x  = csi[k][j][i].z;
-	    ucont[k][j][i].y  = eta[k][j][i].z;
-	    ucont[k][j][i].z  = zet[k][j][i].z;
-	  }   
-	}
-      }
-    }
-  }
- if (InitialGuessOne==6) {
-    for (k=zs ; k<lze; k++) {
-      for (j=lys; j<lye; j++) {
-	for (i=lxs; i<lxe; i++) {
-	  if (nvert[k][j][i]<9.5){
-	    ucont[k][j][i].x  = csi[k][j][i].z;
-	    ucont[k][j][i].y  = eta[k][j][i].z;
-	    ucont[k][j][i].z  = zet[k][j][i].z;
-	  }   
-	}
-      }
-    }
-  }
-
-  if (InitialGuessOne==4) {//Green vortex Mohsen
-    PetscReal u,v;  
-    DMDAVecGetArray(da, user->P, &p);
-    DMDAVecGetArray(fda, user->Cent, &cent);
-    DMDAVecGetArray(fda, user->Centx, &centx);
-    DMDAVecGetArray(fda, user->Centy, &centy);
-    DMDAVecGetArray(fda, user->Centz, &centz);
-    
-    
-    for (k=lzs ; k<lze; k++) {
-      for (j=lys; j<lye; j++) {
-	for (i=xs; i<lxe; i++) {
-	  // ucont[k][j][i].x=-(cos(centx[k][j][i].x)*sin(centx[k][j][i].y))*csi[k][j][i].x;
-	  u=-(cos(centx[k][j][i].x)*sin(centx[k][j][i].y));
-	  v=(sin(centx[k][j][i].x)*cos(centx[k][j][i].y));
-
-	  ucont[k][j][i].x=u*csi[k][j][i].x+v*csi[k][j][i].y;
-	}
-      }
-    }
-    for (k=lzs ; k<lze; k++) {
-      for (j=ys; j<lye; j++)  {
-	for (i=lxs; i<lxe; i++) {
-	  //ucont[k][j][i].y=(sin(centy[k][j][i].x)*cos(centy[k][j][i].y))*eta[k][j][i].y;
-	  u=-(cos(centy[k][j][i].x)*sin(centy[k][j][i].y));
-	  v=(sin(centy[k][j][i].x)*cos(centy[k][j][i].y));
-
-	  ucont[k][j][i].y=u*eta[k][j][i].x+v*eta[k][j][i].y;
-	}
-      }
-    }
-    for (k=zs ; k<lze; k++) {
-      for (j=lys; j<lye; j++)  {
-	for (i=lxs; i<lxe; i++) {
-	  ucont[k][j][i].z=0.0;
-	}
-      }
-    }
-    
-    for (k=lzs ; k<lze; k++) {
-      for (j=lys; j<lye; j++)  {
-	for (i=lxs; i<lxe; i++) {
-	  p[k][j][i]=-0.25*(cos(2*cent[k][j][i].x)+cos(2*cent[k][j][i].y));
-	}
-      }
-    }
-    DMDAVecRestoreArray(fda, user->Centx, &centx);
-    DMDAVecRestoreArray(fda, user->Centy, &centy);
-    DMDAVecRestoreArray(fda, user->Centz, &centz);
-    DMDAVecRestoreArray(da, user->P, &p);
-    DMDAVecRestoreArray(fda, user->Cent, &cent);
-    
-  }//Mohsen
-
   DMDAVecRestoreArray(fda, Coor, &coor);
   DMDAVecRestoreArray(fda, user->Ucont, &ucont);
   DMDAVecRestoreArray(fda, user->lZet,  &zet);
@@ -5972,57 +5739,7 @@ PetscErrorCode SetInitialGuessToOne(UserCtx *user)
   DMGlobalToLocalBegin(user->da, user->P, INSERT_VALUES, user->lP);	
   DMGlobalToLocalEnd(user->da, user->P, INSERT_VALUES, user->lP);
 
-  Contra2Cart(user);
- 
-  //Mohsen Sep 2012
-  if ( InitialGuessOne==14){
- 
-    Divergence(user);
- 
-    Vec       Ucat_Exact,Ucat_Err;
-    Cmpnts    ***ucat_exact;
-    
-    VecDuplicate(user->Ucat,&Ucat_Exact);
-    VecDuplicate(user->Ucat,&Ucat_Err);
-    VecSet(Ucat_Exact,0.0);
-    VecSet(Ucat_Err,0.0);
-    
-    DMDAVecGetArray(fda, user->Cent, &cent);
-    DMDAVecGetArray(fda,Ucat_Exact, &ucat_exact);
-    
-    for(k=lzs; k<lze ; k++){
-      for (j=lys; j<lye; j++) {
-	for (i=lxs; i<lxe; i++) {
-	  ucat_exact[k][j][i].x=-cos(cent[k][j][i].x)*sin(cent[k][j][i].y);
-	  ucat_exact[k][j][i].y=sin(cent[k][j][i].x)*cos(cent[k][j][i].y);
-	}
-      }
-    }
-    
-    DMDAVecRestoreArray(fda, user->Cent, &cent);
-    DMDAVecRestoreArray(fda,Ucat_Exact, &ucat_exact);
-    
-    VecWAXPY(Ucat_Err,-1.0,user->Ucat,Ucat_Exact);
-    
-    PetscReal ucat_err,max_ucat_err,min_ucat_err,max_abs_ucat;
-    PetscInt  mi,min_i,max_i;
-    VecMax(Ucat_Err, &max_i, &max_ucat_err);
-    VecMin(Ucat_Err, &min_i, &min_ucat_err);
-    
-    if (fabs(max_ucat_err)>fabs(min_ucat_err)) {
-      max_abs_ucat=fabs(max_ucat_err);
-      mi=max_i;
-    } else {
-      max_abs_ucat=fabs(min_ucat_err);
-      mi=min_i;
-    }
-    
-    VecNorm(Ucat_Err,NORM_INFINITY, & ucat_err);
-    PetscPrintf(PETSC_COMM_WORLD, "Max initial ucat error is %le \n",ucat_err);
-    VecDestroy(&Ucat_Exact);
-    VecDestroy(&Ucat_Err);
-  }
- 
+  Contra2Cart(user); 
   return(0);
 
 }
