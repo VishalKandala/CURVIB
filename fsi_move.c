@@ -13,7 +13,7 @@
 
 extern PetscInt ti, LV;
 /* // */
-extern PetscInt orient;
+extern char orient[];
 /* // */
 extern PetscInt tiout,STRONG_COUPLING,rheology,NumberOfBodies;
 extern PetscInt dgf_z,dgf_y,dgf_x;
@@ -926,15 +926,15 @@ PetscInt     i,itr=12,j,nv;
   // solve Ang mom equ using trapozoidal rule u(n+1)=u(n)+dt*F(n+1/2)
   /* if (dgf_ax) { */
   /* // */
-  if (orient == 0) {
+  if (strcmp(orient,"xx00")==0) {
     S_ang_n[1]=(1-damp*dt)/(1.+damp*dt)*S_ang_r[1]
       + dt/(1.+damp*dt)*(mu_s*M_x);///(1.+mu_s*Mdpdn_x); // w=w_r + int(M/Idt)
     S_ang_n[0]=S_ang_r[0]+0.5*(S_ang_n[1]+S_ang_r[1])*dt; //ang=ang_r+w_avedt
-  } else if (orient == 45) {
+  } else if (strcmp(orient,"xy45")==0) {
     S_ang_n[1]=(1-damp*dt)/(1.+damp*dt)*S_ang_r[1]
       + dt/(1.+damp*dt)*(mu_s*(M_x*cos(pi/4) + M_y*cos(pi/4)));///(1.+mu_s*Mdpdn_x); // w=w_r + int(M/Idt)
     S_ang_n[0]=S_ang_r[0]+0.5*(S_ang_n[1]+S_ang_r[1])*dt; //ang=ang_r+w_avedt
-  } else if (orient == 90) {
+  } else if (strcmp(orient,"yy00")==0) {
     S_ang_n[1]=(1-damp*dt)/(1.+damp*dt)*S_ang_r[1]
       + dt/(1.+damp*dt)*(mu_s*M_y);///(1.+mu_s*Mdpdn_x); // w=w_r + int(M/Idt)
     S_ang_n[0]=S_ang_r[0]+0.5*(S_ang_n[1]+S_ang_r[1])*dt; //ang=ang_r+w_avedt
@@ -995,11 +995,11 @@ PetscInt     i,itr=12,j,nv;
   // output values
   //PetscPrintf(PETSC_COMM_WORLD, "Ang_x, dAng_x/dt M_x w %le %le %le %le %le %le\n",S_ang_n[0],S_ang_n[1], M_x, S_ang_r[0],S_ang_rm1[0],w);
   /* // */
-  if (orient == 0) {
+  if (strcmp(orient,"xx00")==0){
     PetscPrintf(PETSC_COMM_WORLD, "%d Ang_x, dAng_x/dt M_x  %le %le %le %le %le %le %le %le\n",ibi,S_ang_n[0],S_ang_n[1], M_x, S_ang_r[0],S_ang_r[1], w,1.-FSinfo->atk_o,FSinfo->dS[1],FSinfo->dS_o[1]);
-  } else if (orient == 45) {
+  } else if (strcmp(orient,"xy45")==0) {
     PetscPrintf(PETSC_COMM_WORLD, "%d Ang_x, dAng_x/dt M_x  %le %le %le %le %le %le %le %le\n",ibi,S_ang_n[0],S_ang_n[1], (M_x*cos(pi/4) + M_y*cos(pi/4)), S_ang_r[0],S_ang_r[1], w,1.-FSinfo->atk_o,FSinfo->dS[1],FSinfo->dS_o[1]);
-  } else if (orient == 90) {
+  } else if (strcmp(orient,"yy00")==0) {
     PetscPrintf(PETSC_COMM_WORLD, "%d Ang_y, dAng_y/dt M_y  %le %le %le %le %le %le %le %le\n",ibi,S_ang_n[0],S_ang_n[1], M_y, S_ang_r[0],S_ang_r[1], w,1.-FSinfo->atk_o,FSinfo->dS[1],FSinfo->dS_o[1]);
   }
   /* // */
@@ -1135,34 +1135,39 @@ PetscErrorCode Elmt_Move_FSI_ROT(FSInfo *FSinfo, IBMNodes *ibm,
   PetscReal rot;
 
   /* // */
-    rot=FSinfo->S_ang_n[0];//-FSinfo->S_ang_o[0];
+  rot=FSinfo->S_ang_n[0];//-FSinfo->S_ang_o[0];
   /* // */
   PetscInt i;
   PetscInt n1e, n2e, n3e;
   PetscReal dx12, dy12, dz12, dx13, dy13, dz13, dr;
   PetscReal rx,ry,rz;
   /* // */
-  PetscReal wx = FSinfo->S_ang_n[1], wy = 0., wz = 0.;
+  PetscReal wx,wy,wz;  // used to set velocities of immersed boundary points.
   /* // */
-  PetscPrintf(PETSC_COMM_WORLD, "Body Rotate: %le Center %le %le %le\n",rot, x_c,y_c,z_c);
+  PetscPrintf(PETSC_COMM_WORLD, "Immesed Body Rotation: Axis- %-s, Angle: %le, Center %le %le %le\n",orient,rot, x_c,y_c,z_c);
     
 /* //Rotation of MHV around hinge */
-  PetscReal pi = 3.14159265359, angle = -rot, R[4][4], x[4], xn[4], u, v, w, a, b, c;
+  PetscReal pi = 3.14159265359, angle = 0.0, R[4][4], x[4], xn[4], u, v, w, a, b, c;
+  angle = (-rot*pi)/180.0; 
   PetscInt m,n;
 
+  // For more info check out: https://en.wikipedia.org/wiki/Rotation_matrix.
 
-
-  if (orient == 0) {
-    u = 1. ; v = 0.;
- 
-  } else if (orient == 45) {
-    u = cos(pi/4); v = cos(pi/4);
-
-  } else if (orient == 90) {
-    u = 0.; v = 1.;
-   
+  if (strcmp(orient,"xx00")==0) {  // axis of rotation parallel to x-axis.
+    u = 1. ; v = 0.; w = 0.;
+  } else if (strcmp(orient,"yy00")==0){  // axis of rotation parallel to y-axis.
+    u = 0.; v = 1.; w = 0.; 
+  } else if (strcmp(orient,"zz00")==0){  // axis of rotation parallel to z-axis.
+    u = 0.; v = 0.; w = 1.;
+  } else if (strcmp(orient,"xy45")==0){
+    u = cos(pi/4); v = cos(pi/4); w=0;  // axis of  rotation parallel to a line 45 degs between x and y axis.
+  } else if (strcmp(orient,"xz45")==0){
+    u = cos(pi/4); v =  0; w = cos(pi/4);
+  } else if (strcmp(orient,"yz45")==0){
+    u = 0; v = cos(pi/4); w = cos(pi/4);
   }
-  w = 0.; //Rotation vector
+  
+//  PetscPrintf(PETSC_COMM_WORLD, "Rotation - u,v,w: %le,%le,%le \n",u,v,w);
   a = x_c; b = y_c; c = z_c; //Rotation origin
   for (i=0; i<n_v; i++) { 
     x[0] = ibm->x_bp0[i]; x[1] = ibm->y_bp0[i]; x[2] = ibm->z_bp0[i]; x[3] = 1.;
@@ -1243,11 +1248,27 @@ PetscErrorCode Elmt_Move_FSI_ROT(FSInfo *FSinfo, IBMNodes *ibm,
 
   }
   /* // */
-  if (orient == 45) {
-    wy = wx*cos(pi/4);
+  if (strcmp(orient,"xx00")==0){
+  wx = FSinfo->S_ang_n[1], wy = 0., wz = 0.; 
+  } else if (strcmp(orient,"yy00")==0){
+    wy = FSinfo->S_ang_n[1];
+    wx = 0.;
+    wz = 0.;
+  } else if (strcmp(orient,"zz00")==0){
+    wz = FSinfo->S_ang_n[1];
+    wx = 0.;
+    wy = 0.;
+  }else if (strcmp(orient,"xy45")==0){
+    wy = FSinfo->S_ang_n[1]*cos(pi/4);
     wx = wy;
-  } else if (orient == 90) {
-    wy = wx;
+    wz = 0.;
+  }else if (strcmp(orient,"xz45")==0){
+    wx = FSinfo->S_ang_n[1]*cos(pi/4);
+    wz = wx;
+    wy = 0.;
+  }else if (strcmp(orient,"yz45")==0){
+    wy = FSinfo->S_ang_n[1]*cos(pi/4);
+    wz = wy;
     wx = 0.;
   }
   /* // */
@@ -2875,7 +2896,7 @@ PetscErrorCode rotate_ibm(IBMNodes *ibm, FSInfo *fsi)
     rr.y = ibm->y_bp0[i];
     rr.z = ibm->z_bp0[i];
 
-    rr   = rotate_xyz(rr, a_c, alfa_c);
+    rr   = rotate_y(rr, a_c, alfa_c);
 
     ibm->x_bp[i] = rr.x;
     ibm->y_bp[i] = rr.y;

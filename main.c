@@ -15,7 +15,7 @@ PetscReal FluxInSum, FluxOutSum;
 */
 PetscInt immersed = 0; 
 PetscInt invicid = 0, channelz = 0;
-PetscInt movefsi = 0, rotatefsi=0, sediment=0;
+PetscInt movefsi = 0, rotatefsi=0, sediment=0,moveibm=0;
 PetscBool rstart_flg;
 PetscInt implicit = 0,implicit_type=0;
 PetscInt imp_MAX_IT = 50; 
@@ -77,7 +77,7 @@ PetscInt STEPS=0;// for reading from file
 PetscInt LVV=0;
 ///////////////////////////////////////
 /* // */
-PetscInt orient = 0;
+char orient[] = "xx00";
 /* // */
 
 //IBMNodes	*ibm_ptr;
@@ -620,6 +620,7 @@ int main(int argc, char **argv) {
   PetscOptionsGetInt(PETSC_NULL, "-imp_MAX_IT", &imp_MAX_IT, PETSC_NULL);
   PetscOptionsGetInt(PETSC_NULL, "-fsi", &movefsi, PETSC_NULL);
   PetscOptionsGetInt(PETSC_NULL, "-rfsi", &rotatefsi, PETSC_NULL);
+  PetscOptionsGetInt(PETSC_NULL,"-move_ibm",&moveibm,PETSC_NULL);
   PetscOptionsGetInt(PETSC_NULL, "-radi", &radi, PETSC_NULL);
   PetscOptionsGetInt(PETSC_NULL, "-inlet", &inletprofile, PETSC_NULL);
   PetscOptionsGetInt(PETSC_NULL, "-str", &STRONG_COUPLING, PETSC_NULL);
@@ -654,9 +655,9 @@ int main(int argc, char **argv) {
   PetscOptionsGetInt(PETSC_NULL, "-blk", &blank, PETSC_NULL);
   PetscOptionsGetInt(PETSC_NULL, "-init1", &InitialGuessOne, PETSC_NULL);
 
-  PetscOptionsGetReal(PETSC_NULL, "-x_c", &(CMx_c), PETSC_NULL);
-  PetscOptionsGetReal(PETSC_NULL, "-y_c", &(CMy_c), PETSC_NULL);
-  PetscOptionsGetReal(PETSC_NULL, "-z_c", &(CMz_c), PETSC_NULL);
+  PetscOptionsGetReal(PETSC_NULL, "-CMx_c", &(CMx_c), PETSC_NULL);
+  PetscOptionsGetReal(PETSC_NULL, "-CMy_c", &(CMy_c), PETSC_NULL);
+  PetscOptionsGetReal(PETSC_NULL, "-CMz_c", &(CMz_c), PETSC_NULL);
 
   PetscOptionsGetReal(PETSC_NULL, "-imp_atol", &(imp_atol), PETSC_NULL);
   PetscOptionsGetReal(PETSC_NULL, "-imp_rtol", &(imp_rtol), PETSC_NULL);
@@ -690,7 +691,7 @@ int main(int argc, char **argv) {
   PetscOptionsGetReal(PETSC_NULL, "-St_exp", &(St_exp), PETSC_NULL);
   PetscOptionsGetReal(PETSC_NULL, "-wlngth", &(wavelength), PETSC_NULL);
 
-  PetscOptionsGetInt(PETSC_NULL, "-orient", &orient, PETSC_NULL);
+  PetscOptionsGetString(PETSC_NULL, "-orient", orient,sizeof(orient),PETSC_NULL);
     
   PetscReal compute_time,time_start,time_end;
   PetscPrintf(PETSC_COMM_WORLD, "Data is output for ever  %d timesteps; Implicit Solver Tolerances: Absolute-%le; Relative- %le\n",tiout, imp_atol,imp_rtol);
@@ -728,32 +729,47 @@ int main(int argc, char **argv) {
     if(LVAD){
 	ibi=0;  // set the number of blocks to be 1 i.e the first block has index 0;
         ibm_read_Icem(&ibm[ibi],ibi);  // This function reads the grid either from grid.dat or from the cartesian grid setup in the control file.
-	PetscPrintf(PETSC_COMM_WORLD,"IBM Read LVAD!\n");
+        FsiInitialize(0, &fsi[ibi], ibi); 
+// 	PetscPrintf(PETSC_COMM_WORLD,"IBM Read LVAD begins!\n");
+        if(rotatefsi) 	Elmt_Move_FSI_ROT(&fsi[ibi], &ibm[ibi],user[bi].dt,ibi); 
         ibm_surface_VTKOut(&ibm[ibi],ibi,0); // This function generates the VTK file that can be used to visualize the immersed boundary surface on ParaView.	
-        FsiInitialize(0, &fsi[ibi], ibi);  // This function initializes FSI.
+//      PetscPrintf(PETSC_COMM_WORLD,"IBM Read LVAD Done!\n");
+//       	PetscPrintf(PETSC_COMM_WORLD,"FSI Initial begins!\n");
+ // This function initializes FSI.
+//        PetscPrintf(PETSC_COMM_WORLD,"FSI Initial Ends!\n");
+//        if(rotatefsi){
+//        PetscPrintf(PETSC_COMM_WORLD,"Rotate IBM  begins!\n");
+//        rotate_ibm(&ibm[ibi],&fsi[ibi]);
+//        PetscPrintf(PETSC_COMM_WORLD,"Rotate IBM  ends!\n");
+//	PetscPrintf(PETSC_COMM_WORLD,"Calculating Normals begins!\n");
+//        calc_ibm_normal(&ibm[ibi]);       	
+//	PetscPrintf(PETSC_COMM_WORLD,"Calculating Normals ends!\n");
+//      PetscPrintf(PETSC_COMM_WORLD,"Surface File generation begins!\n");
+//	Elmt_Move_FSI_ROT(&fsi[ibi], &ibm[ibi],user[bi].dt,ibi);
+//        ibm_surface_VTKOut(&ibm[i],i,0);
+   //     PetscPrintf(PETSC_COMM_WORLD,"Surface File generation ends!\n");
+   //     }      
     }
     else {
       for (i=0;i<NumberOfBodies;i++) {
 	
-	PetscPrintf(PETSC_COMM_WORLD, "Ibm read General!\n");
-
-	if (NumberOfBodies>10 && i>0)
-	  ibm_read_ucd(&ibm[i], 0);
-	
-	else{
-	  L_dim=1.;
-//	  CMz_c=0.0;CMy_c=0.0;CMx_c=0.0;
-	  ibm_read_Icem(&ibm[i],i);	 
-	  ibm_surface_VTKOut(&ibm[i],i,0);
-	}	// init for fsi
+	PetscPrintf(PETSC_COMM_WORLD, "Ibm read General!\n");	
+	L_dim=1.;
+	ibm_read_Icem(&ibm[i],i);	 
+	// init for fsi
 	FsiInitialize(0, &fsi[i], i);
-	
-	if (NumberOfBodies>10 && i>0) {
+// 	if(rotatefsi){
+     //   rotate_ibm(&ibm[ibi],&fsi[ibi]);
+//	calc_ibm_normal(&ibm[ibi]);       	
+//        ibm_surface_VTKOut(&ibm[i],i,0);
+//        }
+
+        if (NumberOfBodies>10 && i>0) {
 	  PetscInt Nibm_y=13, Nibm_z=14;
 	  PetscReal dYibm=1.5, dZibm=-1.5;
 	  ibm_placement(&ibm[i], &fsi[i], Nibm_y, Nibm_z, dYibm, dZibm, i);
 	} else
-	  fsi[i].z_c +=i*2.;
+//	  fsi[i].z_c +=i*2.;
 	PetscBarrier(PETSC_NULL);
       }
      }  

@@ -78,27 +78,30 @@ PetscErrorCode ibm_surface_VTKOut(IBMNodes *ibm, PetscInt ibi, PetscInt ti)
     PetscFPrintf(PETSC_COMM_WORLD, f, "Surface Grid\n");
     PetscFPrintf(PETSC_COMM_WORLD, f, "ASCII\n");
     PetscFPrintf(PETSC_COMM_WORLD, f, "DATASET UNSTRUCTURED_GRID\n");
-   
+//    PetscPrintf(PETSC_COMM_WORLD,"Surface file headers done!\n"); 
     PetscPrintf(PETSC_COMM_WORLD,"Number of nodes is %d \n",ibm->n_v);
     PetscFPrintf(PETSC_COMM_WORLD, f, "POINTS  %d float\n",ibm->n_v);
     for (i=0; i<ibm->n_v; i++) {
       PetscFPrintf(PETSC_COMM_WORLD, f, "%f %f %f\n", ibm->x_bp[i],ibm->y_bp[i],ibm->z_bp[i]);
     }
-
+//    PetscPrintf(PETSC_COMM_WORLD,"Surface File no.of nodes and co-ordinates printed!\n");
     PetscFPrintf(PETSC_COMM_WORLD, f, "CELLS %d %d\n",ibm->n_elmt, (n_cells+1)*ibm->n_elmt);
     for (i=0; i<ibm->n_elmt; i++) {
       PetscFPrintf(PETSC_COMM_WORLD,f, "%d  %d %d %d\n",n_cells, ibm->nv1[i], ibm->nv2[i], ibm->nv3[i]);
     }
+//    PetscPrintf(PETSC_COMM_WORLD,"Surface File no.of elements and nodes printed!\n");
     PetscFPrintf(PETSC_COMM_WORLD, f, "CELL_TYPES %d\n",ibm->n_elmt);
     for (i=0; i<ibm->n_elmt; i++) {
       PetscFPrintf(PETSC_COMM_WORLD,f, "%d\n",5);
     }
-
+//    PetscPrintf(PETSC_COMM_WORLD,"Surface File no.of nodes and co-ordinates printed!\n");
     PetscFPrintf(PETSC_COMM_WORLD, f, "POINT_DATA %d\n", ibm->n_v);
     PetscFPrintf(PETSC_COMM_WORLD, f, "VECTORS u float\n");
     for (i=0; i<ibm->n_v; i++) {
       PetscFPrintf(PETSC_COMM_WORLD, f, "%f %f %f\n", ibm->u[i].x,ibm->u[i].y,ibm->u[i].z);
     }
+//    PetscPrintf(PETSC_COMM_WORLD,"Surface File point data printed!\n");
+
     PetscFPrintf(PETSC_COMM_WORLD, f, "CELL_DATA %d\n", ibm->n_elmt);
     PetscFPrintf(PETSC_COMM_WORLD, f,  "VECTORS nf float\n");
     for (i=0; i<ibm->n_elmt; i++) {
@@ -110,6 +113,7 @@ PetscErrorCode ibm_surface_VTKOut(IBMNodes *ibm, PetscInt ibi, PetscInt ti)
 /*     } */
     PetscFPrintf(PETSC_COMM_WORLD, f, "SCALARS p double\n");    
     PetscFPrintf(PETSC_COMM_WORLD, f, "LOOKUP_TABLE default\n");
+//    PetscPrintf(PETSC_COMM_WORLD,"Surface File cell data printed!\n");
     for (i=0; i<ibm->n_elmt; i++) {
       PetscFPrintf(PETSC_COMM_WORLD, f, "%f\n", ibm->nt_y[i]);
     }
@@ -3477,7 +3481,7 @@ PetscErrorCode ibm_read_Icem(IBMNodes *ibm, PetscInt ibi)
 
     fd = fopen(filen, "r"); if (!fd) SETERRQ(PETSC_COMM_WORLD,1, "Cannot open IBM node file");
  
-    PetscPrintf(PETSC_COMM_WORLD, "Geometric Center of Immersed Boundary:  x_c = %le,y_c = %le,z_c = %le \n",CMx_c,CMy_c,CMz_c);
+    PetscPrintf(PETSC_COMM_WORLD, "Geometric Center of Immersed Boundary:  CMx_c = %le,CMy_c = %le,CMz_c = %le \n",CMx_c,CMy_c,CMz_c);
     
     if (fd) {
       

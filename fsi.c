@@ -17,14 +17,15 @@ PetscErrorCode FsiInitialize(PetscInt n_elmt, FSInfo *fsi,PetscInt ibi)
 {
   /*  Note: This routine shouldn't be called before ibm_read */
   PetscInt  i,j;
-
+  PetscReal rotation_angle;
+  PetscOptionsGetReal(PETSC_NULL, "-rot", &(rotation_angle), PETSC_NULL);
   for (i=0;i<6;i++) {
     fsi->S_old[i]=0.;
     fsi->S_new[i]=0.;
     fsi->S_realm1[i]=0.;
     fsi->S_real[i]=0.;
 
-    fsi->S_ang_n[i]=0.;
+    fsi->S_ang_n[i]=rotation_angle;
     fsi->S_ang_o[i]=0.;
     fsi->S_ang_r[i]=0.;
     fsi->S_ang_rm1[i]=0.;

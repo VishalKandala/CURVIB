@@ -1,7 +1,7 @@
 #include "variables.h"
 #include "petsctime.h"
 extern PetscInt   block_number, ti, tiout, NumberOfBodies;
-extern PetscInt   movefsi, rotatefsi, immersed, STRONG_COUPLING;
+extern PetscInt   movefsi, rotatefsi, moveibm,immersed, STRONG_COUPLING;
 extern PetscInt   implicit, TwoD, fish_c, sediment, wing,rheology,duplicate,turbine;
 extern PetscInt   cop, regime, fish, fishcyl, MHV, LV, moveframe,rotateframe;
 extern PetscReal  max_angle, Flux_in, St_exp, FluxInSum;
@@ -187,7 +187,7 @@ PetscErrorCode Struc_Solver(UserMG *usermg,IBMNodes *ibm,
     PetscPrintf(PETSC_COMM_WORLD, "MV_FRAME!!!! %le %le %le\n",fsi[0].S_new[3],fsi[0].S_new[5],St_exp);
   }
   
-  if (rotatefsi && rotateframe==0) {
+  if (rotatefsi && rotateframe==0 && moveibm) {
     for (level = usermg->mglevels-1; level>=usermg->mglevels-1; level--) {
       user = usermg->mgctx[level].user;
       for (bi=0; bi<block_number; bi++) {
