@@ -1,11 +1,11 @@
 #include "variables.h"
-extern PetscInt block_number, inletprofile, blank, MHV;
+extern PetscInt block_number, inletprofile, blank, MHV,rotate_grid;
 extern PetscReal L_dim;
 extern PetscInt  moveframe,rotateframe;
 extern PetscInt  les, poisson;
 extern int averaging;
 extern int cpu_size;
-
+extern char gridrotorient[];
 #include <petsctime.h>
 
 PetscErrorCode InflowWaveFormRead(UserCtx *user);
@@ -797,7 +797,81 @@ PetscErrorCode MG_Initial(UserMG *usermg, IBMNodes *ibm)
 	}
       } // grid-1d
     }
-    if(generate_grid) PetscPrintf(PETSC_COMM_WORLD,"A grid with dimensions L_x=%le,L_y=%le,L_z=%le scaled by L_dim=%le and non-dimensionalized with cl=%le has been generated for finest level.\n ",L_x,L_y,L_z,L_dim,cl);
+    if(generate_grid) {
+      PetscPrintf(PETSC_COMM_WORLD,"A grid with dimensions L_x=%le,L_y=%le,L_z=%le scaled by L_dim=%le and non-dimensionalized with cl=%le has been generated for finest level.\n ",L_x,L_y,L_z,L_dim,cl);
+    } else{ 
+      PetscPrintf(PETSC_COMM_WORLD,"Grid read from grid.dat file");
+    }
+    
+    if(rotate_grid){
+    PetscReal pi = 3.14159265359,R[4][4],x[4],xn[4],u,v,w,grid_angle = 0.0,a,b,c;
+    PetscOptionsGetReal(PETSC_NULL, "-grid_rotation_angle", &grid_angle, PETSC_NULL);
+    PetscOptionsGetReal(PETSC_NULL, "-gy_c", &b, PETSC_NULL);
+    PetscOptionsGetReal(PETSC_NULL, "-gx_c", &a, PETSC_NULL);
+    PetscOptionsGetReal(PETSC_NULL, "-gz_c", &c, PETSC_NULL);   
+    PetscPrintf(PETSC_COMM_WORLD,"Grid Rotation: Axis - %-s,Angle - %le,Center - %le,%le,%le \n",gridrotorient,grid_angle,a,b,c);
+    grid_angle = (-grid_angle*pi)/180.0;
+    PetscInt m,n;
+    //For more info check out: https://en.wikipedia.org/wiki/Rotation_matrix.
+    if (strcmp(gridrotorient,"xx00")==0) {  // axis of rotation parallel to x-axis.
+      u = 1. ; v = 0.; w = 0.;
+    } else if (strcmp(gridrotorient,"yy00")==0){  // axis of rotation parallel to y-axis.
+      u = 0.; v = 1.; w = 0.; 
+    } else if (strcmp(gridrotorient,"zz00")==0){  // axis of rotation parallel to z-axis.
+      u = 0.; v = 0.; w = 1.;
+    } else if (strcmp(gridrotorient,"xy45")==0){
+      u = cos(pi/4); v = cos(pi/4); w=0;  // axis of  rotation parallel to a line 45 degs between x and y axis.
+    } else if (strcmp(gridrotorient,"xz45")==0){
+      u = cos(pi/4); v =  0; w = cos(pi/4);
+    } else if (strcmp(gridrotorient,"yz45")==0){
+      u = 0; v = cos(pi/4); w = cos(pi/4);
+    }
+    
+     //    PetscPrintf(PETSC_COMM_WORLD,"Grid Rotation: u,v,w - %le,%le,%le \n",u,v,w);
+    for(k=zs;k<ze;k++){
+       for(j=ys;j<ye;j++){
+          for(i=xs;i<xe;i++){
+                x[0] = coor[k][j][i].x, x[1] = coor[k][j][i].y, x[2] = coor[k][j][i].z, x[3] = 1.;
+//                if(k==floor((ze-zs)/2) && j==floor((ye-ys)/2) && i == floor((xe-xs)/2)){
+//                PetscPrintf(PETSC_COMM_SELF,"coor-x,y,z : %le,%le,%le \n",coor[k][j][i].x,coor[k][j][i].y,coor[k][j][i].z);
+//                }
+                R[0][0] = u*u + (v*v + w*w)*cos(grid_angle);
+                R[0][1] = u*v*(1 - cos(grid_angle)) - w*sin(grid_angle);
+                R[0][2] = u*w*(1 - cos(grid_angle)) + v*sin(grid_angle);
+                R[0][3] = (a*(v*v + w*w) - u*(b*v + c*w))*(1 - cos(grid_angle)) + (b*w -c*v)*sin(grid_angle);
+    
+                R[1][0] = u*v*(1 - cos(grid_angle)) + w*sin(grid_angle);
+                R[1][1] = v*v + (u*u + w*w)*cos(grid_angle);
+                R[1][2] = v*w*(1 - cos(grid_angle)) - u*sin(grid_angle);
+                R[1][3] = (b*(u*u + w*w) - v*(a*u + c*w))*(1 - cos(grid_angle)) + (c*u - a*w)*sin(grid_angle);
+    
+                R[2][0] = u*w*(a - cos(grid_angle)) - v*sin(grid_angle);
+                R[2][1] = v*w*(1 - cos(grid_angle)) + u*sin(grid_angle);
+                R[2][2] = w*w + (u*u + v*v)*cos(grid_angle);
+                R[2][3] = (c*(u*u + v*v) - w*(a*u + b*v))*(1 - cos(grid_angle)) + (a*v - b*u)*sin(grid_angle);
+    
+                R[3][0] = 0.;
+                R[3][1] = 0.;
+                R[3][2] = 0.;
+                R[3][3] = 1.;
+    
+                for (m=0; m<4; m++) {
+                 xn[m] = 0.;
+                 for (n=0; n<4; n++) {
+	          xn[m] += R[m][n]*x[n];
+                  }
+                }
+                
+                coor[k][j][i].x = xn[0];
+                coor[k][j][i].y = xn[1];
+                coor[k][j][i].z = xn[2];
+//                if(k==floor((ze-zs)/2) && j==floor((ye-ys)/2) && i == floor((xe-xs)/2)){
+//                PetscPrintf(PETSC_COMM_SELF,"After rotation coor-x,y,z : %le,%le,%le \n",coor[k][j][i].x,coor[k][j][i].y,coor[k][j][i].z);
+//                }
+       }
+      }     
+     }
+    } // rotate_grid 
     PetscFree(gc);
     DMDAVecRestoreArray(user[bi].fda, Coor, &coor);
     

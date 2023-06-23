@@ -500,7 +500,7 @@ PetscErrorCode OutflowFlux(UserCtx *user) {
 	    for (i=lxs; i<lxe; i++) {
 	      if(nvert[k][j][i]<0.1){
                 FluxOut += ucont[k][j][i].y;
-                PetscPrintf(PETSC_COMM_SELF,"ucont.x,y,z=%le,%le,%le \n",ucont[k][j][i].x,ucont[k][j][i].y,ucont[k][j][i].z);
+               // PetscPrintf(PETSC_COMM_SELF,"ucont.x,y,z=%le,%le,%le \n",ucont[k][j][i].x,ucont[k][j][i].y,ucont[k][j][i].z);
                 lArea += sqrt( (eta[k][j][i].x) * (eta[k][j][i].x) +
 			     (eta[k][j][i].y) * (eta[k][j][i].y) +
 			     (eta[k][j][i].z) * (eta[k][j][i].z));

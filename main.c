@@ -15,7 +15,7 @@ PetscReal FluxInSum, FluxOutSum;
 */
 PetscInt immersed = 0; 
 PetscInt invicid = 0, channelz = 0;
-PetscInt movefsi = 0, rotatefsi=0, sediment=0,moveibm=0;
+PetscInt movefsi = 0, rotatefsi=0, sediment=0,moveibm=0,rotate_grid=0;
 PetscBool rstart_flg;
 PetscInt implicit = 0,implicit_type=0;
 PetscInt imp_MAX_IT = 50; 
@@ -78,6 +78,7 @@ PetscInt LVV=0;
 ///////////////////////////////////////
 /* // */
 char orient[] = "xx00";
+char gridrotorient[] = "xx00";
 /* // */
 
 //IBMNodes	*ibm_ptr;
@@ -625,6 +626,7 @@ int main(int argc, char **argv) {
   PetscOptionsGetInt(PETSC_NULL, "-inlet", &inletprofile, PETSC_NULL);
   PetscOptionsGetInt(PETSC_NULL, "-str", &STRONG_COUPLING, PETSC_NULL);
   PetscOptionsGetInt(PETSC_NULL, "-rs_fsi", &rstart_fsi, PETSC_NULL);
+  PetscOptionsGetInt(PETSC_NULL, "-r_grid", &rotate_grid, PETSC_NULL);
   PetscOptionsGetInt(PETSC_NULL, "-cop", &cop, PETSC_NULL);
   PetscOptionsGetInt(PETSC_NULL, "-fish", &fish, PETSC_NULL);
   PetscOptionsGetInt(PETSC_NULL, "-aneurysm", &aneurysm, PETSC_NULL);
@@ -692,7 +694,8 @@ int main(int argc, char **argv) {
   PetscOptionsGetReal(PETSC_NULL, "-wlngth", &(wavelength), PETSC_NULL);
 
   PetscOptionsGetString(PETSC_NULL, "-orient", orient,sizeof(orient),PETSC_NULL);
-    
+  PetscOptionsGetString(PETSC_NULL, "-g_orient", gridrotorient,sizeof(orient),PETSC_NULL);   
+  
   PetscReal compute_time,time_start,time_end;
   PetscPrintf(PETSC_COMM_WORLD, "Data is output for ever  %d timesteps; Implicit Solver Tolerances: Absolute-%le; Relative- %le\n",tiout, imp_atol,imp_rtol);
   PetscTime(&time_start);
