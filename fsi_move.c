@@ -1249,7 +1249,7 @@ PetscErrorCode Elmt_Move_FSI_ROT(FSInfo *FSinfo, IBMNodes *ibm,
   }
   /* // */
   if (strcmp(orient,"xx00")==0){
-  wx = FSinfo->S_ang_n[1], wy = 0., wz = 0.; 
+    wx = FSinfo->S_ang_n[1], wy = 0., wz = 0.; 
   } else if (strcmp(orient,"yy00")==0){
     wy = FSinfo->S_ang_n[1];
     wx = 0.;

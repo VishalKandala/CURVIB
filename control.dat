@@ -1,0 +1,135 @@
+### Special cases for specific problems ### 
+## SOME MAY NOT BE WORKING !!!! ###
+-les 0                                          # LES for turbulent flow 
+-wallfunction 0                                 # Wall modelling model for turbulent flow
+-lvad 0                                         # LVAD problem 
+-inv_flg 0                                      # Inverted Flag problem
+-bhv 0                                          # Biomechanical Heart Valve problem 
+-twoD 0                                         # 2D Simulation.
+
+## Solver Parameters ###
+
+-dt 0.0005 #//0.0005                            # timestep size
+-totalsteps 0                                   # Total Number of steps.
+-d_taw 0.01                                     # ?
+#-rstart 590                                    # Timestep to restart solver from (comment out if not restarting).  
+#-rstart_fem 0                                  # Timestep to restart fem solver from (comment out if not restarting). 
+-imm 1                                          # Whether or  not immersed boundaries must be considered.(1 or 0)
+-thin 0                                         # Whether the immersed boundary is thin(1 or 0)
+-tio 1                                          # Number of timesteps after which new output data is recorded.
+-ren 778                                        # Reynolds number associated with flow (since timestep size and grid are decided seperately, this is a measure of viscosity of flowing fluid."
+-init1 1                                        # Initial Conditions are determined(check SetInitialGuessToOne() in bcs.c)
+-mframe 0                                       # ?
+-mg_k_semi 0                                    # multigrid method semi coarsening along z axis.
+-mg_j_semi 0                                    # "    "     "     "        "   "   "  " y " " .
+-mg_i_semi 0                                    # "    "     "     "        "   "   "  " x " " .
+-body 1                                         # ?
+
+## Boundary Parameters ###
+
+#-period 3000                                   # Period for pressure wave inlet boundary conditions.
+-inlet 1                                        # Inlet velocity is determined(check InflowFlux() in bcs.c)
+
+
+### Implicit(Pseudo Time) solver parameters ###
+
+-cfl 0.3                                        # pseudo time cfl
+-vnn 0.03                                       # pseudo time von-neumann number
+-imp 1                                          # Type of implicit solver 
+-imp_type 3                                     # ?
+-imp_MAX_IT 20                                  # Maximum number of iterations for pseudo time solver.
+-imp_atol  1.e-8                                # absolute tolerance for implicit pseudo time solver.
+-imp_rtol  1.e-2                                # relative tolerance ""  ""       ""     ""   ""
+-imp_stol  1.e-8                                # tolerance for what? 
+
+## Grid Parameters ###
+
+-L_x 3.75                                       # x dimension of fluid domain
+-L_y 1.0                                        # y ""        "" """"  """""
+-L_z 3.75                                       # z ""        "" """"  """""
+-grid 1                                         # Grid is read from grid.dat(0) or created using following parameters(1).
+-im 101                                         # Number of grid points along x axis.
+-jm 101                                         # Number of grid points along y axis. 
+-km 101                                         # Number of grid points along z axis.
+
+## Immersed Boundary parameters ###
+
+-cl 1.                                          # Charactertistic Length(?)
+-char_length_ibm 2                              # Characteristic Length of IBM (which divides every co-ordinate value of immersed boundary).
+-CMx_c 0.5                                      # Center of Mass of Immersed boundary (x-coordinate) 
+-CMy_c 0.25                                     # Center of Mass of Immersed boundary (y-coordinate)
+-CMz_c 0.5                                      # Center of Mass of Immersed boundary (z-coordinate)
+-move_ibm 0                                     # move the body during simulation.(rotation and/or translation).
+-fsi 0                                          # move the immersed boundary.
+-rfsi 1                                         # rotate the immersed boundary. 
+-x_c     0.5                                    # Center of rotation of Immersed boundary (x-coordinate)
+-y_c     0.25                                   # Center of rotation of Immersed boundary (y-coordinate)
+-z_c     0.50                                   # Center of rotation of Immersed boundary (z-coordinate)
+-rot     90.0                                    # Angle or clockwise rotation(Degrees) 
+-orient  "zz00"                                    # Orientation of axis of rotation (xx00,yy00,zz00,xy45,xz45,yz45). --- First and Second Letters determine plane,numbers determine angle in plane.
+-str 0                                          # ?
+-St_exp 0.017                                   # ?
+-wlngth 0.5                                     # ?
+-reg 0                                          # ?
+#-red_vel 0.                                    # ?
+#-damp    0.0                                   # ?
+#-mu_s    1200                                  # ? 
+#-radi 40                                       # ?
+
+## SNES (Non-linear) solver parameters ###  ???
+
+-snes_max_it 20                                 # SNES Solver Maximum number of iterations. 
+#-snes_rtol 1.e-9                               # Relative tolerance for SNES Solver,
+#-snes_atol 1.e-9                               # Absolute tolerance for SNES Solver.
+-snes_monitor                                   # Whether or not to monitor the SNES Solver. (Comment out if not necessary)
+-pc_type jacobi                                 # Preconditioner Type for SNES Solver Co-efficient Matrix
+#-snes_mf                                       # ?
+
+## KSP Solver parameters ### ?
+
+-ksp_type fgmres                                # KSP Solver type (Seach KSP Solvers for more details).
+#-ksp_max_it 10                                 # KSP Solver Maximum number of iterations.
+#-ksp_rtol 1.e-6                                # KSP Solver Relative Tolerance.
+
+## Poisson solver parameters ### 
+
+-ps_ksp_type fgmres                             # Poisson KSP Solver type(Search KSP Solvers for more details).
+#-ps_ksp_gmres_restart 20                       # Iteration number at which KSP Solver will be restarted (?)
+#-ps_pc_type jacobi                             # Preconditioner Type for Poisson KSP Solver Co-efficient Matrix 
+-ps_ksp_atol 1.e-5                              # Poisson KSP Solver Absolute Tolerance.
+-ps_ksp_rtol 1.e-11                             # Poisson KSP Solver Relative Tolerance. 
+-ps_ksp_max_it 40                               # Poisson KSP Solver Maximum Number of Iterations.
+-ps_ksp_monitor_true_residual                   # Poisson KSP Solver Display Residual value.
+#-ps_ts_monitor                                 # Poisson Solver Timestepping Monitoring (Comment out if not necessary).
+#-ps_ksp_converged_reason                       # ?
+#-ps_ksp_monitor_singular_value                 # ?
+#-ps_ksp_log                                    # ?
+#-ps_ksp_view                                   # ?
+#-ps_pc_type svd                                # ?
+#-ps_pc_svd_monitor                             # ?
+-ps_mg_levels_1_ksp_type richardson             # Multigrid Level 1 KSP Solver Preconditioner 
+-ps_mg_levels_2_ksp_type richardson             # Multigrid Level 2 KSP Solver Preconditioner
+-ps_mg_levels_3_ksp_type fgmres                 # Multigrid Level 3 KSP Solver Preconditioner (Coarsest)
+
+## FEM parameters ###
+
+-E 1.88e3                                       # ?
+-mu 0.                                          # ?
+-rho 1694.9                                     # ?
+-h0 1.5e-2                                      # ?
+-nbody 1                                        # ?
+-explicit 0                                     # ?
+-damping 0                                      # ?
+-dampfactor 1.05e-2                             # ?
+-fem_scale 1.0                                  # ?
+-twod 0                                         # ?
+-membrane 1                                     # ?
+-bending 1                                      # ?
+-ConstitutiveLawNonLinear 0                     # ?
+-outghost 0                                     # ?
+-contact 0                                      # ?
+-fem_snes_mf                                    # ?
+#-fem_snes_type aspin                           # ?
+-fem_snes_max_it 20                             # ?
+#-fem_snes_atol 1.e-9                           # ?
+-fem_snes_monitor                               # ?

@@ -726,53 +726,12 @@ int main(int argc, char **argv) {
     }
   
 //------------------ READ IBM DATA -------------------------------------------------
-    if(LVAD){
-	ibi=0;  // set the number of blocks to be 1 i.e the first block has index 0;
-        ibm_read_Icem(&ibm[ibi],ibi);  // This function reads the grid either from grid.dat or from the cartesian grid setup in the control file.
-        FsiInitialize(0, &fsi[ibi], ibi); 
-// 	PetscPrintf(PETSC_COMM_WORLD,"IBM Read LVAD begins!\n");
-        if(rotatefsi) 	Elmt_Move_FSI_ROT(&fsi[ibi], &ibm[ibi],user[bi].dt,ibi); 
-        ibm_surface_VTKOut(&ibm[ibi],ibi,0); // This function generates the VTK file that can be used to visualize the immersed boundary surface on ParaView.	
-//      PetscPrintf(PETSC_COMM_WORLD,"IBM Read LVAD Done!\n");
-//       	PetscPrintf(PETSC_COMM_WORLD,"FSI Initial begins!\n");
- // This function initializes FSI.
-//        PetscPrintf(PETSC_COMM_WORLD,"FSI Initial Ends!\n");
-//        if(rotatefsi){
-//        PetscPrintf(PETSC_COMM_WORLD,"Rotate IBM  begins!\n");
-//        rotate_ibm(&ibm[ibi],&fsi[ibi]);
-//        PetscPrintf(PETSC_COMM_WORLD,"Rotate IBM  ends!\n");
-//	PetscPrintf(PETSC_COMM_WORLD,"Calculating Normals begins!\n");
-//        calc_ibm_normal(&ibm[ibi]);       	
-//	PetscPrintf(PETSC_COMM_WORLD,"Calculating Normals ends!\n");
-//      PetscPrintf(PETSC_COMM_WORLD,"Surface File generation begins!\n");
-//	Elmt_Move_FSI_ROT(&fsi[ibi], &ibm[ibi],user[bi].dt,ibi);
-//        ibm_surface_VTKOut(&ibm[i],i,0);
-   //     PetscPrintf(PETSC_COMM_WORLD,"Surface File generation ends!\n");
-   //     }      
-    }
-    else {
-      for (i=0;i<NumberOfBodies;i++) {
-	
-	PetscPrintf(PETSC_COMM_WORLD, "Ibm read General!\n");	
-	L_dim=1.;
-	ibm_read_Icem(&ibm[i],i);	 
-	// init for fsi
-	FsiInitialize(0, &fsi[i], i);
-// 	if(rotatefsi){
-     //   rotate_ibm(&ibm[ibi],&fsi[ibi]);
-//	calc_ibm_normal(&ibm[ibi]);       	
-//        ibm_surface_VTKOut(&ibm[i],i,0);
-//        }
-
-        if (NumberOfBodies>10 && i>0) {
-	  PetscInt Nibm_y=13, Nibm_z=14;
-	  PetscReal dYibm=1.5, dZibm=-1.5;
-	  ibm_placement(&ibm[i], &fsi[i], Nibm_y, Nibm_z, dYibm, dZibm, i);
-	} else
-//	  fsi[i].z_c +=i*2.;
-	PetscBarrier(PETSC_NULL);
-      }
-     }  
+    ibi = 0;
+    ibm_read_Icem(&ibm[ibi],ibi);  // This function reads the grid either from grid.dat or from the cartesian grid setup in the control file. 
+    if(rotatefsi)  Elmt_Move_FSI_ROT(&fsi[ibi], &ibm[ibi],user[bi].dt,ibi); // Rotate the immersed boundary if rotation is turned  on.
+    ibm_surface_VTKOut(&ibm[ibi],ibi,0); // This function generates the VTK file that can be used to visualize the immersed boundary surface on ParaVi
+    PetscBarrier(PETSC_NULL);   
+//----------------------------------------------------------------------------------
     ti = 0;
     if (rstart_flg) ti = tistart;
     } // if immersed
