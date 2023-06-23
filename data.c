@@ -25,7 +25,7 @@ PetscReal  St_exp=0.35,wavelength=0.65;
 PetscInt   tiout = 10;
 PetscInt   STRONG_COUPLING=0, wallfunction=0;
 PetscInt   fish=0, eel=0,rheology=0,pizza=0,sediment=0;
-PetscInt   radi=10,tistart,Ddata=0,qv=0,unorm=0,vx=0,nudata=1,averaging,max_angle, orient=0;
+PetscInt   radi=10,tistart,Ddata=0,qv=0,unorm=0,vx=0,nudata=1,averaging,max_angle;
 /* typedef struct { */
 /*   PetscReal t, f; */
 /* } FlowWave; */

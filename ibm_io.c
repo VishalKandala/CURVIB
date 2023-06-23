@@ -1,6 +1,7 @@
 #include "variables.h"
 extern PetscReal CMx_c,CMy_c,CMz_c, L_dim;
-extern PetscInt  cop, wing,NumberOfBodies,rheology,orient;
+extern PetscInt  cop, wing,NumberOfBodies,rheology;
+extern char orient[];
 PetscReal l_x,l_y,l_z;
 
 PetscErrorCode ibm_surface_out(IBMNodes *ibm, PetscInt ti,
@@ -1599,7 +1600,7 @@ PetscErrorCode ibm_read_ucd(IBMNodes *ibm, PetscInt ibi)
       PetscMalloc(n_v*sizeof(Cmpnts), &(ibm->uold));
       PetscMalloc(n_v*sizeof(Cmpnts), &(ibm->urm1));
       /* // */
-      PetscPrintf(PETSC_COMM_WORLD, "Orienttation %d !\n",orient);
+      PetscPrintf(PETSC_COMM_WORLD, "Orienttation %-s !\n",orient);
       /* // */
       for (i=0; i<n_v; i++) {
 	fscanf(fd, "%i %le %le %le", &ii, &x_bp[i], &y_bp[i], &z_bp[i]);//, &t, &t, &t);
@@ -1610,11 +1611,11 @@ PetscErrorCode ibm_read_ucd(IBMNodes *ibm, PetscInt ibi)
 
 	xd[0] = 0.02;  xd[1] = -0.05;  xd[2] = -0.12; //Translation
 	
-	if (orient == 0) {
+	if (strcmp(orient,"xx00") == 0) {
 	  angle =0.;
-	} else if (orient == 45) {
+	} else if (strcmp(orient,"xy45") == 0) {
 	  angle = pi/4.;
-	} else if (orient == 90) {
+	} else if (strcmp(orient,"yy00") == 0) {
 	  angle = pi/2.;
 	}
 

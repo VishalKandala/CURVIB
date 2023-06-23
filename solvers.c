@@ -7,7 +7,7 @@ extern PetscInt   cop, regime, fish, fishcyl, MHV, LV, moveframe,rotateframe;
 extern PetscReal  max_angle, Flux_in, St_exp, FluxInSum;
 extern PetscInt   les, dynamic_freq, tistart, averaging, poisson;
 /* // */
-extern PetscInt orient;
+extern char orient[];
 /* // */
 Cmpnts Cross(Cmpnts v1,Cmpnts v2);
 Cmpnts MINUS(Cmpnts v1,Cmpnts v2);
