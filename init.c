@@ -1,5 +1,5 @@
 #include "variables.h"
-extern PetscInt block_number, inletprofile, blank, MHV,rotate_grid;
+extern PetscInt block_number, inletprofile, blank, MHV,rotate_grid,visflg;
 extern PetscReal L_dim;
 extern PetscInt  moveframe,rotateframe;
 extern PetscInt  les, poisson;
@@ -63,7 +63,7 @@ PetscErrorCode FormInitialize(UserCtx *user)
 
   user->st = 1.;//0.038406145;
   
-  PetscPrintf(PETSC_COMM_WORLD, "Reynolds Number(Re):  %le;  Stanton Number(St): %le; Timestep(dt) %le \n",user->ren,user->st,user->dt);
+  if(visflg)  PetscPrintf(PETSC_COMM_WORLD, "Reynolds Number(Re):  %le;  Stanton Number(St): %le; Timestep(dt) %le \n",user->ren,user->st,user->dt);
 
   return(0);
 }
@@ -105,8 +105,8 @@ PetscErrorCode MGDACreate(UserMG *usermg, PetscInt bi)
     else {
       user[bi].KM = (user_high[bi].KM + 1) / 2;
     }
-    PetscPrintf(PETSC_COMM_WORLD,"Distributed Array will generation for each MG level begins\n");
-    PetscPrintf(PETSC_COMM_WORLD, "Grid dimension in i,j and k direction for level %d are %d %d %d :\n",l,user[bi].IM, user[bi].JM, user[bi].KM);
+    if(visflg)  PetscPrintf(PETSC_COMM_WORLD,"Distributed Array will generation for each MG level begins\n");
+    if(visflg)  PetscPrintf(PETSC_COMM_WORLD, "Grid dimension in i,j and k direction for level %d are %d %d %d :\n",l,user[bi].IM, user[bi].JM, user[bi].KM);
     if (user[bi].IM*(2- (user[bi].isc))-(user_high[bi].IM+1-(user[bi].isc)) + 
 	user[bi].JM*(2- (user[bi].jsc))-(user_high[bi].JM+1-(user[bi].jsc)) +
 	user[bi].KM*(2- (user[bi].ksc))-(user_high[bi].KM+1-(user[bi].ksc))) {
@@ -173,7 +173,7 @@ PetscErrorCode MGDACreate(UserMG *usermg, PetscInt bi)
 
   ierr=DMDACreate3d(PETSC_COMM_WORLD,xperiod,yperiod,zperiod,DMDA_STENCIL_BOX,M,N,P,PETSC_DECIDE,PETSC_DECIDE,PETSC_DECIDE,1,s,
 		  PETSC_NULL, PETSC_NULL, PETSC_NULL,&(user[bi].da)); //Mohsen Jan 12    // DA is created here for all conditions. 
-  PetscPrintf(PETSC_COMM_WORLD, "DA is Created for coarsest level and global dimension in i,j and k direction are %d %d %d :\n",M,N,P); 
+  if(visflg)  PetscPrintf(PETSC_COMM_WORLD, "DA is Created for coarsest level and global dimension in i,j and k direction are %d %d %d :\n",M,N,P); 
  
   if (ierr) 
     SETERRQ1(PETSC_COMM_SELF,1, "problem creating DA %d",ierr);
@@ -192,7 +192,7 @@ PetscErrorCode MGDACreate(UserMG *usermg, PetscInt bi)
   
   for (l=1; l<usermg->mglevels; l++) { // loop through all mg-levels finer than the coarsest level.
     user = mgctx[l].user;
-  PetscPrintf(PETSC_COMM_WORLD,"Finer DA distribution determination to ensure processors share  the same grid locations for successive MG levels initiated\n");
+  if(visflg)  PetscPrintf(PETSC_COMM_WORLD,"Finer DA distribution determination to ensure processors share  the same grid locations for successive MG levels initiated\n");
     // Get info about the coarser DA
     DMDAGetInfo(mgctx[l-1].user[bi].da, PETSC_NULL, &MM,&NN,&PP,&m,&n,&p,PETSC_NULL,PETSC_NULL,PETSC_NULL, PETSC_NULL,PETSC_NULL,PETSC_NULL);
   //  if (l==1) PetscPrintf(PETSC_COMM_WORLD, "Corresponing number of procs for coarsest DA in i,j and k direction are %d %d %d :\n",m,n,p);
@@ -278,7 +278,7 @@ PetscErrorCode MGDACreate(UserMG *usermg, PetscInt bi)
     // Create the refined DA based on the new distribution
    
     ierr=DMDACreate3d(PETSC_COMM_WORLD,xperiod,yperiod,zperiod,DMDA_STENCIL_BOX,user[bi].IM+1,user[bi].JM+1,user[bi].KM+1,m,n,p,1,s,lxSum,lySum,lzSum,&(user[bi].da));
-    PetscPrintf(PETSC_COMM_WORLD, "Global dimension of DA in i,j and k direction for level %d are %d %d %d :\n",l,user[bi].IM+1,user[bi].JM+1,user[bi].KM+1);
+    if(visflg)  PetscPrintf(PETSC_COMM_WORLD, "Global dimension of DA in i,j and k direction for level %d are %d %d %d :\n",l,user[bi].IM+1,user[bi].JM+1,user[bi].KM+1);
    
     if (ierr) SETERRQ1(PETSC_COMM_SELF,1, "problem creating DA %d",ierr);
     
@@ -294,7 +294,7 @@ PetscErrorCode MGDACreate(UserMG *usermg, PetscInt bi)
     DMDASetUniformCoordinates(user[bi].da, 0.0, 1.0, 0.0, 1.0, 0.0, 1.0);
     DMGetCoordinateDM(user[bi].da, &(user[bi].fda)); // Scatters from global da to a local fda.
     DMDAGetLocalInfo(user[bi].da, &(user[bi].info));
-    PetscPrintf(PETSC_COMM_WORLD," All DAs generated ensuring finer and coarser DAs allocate the same regions of domain to same processors\n");
+   if(visflg)   PetscPrintf(PETSC_COMM_WORLD," All DAs generated ensuring finer and coarser DAs allocate the same regions of domain to same processors\n");
     PetscFree(lx);PetscFree(ly);PetscFree(lz);  
     PetscFree(lxSum);PetscFree(lySum);PetscFree(lzSum);  
   }
@@ -590,7 +590,7 @@ PetscErrorCode MG_Initial(UserMG *usermg, IBMNodes *ibm)
     }
   }
   
-  PetscPrintf(PETSC_COMM_WORLD, "Periodic BC Flags: i_periodic is %d  , j_periodic is %d and k_periodic is %d \n", i_periodic, j_periodic, k_periodic);
+  if(visflg)  PetscPrintf(PETSC_COMM_WORLD, "Periodic BC Flags: i_periodic is %d  , j_periodic is %d and k_periodic is %d \n", i_periodic, j_periodic, k_periodic);
  
   /* The bcs.dat for boundary conditions at 6 boundary surfaces 
      on the finest level is restricted to the coarser
@@ -798,9 +798,9 @@ PetscErrorCode MG_Initial(UserMG *usermg, IBMNodes *ibm)
       } // grid-1d
     }
     if(generate_grid) {
-      PetscPrintf(PETSC_COMM_WORLD,"A grid with dimensions L_x=%le,L_y=%le,L_z=%le scaled by L_dim=%le and non-dimensionalized with cl=%le has been generated for finest level.\n ",L_x,L_y,L_z,L_dim,cl);
+      if(visflg)  PetscPrintf(PETSC_COMM_WORLD,"A grid with dimensions L_x=%le,L_y=%le,L_z=%le scaled by L_dim=%le and non-dimensionalized with cl=%le has been generated for finest level.\n ",L_x,L_y,L_z,L_dim,cl);
     } else{ 
-      PetscPrintf(PETSC_COMM_WORLD,"Grid read from grid.dat file");
+      if(visflg)  PetscPrintf(PETSC_COMM_WORLD,"Grid read from grid.dat file");
     }
     
     if(rotate_grid){
@@ -809,7 +809,7 @@ PetscErrorCode MG_Initial(UserMG *usermg, IBMNodes *ibm)
     PetscOptionsGetReal(PETSC_NULL, "-gy_c", &b, PETSC_NULL);
     PetscOptionsGetReal(PETSC_NULL, "-gx_c", &a, PETSC_NULL);
     PetscOptionsGetReal(PETSC_NULL, "-gz_c", &c, PETSC_NULL);   
-    PetscPrintf(PETSC_COMM_WORLD,"Grid Rotation: Axis - %-s,Angle - %le,Center - %le,%le,%le \n",gridrotorient,grid_angle,a,b,c);
+    if(visflg)  PetscPrintf(PETSC_COMM_WORLD,"Grid Rotation: Axis - %-s,Angle - %le,Center - %le,%le,%le \n",gridrotorient,grid_angle,a,b,c);
     grid_angle = (-grid_angle*pi)/180.0;
     PetscInt m,n;
     //For more info check out: https://en.wikipedia.org/wiki/Rotation_matrix.

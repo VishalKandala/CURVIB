@@ -9,7 +9,7 @@ extern PetscInt ti, moveframe, blank;
 extern PetscReal FluxInSum,FluxOutSum;
 extern PetscReal Flux_in, angle,CMy_c, CMx_c,CMz_c;
 extern PetscInt block_number;
-extern PetscInt inletprofile;
+extern PetscInt inletprofile,visflg;
 extern PetscInt inletface,outletface;
 PetscReal FluxInSumB[5],FluxOutSumB[5],AreaOutB[5],OFC[5];  // Maximum block number assumed 5,OFC:Outlet Flux Coefficient
 PetscErrorCode Contra2Cart(UserCtx *user);
@@ -171,14 +171,14 @@ PetscErrorCode InflowFlux(UserCtx *user)
   }
   // E-Calc uin
   //fn is face number which is 0 to 5
-  PetscPrintf(PETSC_COMM_WORLD,"Inlet Velocity : %le \n",uin);  
+  if(visflg)  PetscPrintf(PETSC_COMM_WORLD,"Inlet Velocity : %le \n",uin);  
   PetscInt fn;PetscReal d;
   FluxIn=0.0;
   lAreaIn=0.0;
   for (fn=0; fn<6; fn++) {
    if (user->bctype[fn] == INLET) {
       inletface = fn;
-    PetscPrintf(PETSC_COMM_WORLD,"Inlet detected at face: %d \n",inletface);
+   if(visflg) PetscPrintf(PETSC_COMM_WORLD,"Inlet detected at face: %d \n",inletface);
     switch(fn){
       // face 0
     case 0:
@@ -355,11 +355,11 @@ PetscErrorCode InflowFlux(UserCtx *user)
 
    }// end inlet check
    else if(user->bctype[fn]==SOLIDWALL){
-      PetscPrintf(PETSC_COMM_WORLD,"Solid Wall detected at face: %d \n",fn);
+     if(visflg) PetscPrintf(PETSC_COMM_WORLD,"Solid Wall detected at face: %d \n",fn);
   }
   else if(user->bctype[fn]==OUTLET){
       outletface=fn;
-      PetscPrintf(PETSC_COMM_WORLD,"Outlet  detected at face: %d \n",outletface);
+   if(visflg) PetscPrintf(PETSC_COMM_WORLD,"Outlet  detected at face: %d \n",outletface);
  }
           
 //    PetscPrintf(PETSC_COMM_WORLD,"face: %di \n",fn);
@@ -370,7 +370,7 @@ PetscErrorCode InflowFlux(UserCtx *user)
  MPI_Allreduce(&lAreaIn,&AreaSumIn,1,MPI_DOUBLE,MPI_SUM,PETSC_COMM_WORLD);
  PetscBarrier(PETSC_NULL);
  user->FluxInSum = FluxInSum;
- PetscPrintf(PETSC_COMM_WORLD,"Inflow Flux - Area:  %le - %le \n",FluxInSum,AreaSumIn);    
+ if(visflg) PetscPrintf(PETSC_COMM_WORLD,"Inflow Flux - Area:  %le - %le \n",FluxInSum,AreaSumIn);    
  FluxInSumB[user->_this]=FluxInSum;
 
   
@@ -550,7 +550,7 @@ PetscErrorCode OutflowFlux(UserCtx *user) {
   
   MPI_Allreduce(&lArea,&lAreaSum,1,MPI_DOUBLE,MPI_SUM,PETSC_COMM_WORLD);
   MPI_Allreduce(&FluxOut,&FluxOutSum,1,MPI_DOUBLE,MPI_SUM,PETSC_COMM_WORLD);
-  PetscPrintf(PETSC_COMM_WORLD,"Outflow Flux - Area:  %le - %le \n",FluxOutSum,lAreaSum);    
+  if(visflg)  PetscPrintf(PETSC_COMM_WORLD,"Outflow Flux - Area:  %le - %le \n",FluxOutSum,lAreaSum);    
   user->FluxOutSum = FluxOutSum;
   FluxOutSumB[user->_this]=FluxOutSum;
   AreaOutB[user->_this]=lAreaSum;
@@ -4295,7 +4295,7 @@ DM            da = user->da, fda = user->fda;
 */
   PetscInt period=80;
   PetscReal psys=0.273;
-  PetscOptionsGetInt(PETSC_NULL, "-period", &period, PETSC_NULL);
+  if(visflg) PetscOptionsGetInt(PETSC_NULL, "-period", &period, PETSC_NULL);
   PetscInt fn;
   PetscReal FluxOut2=0.0;
   FluxOut=0.0,lArea=0.0,AreaSum=0.0;
@@ -4445,7 +4445,7 @@ DM            da = user->da, fda = user->fda;
   MPI_Allreduce(&lArea,&AreaSum,1,MPI_DOUBLE,MPI_SUM,PETSC_COMM_WORLD);
   user->FluxOutSum = FluxOutSum;
   user->AreaOutSum = AreaSum;
-  PetscPrintf(PETSC_COMM_WORLD,"FormBCS Pre-correction - Outflow: Cartesian-Flux - %le, Contravariant-Flux - %le, Area - %le \n",FluxOutSum,FluxOutSumcont,AreaSum);
+   if(visflg) PetscPrintf(PETSC_COMM_WORLD,"FormBCS Pre-correction - Outflow: Cartesian-Flux - %le, Contravariant-Flux - %le, Area - %le \n",FluxOutSum,FluxOutSumcont,AreaSum);
    // Correction 
   FluxIn = FluxInSum + FarFluxInSum + user->FluxIntpSum;
   // ratio conditions for generalized BCS --- Vishal Kandala
@@ -4471,7 +4471,7 @@ DM            da = user->da, fda = user->fda;
     } // inlet at -z
    } // inlet at -x,-y or -z 
  //-------------------------------------------------------------------------------------------------- 
-  PetscPrintf(PETSC_COMM_WORLD,"FormBCS Correction Ratio - %le \n",ratio);
+  if(visflg) PetscPrintf(PETSC_COMM_WORLD,"FormBCS Correction Ratio - %le \n",ratio);
   user->FluxOutSum=0.0;
   FluxOut=0.0;
   
@@ -4623,7 +4623,7 @@ DM            da = user->da, fda = user->fda;
   MPI_Allreduce(&lArea,&AreaSum,1,MPI_DOUBLE,MPI_SUM,PETSC_COMM_WORLD);
   user->FluxOutSum = FluxOutSum;
   user->AreaOutSum = AreaSum;
-  PetscPrintf(PETSC_COMM_WORLD,"FormBCS Post-correction - Outflow: Flux - %le, Area - %le \n",FluxOutSum,AreaSum);
+  if(visflg) PetscPrintf(PETSC_COMM_WORLD,"FormBCS Post-correction - Outflow: Flux - %le, Area - %le \n",FluxOutSum,AreaSum);
   DMDAVecRestoreArray(fda, user->Ucont, &ucont);
   DMGlobalToLocalBegin(fda, user->Ucont, INSERT_VALUES, user->lUcont);
   DMGlobalToLocalEnd(fda, user->Ucont, INSERT_VALUES, user->lUcont);
@@ -5764,7 +5764,7 @@ PetscErrorCode SetInitialGuessToOne(UserCtx *user)
   DMDAVecGetArray(da, user->lNvert, &nvert);
   
   extern PetscInt InitialGuessOne;
-  PetscPrintf(PETSC_COMM_WORLD,"InitialGuess: %d \n",InitialGuessOne); 
+  if(visflg)  PetscPrintf(PETSC_COMM_WORLD,"InitialGuess: %d \n",InitialGuessOne); 
   for (k=zs ; k<lze; k++) {
     for (j=lys; j<lye; j++) {
       for (i=lxs; i<lxe; i++) {	

@@ -1,6 +1,6 @@
 #include "variables.h"
 extern PetscReal CMx_c,CMy_c,CMz_c, L_dim;
-extern PetscInt  cop, wing,NumberOfBodies,rheology;
+extern PetscInt  cop, wing,NumberOfBodies,rheology,visflg;
 extern char orient[];
 PetscReal l_x,l_y,l_z;
 
@@ -3475,19 +3475,19 @@ PetscErrorCode ibm_read_Icem(IBMNodes *ibm, PetscInt ibi)
   MPI_Comm_rank(PETSC_COMM_WORLD, &rank);
   if(!rank) { // root processor read in the data
     FILE *fd;
-    PetscPrintf(PETSC_COMM_SELF, "READ nlist begins\n");
+  if(visflg)    PetscPrintf(PETSC_COMM_SELF, "READ nlist begins\n");
     char filen[80];  
     sprintf(filen,"nlist%2.2d" , ibi);
 
 
     fd = fopen(filen, "r"); if (!fd) SETERRQ(PETSC_COMM_WORLD,1, "Cannot open IBM node file");
  
-    PetscPrintf(PETSC_COMM_WORLD, "Geometric Center of Immersed Boundary:  CMx_c = %le,CMy_c = %le,CMz_c = %le \n",CMx_c,CMy_c,CMz_c);
+  if(visflg)    PetscPrintf(PETSC_COMM_WORLD, "Geometric Center of Immersed Boundary:  CMx_c = %le,CMy_c = %le,CMz_c = %le \n",CMx_c,CMy_c,CMz_c);
     
     if (fd) {
       
       fscanf(fd, "%i",&n_v);  // Read the first line of nlist, to get number of nodes
-      PetscPrintf(PETSC_COMM_SELF, "number of nodes of list %d %d \n",ibi, n_v);
+      if(visflg)  PetscPrintf(PETSC_COMM_SELF, "number of nodes of list %d %d \n",ibi, n_v);
       
       ibm->n_v = n_v;   // No of nodes is designated as n_v. 
           
@@ -3553,13 +3553,13 @@ PetscErrorCode ibm_read_Icem(IBMNodes *ibm, PetscInt ibi)
 	
 	} // i(n_v) or lines in nlist.
       /*------- Print out a few lines */
-      PetscPrintf(PETSC_COMM_WORLD," nlist READ Complete \n");
+      if(visflg)  PetscPrintf(PETSC_COMM_WORLD," nlist READ Complete \n");
       i=0;
-      PetscPrintf(PETSC_COMM_WORLD, "co-ordinates(xyz) for node n=%d: %le %le %le\n",i, x_bp[i], y_bp[i], z_bp[i]);
+      if(visflg)  PetscPrintf(PETSC_COMM_WORLD, "co-ordinates(xyz) for node n=%d: %le %le %le\n",i, x_bp[i], y_bp[i], z_bp[i]);
       i=50;
-      PetscPrintf(PETSC_COMM_WORLD, "co-ordinates(xyz) for node n=%d: %le %le %le\n",i, x_bp[i], y_bp[i], z_bp[i]);
+      if(visflg)  PetscPrintf(PETSC_COMM_WORLD, "co-ordinates(xyz) for node n=%d: %le %le %le\n",i, x_bp[i], y_bp[i], z_bp[i]);
       i=n_v-1;
-      PetscPrintf(PETSC_COMM_WORLD, "co-ordinates(xyz) for node n=%d: %le %le %le\n",i, x_bp[i], y_bp[i], z_bp[i]);
+       if(visflg) PetscPrintf(PETSC_COMM_WORLD, "co-ordinates(xyz) for node n=%d: %le %le %le\n",i, x_bp[i], y_bp[i], z_bp[i]);
       //-------------------------------
 
       MPI_Bcast(ibm->x_bp0, n_v, MPIU_REAL, 0, PETSC_COMM_WORLD);   // Broadcast co-ordinate values to all processors.
@@ -3578,7 +3578,7 @@ PetscErrorCode ibm_read_Icem(IBMNodes *ibm, PetscInt ibi)
     } // for fd: nlist file open check.
 
     //Reading elements list
-    PetscPrintf(PETSC_COMM_SELF, "READ elist begins\n");
+    if(visflg)  PetscPrintf(PETSC_COMM_SELF, "READ elist begins\n");
 
     sprintf(filen,"elist%2.2d" , ibi);
     fd = fopen(filen, "r"); if (!fd) SETERRQ(PETSC_COMM_SELF,1, "Cannot open IBM node file");
@@ -3587,7 +3587,7 @@ PetscErrorCode ibm_read_Icem(IBMNodes *ibm, PetscInt ibi)
      
       
       fscanf(fd, "%i",&n_elmt);  // read first line of elist file
-      PetscPrintf(PETSC_COMM_SELF, "number of element of list %d %d \n",ibi, n_elmt);
+      if(visflg)  PetscPrintf(PETSC_COMM_SELF, "number of element of list %d %d \n",ibi, n_elmt);
       
       ibm->n_elmt = n_elmt;      // set number of elements to n_elmt.
      
@@ -3636,13 +3636,13 @@ PetscErrorCode ibm_read_Icem(IBMNodes *ibm, PetscInt ibi)
 	//  } closing of first while loop
       ibm->nv1 = nv1; ibm->nv2 = nv2; ibm->nv3 = nv3;  // The nodes(1,2,3) corresponding to each element are stored. 
        /*------- Print out a few lines */
-      PetscPrintf(PETSC_COMM_WORLD," elist READ Complete \n");      
+      if(visflg)  PetscPrintf(PETSC_COMM_WORLD," elist READ Complete \n");      
       i=0;
-      PetscPrintf(PETSC_COMM_WORLD, "Elemtn n_elmt = %d is comprised of nodes nv = %d,%d and %d\n", i,nv1[i], nv2[i], nv3[i]);
+       if(visflg) PetscPrintf(PETSC_COMM_WORLD, "Elemtn n_elmt = %d is comprised of nodes nv = %d,%d and %d\n", i,nv1[i], nv2[i], nv3[i]);
       i=30;
-       PetscPrintf(PETSC_COMM_WORLD, "Elemtn n_elmt = %d is comprised of nodes nv = %d,%d and %d\n", i,nv1[i], nv2[i], nv3[i]);
+        if(visflg) PetscPrintf(PETSC_COMM_WORLD, "Elemtn n_elmt = %d is comprised of nodes nv = %d,%d and %d\n", i,nv1[i], nv2[i], nv3[i]);
       i=n_elmt-1;
-       PetscPrintf(PETSC_COMM_WORLD, "Elemtn n_elmt = %d is comprised of nodes nv = %d,%d and %d\n", i,nv1[i], nv2[i], nv3[i]); 
+        if(visflg) PetscPrintf(PETSC_COMM_WORLD, "Elemtn n_elmt = %d is comprised of nodes nv = %d,%d and %d\n", i,nv1[i], nv2[i], nv3[i]); 
 
       fclose(fd);
     } // file elist open condition.
@@ -3702,13 +3702,13 @@ PetscErrorCode ibm_read_Icem(IBMNodes *ibm, PetscInt ibi)
     }
     
     ibm->nf_x = nf_x; ibm->nf_y = nf_y;  ibm->nf_z = nf_z; // Normals stored in ibm datastructure (global memory)
-     PetscPrintf(PETSC_COMM_WORLD,"Element Normals(nf_x,y,z) calculated\n");   
+     if(visflg)  PetscPrintf(PETSC_COMM_WORLD,"Element Normals(nf_x,y,z) calculated\n");   
     //Added 4/1/06 iman
     ibm->dA = dA;
     ibm->nt_x = nt_x; ibm->nt_y = nt_y;  ibm->nt_z = nt_z;
     ibm->ns_x = ns_x; ibm->ns_y = ns_y;  ibm->ns_z = ns_z;  
-    PetscPrintf(PETSC_COMM_WORLD,"Element tangents(nt_x,y,z) and ns_x,y,z calculated\n");     
-    PetscPrintf(PETSC_COMM_WORLD,"Element centers(centt_x,y,z) and areas(dA) calculated\n");
+    if(visflg)  PetscPrintf(PETSC_COMM_WORLD,"Element tangents(nt_x,y,z) and ns_x,y,z calculated\n");     
+    if(visflg)  PetscPrintf(PETSC_COMM_WORLD,"Element centers(centt_x,y,z) and areas(dA) calculated\n");
 
     // The calculated normals,tangents,centers,areas and ns are all broadcast to all processors.
     MPI_Bcast(ibm->nv1, n_elmt, MPI_INT, 0, PETSC_COMM_WORLD);

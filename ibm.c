@@ -1,7 +1,7 @@
 #include "variables.h"
 #include "stdlib.h"
 #include "time.h"
-extern PetscInt thin, block_number,invicid, sediment;
+extern PetscInt thin, block_number,invicid, sediment,visflg;
 extern PetscInt NumberOfBodies, moveframe, wallfunction;
 
 PetscErrorCode BoundingSphere(IBMNodes *ibm);

@@ -16,7 +16,7 @@ extern PetscInt ti, LV;
 extern char orient[];
 /* // */
 extern PetscInt tiout,STRONG_COUPLING,rheology,NumberOfBodies;
-extern PetscInt dgf_z,dgf_y,dgf_x;
+extern PetscInt dgf_z,dgf_y,dgf_x,visflg;
 extern PetscInt dgf_az,dgf_ay,dgf_ax;
 extern PetscReal St_exp,wavelength;
 extern PetscReal Flux_in,CMx_c,CMy_c,CMz_c;
@@ -1144,7 +1144,7 @@ PetscErrorCode Elmt_Move_FSI_ROT(FSInfo *FSinfo, IBMNodes *ibm,
   /* // */
   PetscReal wx,wy,wz;  // used to set velocities of immersed boundary points.
   /* // */
-  PetscPrintf(PETSC_COMM_WORLD, "Immesed Body Rotation: Axis- %-s, Angle: %le, Center %le %le %le\n",orient,rotation_angle, x_c,y_c,z_c);
+  if(visflg)  PetscPrintf(PETSC_COMM_WORLD, "Immesed Body Rotation: Axis- %-s, Angle: %le, Center %le %le %le\n",orient,rotation_angle, x_c,y_c,z_c);
     
 /* //Rotation of MHV around hinge */
   PetscReal pi = 3.14159265359, angle = 0.0, R[4][4], x[4], xn[4], u, v, w, a, b, c;

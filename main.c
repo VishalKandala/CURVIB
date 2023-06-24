@@ -13,7 +13,7 @@ PetscReal FluxInSum, FluxOutSum;
    3      proportional to flux
    4      proportional to normal velocity (flux/area)
 */
-PetscInt immersed = 0; 
+PetscInt immersed = 0,visflg=0; 
 PetscInt invicid = 0, channelz = 0;
 PetscInt movefsi = 0, rotatefsi=0, sediment=0,moveibm=0,rotate_grid=0;
 PetscBool rstart_flg;
@@ -611,6 +611,7 @@ int main(int argc, char **argv) {
   PetscInitialize(&argc, &argv, (char *)0, help);
 // ------- INPUT PARAMETERS ----------------------
   PetscOptionsInsertFile(PETSC_COMM_WORLD, "control.dat", PETSC_TRUE);
+  PetscOptionsGetInt(PETSC_NULL, "-vis_flg", &visflg, PETSC_NULL);
   PetscOptionsGetInt(PETSC_NULL, "-tio", &tiout, PETSC_NULL);
   PetscOptionsGetInt(PETSC_NULL, "-imm", &immersed, PETSC_NULL);
   PetscOptionsGetInt(PETSC_NULL, "-inv", &invicid, PETSC_NULL);
@@ -697,7 +698,7 @@ int main(int argc, char **argv) {
   PetscOptionsGetString(PETSC_NULL, "-g_orient", gridrotorient,sizeof(orient),PETSC_NULL);   
   
   PetscReal compute_time,time_start,time_end;
-  PetscPrintf(PETSC_COMM_WORLD, "Data is output for ever  %d timesteps; Implicit Solver Tolerances: Absolute-%le; Relative- %le\n",tiout, imp_atol,imp_rtol);
+  if(visflg)  PetscPrintf(PETSC_COMM_WORLD, "Data is output for ever  %d timesteps; Implicit Solver Tolerances: Absolute-%le; Relative- %le\n",tiout, imp_atol,imp_rtol);
   PetscTime(&time_start);
 
 // ------------- SETUP PARAMETERS ---------------------------------
@@ -900,19 +901,19 @@ int main(int argc, char **argv) {
 	for (ibi=0;ibi<NumberOfBodies;ibi++) {
 	    if(LVAD){
 	      ibm_search_advanced_rev(&(user[bi]), &ibm[ibi], ibi);  
-  	      PetscPrintf(PETSC_COMM_WORLD, "IBM_SERA REV LVAD  ibi %d bi %d\n", ibi,bi);        
+  	      if(visflg)  PetscPrintf(PETSC_COMM_WORLD, "IBM_SERA REV LVAD  ibi %d bi %d\n", ibi,bi);        
             } 
             else {
 	      ibm_search_advanced(&(user[bi]), &ibm[ibi], ibi);
-              PetscPrintf(PETSC_COMM_WORLD, "IBM_SERA General ibi %d bi %d\n", ibi, bi); 
+             if(visflg)   PetscPrintf(PETSC_COMM_WORLD, "IBM_SERA General ibi %d bi %d\n", ibi, bi); 
 	    }
 	} //ibi
 
 	PetscBarrier(PETSC_NULL);
 	for (ibi=0;ibi<NumberOfBodies;ibi++) {
-	  PetscPrintf(PETSC_COMM_WORLD, "IBM_INTP\n");
+	  if(visflg)  PetscPrintf(PETSC_COMM_WORLD, "IBM_INTP\n");
 	  ibm_interpolation_advanced(&user[bi], &ibm[ibi], ibi, 1);
-	  PetscPrintf(PETSC_COMM_WORLD, "IBM_INTP End\n");
+	  if(visflg)  PetscPrintf(PETSC_COMM_WORLD, "IBM_INTP End\n");
 
 	} //ibi
       }// bi
@@ -944,7 +945,7 @@ int main(int argc, char **argv) {
       VecStrideMax(user[bi].Ucat, 0, PETSC_NULL, &normX);
       VecStrideMax(user[bi].Ucat, 1, PETSC_NULL, &normY);
       VecStrideMax(user[bi].Ucat, 2, PETSC_NULL, &normZ);
-      PetscPrintf(PETSC_COMM_WORLD, "Initial max cartesian velocities along: x -  %le; y- %le; z- %le\n",normX, normY, normZ);
+      if(visflg)  PetscPrintf(PETSC_COMM_WORLD, "Initial max cartesian velocities along: x -  %le; y- %le; z- %le\n",normX, normY, normZ);
       } // for bi
     } // for InitialGuessOne
   } // for ti=0
@@ -1018,7 +1019,7 @@ int main(int argc, char **argv) {
       VecNorm(Error,NORM_INFINITY,&error);
       // error=error/(user[bi].IM*user[bi].JM*user[bi].KM);
       //  if (error<epsilon) goto nextp;
-      PetscPrintf(PETSC_COMM_WORLD, "Ucat l_infinity error is  %le \n", error);
+    if(visflg)    PetscPrintf(PETSC_COMM_WORLD, "Ucat l_infinity error is  %le \n", error);
       VecDestroy(&Error);
     } // bi
     /*---save location of immersed boundary and at time ti--*/
