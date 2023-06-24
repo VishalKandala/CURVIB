@@ -5,7 +5,7 @@ extern PetscInt   movefsi, rotatefsi, moveibm,immersed, STRONG_COUPLING;
 extern PetscInt   implicit, TwoD, fish_c, sediment, wing,rheology,duplicate,turbine;
 extern PetscInt   cop, regime, fish, fishcyl, MHV, LV, moveframe,rotateframe;
 extern PetscReal  max_angle, Flux_in, St_exp, FluxInSum;
-extern PetscInt   les, dynamic_freq, tistart, averaging, poisson;
+extern PetscInt   les, dynamic_freq, tistart, averaging, poisson,visflg;
 /* // */
 extern char orient[];
 /* // */
@@ -843,11 +843,11 @@ PetscErrorCode Struc_Solver(UserMG *usermg,IBMNodes *ibm,
   
   if (MHV1_stuck && MHV2_stuck && itr_sc==1) *DoSCLoop = PETSC_FALSE;
   
-  if (cop)
-    PetscPrintf(PETSC_COMM_WORLD, "S-C Convergence %d %le %le %le\n", itr_sc, dSmax,fsi[0].S_new[5],fsi[0].S_old[5]);
-  else
-    PetscPrintf(PETSC_COMM_WORLD, "S-C Convergence %d %le %le %le\n", itr_sc, dSmax,fsi[0].S_ang_n[0],fsi[0].S_ang_o[0]);
-  
+  if (cop){
+    if(visflg)   PetscPrintf(PETSC_COMM_WORLD, "S-C Convergence %d %le %le %le\n", itr_sc, dSmax,fsi[0].S_new[5],fsi[0].S_old[5]);
+  }else{
+    if(visflg)   PetscPrintf(PETSC_COMM_WORLD, "S-C Convergence %d %le %le %le\n", itr_sc, dSmax,fsi[0].S_ang_n[0],fsi[0].S_ang_o[0]);
+  }
   for (ibi=0;ibi<NumberOfBodies;ibi++) {
     
     if ((movefsi || rotatefsi || regime || MHV) && !(*DoSCLoop)) {

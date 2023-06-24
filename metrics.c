@@ -1,5 +1,7 @@
 #include "variables.h"
 
+extern PetscInt visflg;
+
 PetscErrorCode FormMetrics(UserCtx *user)
 {
   DM		cda;
@@ -640,9 +642,9 @@ PetscErrorCode FormMetrics(UserCtx *user)
   VecStrideMin(user->Cent, 1, PETSC_NULL, &normY_min);
   VecStrideMin(user->Cent, 2, PETSC_NULL, &normZ_min); 
 
-  PetscPrintf(PETSC_COMM_WORLD, "cent Ksi:  min %le max %le \n",normX_min,normX_max);
-  PetscPrintf(PETSC_COMM_WORLD, "cent Eta:  min %le max %le \n",normY_min,normY_max);
-  PetscPrintf(PETSC_COMM_WORLD, "cent Zeta: min %le max %le \n",normZ_min,normZ_max);
+  if(visflg)   PetscPrintf(PETSC_COMM_WORLD, "cent Ksi:  min %le max %le \n",normX_min,normX_max);
+  if(visflg)   PetscPrintf(PETSC_COMM_WORLD, "cent Eta:  min %le max %le \n",normY_min,normY_max);
+  if(visflg)   PetscPrintf(PETSC_COMM_WORLD, "cent Zeta: min %le max %le \n",normZ_min,normZ_max);
 
   //Mohsen Dec 2012
   
@@ -1540,13 +1542,13 @@ PetscErrorCode MomentAreaDivergence(UserCtx *user)
 
   DMDAVecRestoreArray(da, Div, &div);
   VecMax(Div, &i, &maxdiv);
-  PetscPrintf(PETSC_COMM_WORLD, "Maxdiv Moment of AREA Metrics %d %e\n", i, maxdiv);
+  if(visflg)   PetscPrintf(PETSC_COMM_WORLD, "Maxdiv Moment of AREA Metrics %d %e\n", i, maxdiv);
   PetscInt mi;
   for (k=zs; k<ze; k++) {
     for (j=ys; j<ye; j++) {
       for (mi=xs; mi<xe; mi++) {
 	if (Gidx(mi,j,k,user) ==i) {
-	  PetscPrintf(PETSC_COMM_SELF, "MMa %d %d %d\n", mi,j, k);
+	 if(visflg)  PetscPrintf(PETSC_COMM_SELF, "MMa %d %d %d\n", mi,j, k);
 	}
       }
     }

@@ -387,8 +387,10 @@ PetscErrorCode MG_Initial(UserMG *usermg, IBMNodes *ibm)
       mgctx[level].user[bi].jsc = jsc[bi];//&usermg->jsc;
       mgctx[level].user[bi].ksc = ksc[bi];//&usermg->ksc;
 //      mgctx[level].user[bi].cgrid = cgrid[bi];
-      if (level==0) PetscPrintf(PETSC_COMM_WORLD, "SEMI_COARSENING for block %d in i=%d j=%d k=%d\n", bi, isc[bi], jsc[bi], ksc[bi]);
-    //  if (level==0) PetscPrintf(PETSC_COMM_WORLD, "C-grid for block %d is %d\n", bi,cgrid[bi]);
+      if (level==0){   
+          if(visflg)  PetscPrintf(PETSC_COMM_WORLD, "SEMI_COARSENING for block %d in i=%d j=%d k=%d\n", bi, isc[bi], jsc[bi], ksc[bi]);
+        }
+       //  if (level==0) PetscPrintf(PETSC_COMM_WORLD, "C-grid for block %d is %d\n", bi,cgrid[bi]);
     }
   }
   // ------------ Reading Interface Files -------------------------------------
@@ -943,7 +945,7 @@ PetscErrorCode MG_Initial(UserMG *usermg, IBMNodes *ibm)
 
 
   /* Create the global and local vectors at all grid levels */
-  PetscPrintf(PETSC_COMM_WORLD,"Creation of Global and Local vectors at all levels begins\n");  
+  if(visflg)   PetscPrintf(PETSC_COMM_WORLD,"Creation of Global and Local vectors at all levels begins\n");  
   for (level=usermg->mglevels-1; level>=0; level--) {
     user = mgctx[level].user;
     
@@ -1125,11 +1127,11 @@ PetscErrorCode MG_Initial(UserMG *usermg, IBMNodes *ibm)
       if ((wallfunction || rans) && level==usermg->mglevels-1) 
 	VecDuplicate(user[bi].lAj, &user[bi].lUstar);
 
-      PetscPrintf(PETSC_COMM_WORLD,"global and local vectors at all level %d  are created\n",level);
+      if(visflg)   PetscPrintf(PETSC_COMM_WORLD,"global and local vectors at all level %d  are created\n",level);
 
       FormInitialize(&(user[bi]));
 
-      PetscPrintf(PETSC_COMM_WORLD,"Initialization for level %d is done \n",level);
+      if(visflg)   PetscPrintf(PETSC_COMM_WORLD,"Initialization for level %d is done \n",level);
 
       // read Nvert for blanking in overset grids
       if (block_number>1 && bi==0 && blank && level==usermg->mglevels-1) {
@@ -1149,7 +1151,7 @@ PetscErrorCode MG_Initial(UserMG *usermg, IBMNodes *ibm)
       }
 	
       FormMetrics(&(user[bi]));  
-      PetscPrintf(PETSC_COMM_WORLD,"Metrics formation for level %d is done \n",level);
+      if(visflg)   PetscPrintf(PETSC_COMM_WORLD,"Metrics formation for level %d is done \n",level);
 
       if (level==usermg->mglevels-1) MetricsDivergence(&(user[bi]));
     }

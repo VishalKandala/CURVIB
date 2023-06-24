@@ -11,7 +11,7 @@
 
 extern PetscInt block_number, NumberOfBodies,blank;
 extern PetscInt immersed, rans, les;
-extern PetscInt ti,tistart,tiout;
+extern PetscInt ti,tistart,tiout,visflg;
 extern PetscInt imp_MAX_IT,implicit_type;
 extern PetscReal imp_atol, imp_rtol, imp_stol;
 extern PetscInt mg_idx, mg_preItr, mg_poItr, mg_MAX_IT;
@@ -4180,7 +4180,7 @@ PetscErrorCode ImplicitMomentumSolver(UserCtx *user, IBMNodes *ibm,
 	
 	PetscTime(&te);
 	cput=te-ts;
-	PetscPrintf(PETSC_COMM_WORLD, "!!norm of dU %d %d  %le %le %le %le %le\n", pseudot,bi, normdU_bk[bi], reldU_bk[bi],normF_bk[bi], normdT, cput);
+      if(visflg) PetscPrintf(PETSC_COMM_WORLD, "!!norm of dU %d %d  %le %le %le %le %le\n", pseudot,bi, normdU_bk[bi], reldU_bk[bi],normF_bk[bi], normdT, cput);
 
 	if (!rank) {
 	  FILE *f;
@@ -4197,8 +4197,8 @@ PetscErrorCode ImplicitMomentumSolver(UserCtx *user, IBMNodes *ibm,
 	OutflowFlux(&(user[bi]));
 
 
-	PetscPrintf(PETSC_COMM_WORLD, "FluxinRK %le\n", user[bi].FluxOutSum);
-	PetscPrintf(PETSC_COMM_WORLD, "Inlet flux %le\n",user[bi].FluxInSum);
+	 if(visflg)  PetscPrintf(PETSC_COMM_WORLD, "FluxinRK %le\n", user[bi].FluxOutSum);
+	 if(visflg)  PetscPrintf(PETSC_COMM_WORLD, "Inlet flux %le\n",user[bi].FluxInSum);
 	
 	
 
@@ -4207,7 +4207,7 @@ PetscErrorCode ImplicitMomentumSolver(UserCtx *user, IBMNodes *ibm,
 
 	FormBCS(&(user[bi]));
 
-	PetscPrintf(PETSC_COMM_WORLD, "BCS \n");
+	 if(visflg)  PetscPrintf(PETSC_COMM_WORLD, "BCS \n");
 
       } // istage
             
@@ -4215,7 +4215,7 @@ PetscErrorCode ImplicitMomentumSolver(UserCtx *user, IBMNodes *ibm,
 	for (ibi=0;ibi<NumberOfBodies;ibi++) {
 	  CHKMEMQ;
 	  ibm_interpolation_advanced(&user[bi], &ibm[ibi], ibi,1);
-	  PetscPrintf(PETSC_COMM_WORLD, "IBM INTP \n");
+	 if(visflg)    PetscPrintf(PETSC_COMM_WORLD, "IBM INTP \n");
 	  CHKMEMQ;
 	}
 	
