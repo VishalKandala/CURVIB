@@ -1132,10 +1132,10 @@ PetscErrorCode Elmt_Move_FSI_ROT(FSInfo *FSinfo, IBMNodes *ibm,
 {
   PetscInt n_v = ibm->n_v, n_elmt = ibm->n_elmt;
   PetscReal  x_c=FSinfo->x_c, y_c=FSinfo->y_c, z_c=FSinfo->z_c;
-  PetscReal rot;
-
+  PetscReal rotation_angle;
+  PetscOptionsGetReal(PETSC_NULL, "-rot", &(rotation_angle), PETSC_NULL);
   /* // */
-  rot=FSinfo->S_ang_n[0];//-FSinfo->S_ang_o[0];
+  //rot=FSinfo->S_ang_n[0];//-FSinfo->S_ang_o[0];
   /* // */
   PetscInt i;
   PetscInt n1e, n2e, n3e;
@@ -1144,11 +1144,11 @@ PetscErrorCode Elmt_Move_FSI_ROT(FSInfo *FSinfo, IBMNodes *ibm,
   /* // */
   PetscReal wx,wy,wz;  // used to set velocities of immersed boundary points.
   /* // */
-  PetscPrintf(PETSC_COMM_WORLD, "Immesed Body Rotation: Axis- %-s, Angle: %le, Center %le %le %le\n",orient,rot, x_c,y_c,z_c);
+  PetscPrintf(PETSC_COMM_WORLD, "Immesed Body Rotation: Axis- %-s, Angle: %le, Center %le %le %le\n",orient,rotation_angle, x_c,y_c,z_c);
     
 /* //Rotation of MHV around hinge */
   PetscReal pi = 3.14159265359, angle = 0.0, R[4][4], x[4], xn[4], u, v, w, a, b, c;
-  angle = (-rot*pi)/180.0; 
+  angle = (-rotation_angle*pi)/180.0; 
   PetscInt m,n;
 
   // For more info check out: https://en.wikipedia.org/wiki/Rotation_matrix.

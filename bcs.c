@@ -4307,6 +4307,7 @@ DM            da = user->da, fda = user->fda;
 	   i=xs;
            for(k=lzs;k<lze;k++){
              for(j=lys;j<lye;j++){
+               if(nvert[k][j][i+1]<0.1){
                FluxOut +=(ucat[k][j][i+1].x*(csi[k][j][i].x) + 
                           ucat[k][j][i+1].y*(csi[k][j][i].y) + 
                           ucat[k][j][i+1].z*(csi[k][j][i].z)); 
@@ -4317,6 +4318,7 @@ DM            da = user->da, fda = user->fda;
 			     (csi[k][j][i].y) * (csi[k][j][i].y) +
 			     (csi[k][j][i].z) * (csi[k][j][i].z));
 
+                }
               }
             }
           }
@@ -4348,6 +4350,7 @@ DM            da = user->da, fda = user->fda;
 	   j=ys;
            for(k=lzs;k<lze;k++){
              for(i=lxs;i<lxe;i++){
+               if(nvert[k][j+1][i]<0.1){
                FluxOut +=(ucat[k][j+1][i].x*(eta[k][j][i].x) + 
                           ucat[k][j+1][i].y*(eta[k][j][i].y) + 
                           ucat[k][j+1][i].z*(eta[k][j][i].z)); 
@@ -4359,7 +4362,7 @@ DM            da = user->da, fda = user->fda;
                lArea += sqrt( (eta[k][j][i].x) * (eta[k][j][i].x) +
 			     (eta[k][j][i].y) * (eta[k][j][i].y) +
 			     (eta[k][j][i].z) * (eta[k][j][i].z));
-
+               }
               }
             }
           }
@@ -4393,6 +4396,7 @@ DM            da = user->da, fda = user->fda;
 	   k=zs;
            for(j=lys;j<lye;j++){
              for(i=lxs;i<lxe;i++){
+               if(nvert[k+1][j][i]<0.1){
                FluxOut +=(ucat[k+1][j][i].x*(zet[k][j][i].x) + 
                           ucat[k+1][j][i].y*(zet[k][j][i].y) + 
                           ucat[k+1][j][i].z*(zet[k][j][i].z)); 
@@ -4402,8 +4406,9 @@ DM            da = user->da, fda = user->fda;
                  
                lArea += sqrt( (zet[k][j][i].x) * (zet[k][j][i].x) +
 			     (zet[k][j][i].y) * (zet[k][j][i].y) +
-			     (zet[k][j][i].z) * (zet[k][j][i].z));
-              }
+	      		     (zet[k][j][i].z) * (zet[k][j][i].z));
+              } 
+             }
             }
           }
 	 break;
