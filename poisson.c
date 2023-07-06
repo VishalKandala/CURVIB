@@ -1812,8 +1812,8 @@ PetscErrorCode PoissonSolver_MG(UserMG *usermg)
       flg=0;
     VolumeFlux_rev(&user[bi], &ibm_Flux, &ibm_Area, flg);
   }
-
-  VolumeFlux(&user[bi], &ibm_Flux, &ibm_Area, flg);
+  else VolumeFlux(&user[bi], &ibm_Flux, &ibm_Area, flg);
+  
   PoissonRHS(&(user[bi]), user[bi].B);
    
   for (l=usermg->mglevels-1; l>=0; l--) {
