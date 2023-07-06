@@ -1622,13 +1622,13 @@ PetscErrorCode MetricsDivergence(UserCtx *user)
 
   DMDAVecRestoreArray(da, Div, &div);
   VecMax(Div, &i, &maxdiv);
-  PetscPrintf(PETSC_COMM_WORLD, "Maxdiv Metrics %d %e\n", i, maxdiv);
+  if(visflg) PetscPrintf(PETSC_COMM_WORLD, "Maxdiv Metrics %d %e\n", i, maxdiv);
   PetscInt mi;
   for (k=zs; k<ze; k++) {
     for (j=ys; j<ye; j++) {
       for (mi=xs; mi<xe; mi++) {
 	if (Gidx(mi,j,k,user) ==i) {
-	  PetscPrintf(PETSC_COMM_SELF, "MMa %d %d %d\n", mi,j, k);
+	  if(visflg) PetscPrintf(PETSC_COMM_SELF, "MMa %d %d %d\n", mi,j, k);
 	}
       }
     }

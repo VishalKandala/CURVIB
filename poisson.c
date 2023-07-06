@@ -4,7 +4,7 @@
 //#include "petscpcmg.h"
 
 extern PetscInt block_number;
-extern PetscInt immersed,MHV,LV,aneurysm;
+extern PetscInt immersed,MHV,LV,aneurysm,visflg,LVAD;
 extern PetscInt ti;
 
 PetscInt Gidx(PetscInt i, PetscInt j, PetscInt k, UserCtx *user);
@@ -1788,8 +1788,7 @@ PetscErrorCode PoissonSolver_MG(UserMG *usermg)
   if (immersed) {
     for (l=usermg->mglevels-1; l>0; l--) {
 	mgctx[l].user[bi].multinullspace = PETSC_FALSE;
-	MyNvertRestriction(&mgctx[l].user[bi], &mgctx[l-1].user[bi]);
-      
+	MyNvertRestriction(&mgctx[l].user[bi], &mgctx[l-1].user[bi]); 
     }
     /* At the coarsest level, check whether the grid is separated into sevearal 
        blocks by the immersed body */
@@ -1806,17 +1805,17 @@ PetscErrorCode PoissonSolver_MG(UserMG *usermg)
   PetscReal ibm_Flux, ibm_Area;
     
   flg=immersed-1;
-  VolumeFlux(&user[bi], &ibm_Flux, &ibm_Area, flg);
-  if (MHV || LV|| aneurysm) {
-    if ((MHV>1 || LV|| aneurysm) && bi==0 )
+  if (MHV || LV|| aneurysm || LVAD) {
+    if ((MHV>1 || LV || aneurysm || LVAD) && bi==0 )
       flg=1;
     else
       flg=0;
     VolumeFlux_rev(&user[bi], &ibm_Flux, &ibm_Area, flg);
   }
+
+  VolumeFlux(&user[bi], &ibm_Flux, &ibm_Area, flg);
   PoissonRHS(&(user[bi]), user[bi].B);
    
-
   for (l=usermg->mglevels-1; l>=0; l--) {
     
   user = mgctx[l].user;
@@ -1877,7 +1876,7 @@ PetscErrorCode PoissonSolver_MG(UserMG *usermg)
   }
   
 
-  PetscPrintf(PETSC_COMM_WORLD, "PoissonMG Setup\n");
+  if(visflg)   PetscPrintf(PETSC_COMM_WORLD, "PoissonMG Setup\n");
 
   for (l=usermg->mglevels-1; l>=0; l--) {
     user = mgctx[l].user;
@@ -1967,7 +1966,7 @@ PetscErrorCode PoissonSolver_MG(UserMG *usermg)
   }
   
   
-  PetscPrintf(PETSC_COMM_WORLD, "PC for PoissonMG Setup\n");
+   if(visflg)  PetscPrintf(PETSC_COMM_WORLD, "PC for PoissonMG Setup\n");
   
   l = usermg->mglevels-1;
   user = mgctx[l].user;
@@ -1977,7 +1976,7 @@ PetscErrorCode PoissonSolver_MG(UserMG *usermg)
   MatSetNullSpace( user[bi].A, user[bi].nullsp); //Mohsen Nov 2015
   ierr=KSPSetFromOptions(mgksp);CHKERRQ(ierr);
   ierr=KSPSetUp(mgksp);CHKERRQ(ierr);
-  PetscPrintf(PETSC_COMM_WORLD, "KSP Setup & sovle for block %d\n",bi);
+  if(visflg)  PetscPrintf(PETSC_COMM_WORLD, "KSP Setup & solve for block %d\n",bi);
   
   
   ierr= KSPSolve(mgksp, user[bi].B, user[bi].Phi); CHKERRQ(ierr);

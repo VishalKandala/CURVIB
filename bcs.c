@@ -162,7 +162,7 @@ PetscErrorCode InflowFlux(UserCtx *user)
   
     // S-Calc uin
   if (inletprofile == 1) {
-      uin=1.;
+      uin=1.78;
   }     
  //------------------------------------------------------------------------------
   else {

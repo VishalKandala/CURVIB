@@ -9066,9 +9066,9 @@ PetscErrorCode Calc_forces_SI(FSInfo *fsi,UserCtx *user,
   //  fsi->Power=Pw_sideSum;
 /* ==================================================================================             */
 /*   output values */
-  PetscPrintf(PETSC_COMM_WORLD, "F_x,F_y,F_z SI, %le %le %le Az %le %le Ay %le %le\n",F_xSum,F_ySum,F_zSum,Ap_zSum,An_zSum,Ap_ySum,An_ySum);
-  PetscPrintf(PETSC_COMM_WORLD, "M_x,M_y,M_z SI, %le %le %le Ia_x %le %le Ip_y %le %le\n",M_xSum,M_ySum,M_zSum,Iap_xSum,Ian_xSum,Iap_ySum,Ian_ySum);
-  PetscPrintf(PETSC_COMM_WORLD, "Mdpdn_x,Mdpdn_y,Mdpdn_z SI, %le %le %le\n",Mdpdn_xSum,Mdpdn_ySum,Mdpdn_zSum);
+   if(visflg)  PetscPrintf(PETSC_COMM_WORLD, "F_x,F_y,F_z SI, %le %le %le Az %le %le Ay %le %le\n",F_xSum,F_ySum,F_zSum,Ap_zSum,An_zSum,Ap_ySum,An_ySum);
+   if(visflg)  PetscPrintf(PETSC_COMM_WORLD, "M_x,M_y,M_z SI, %le %le %le Ia_x %le %le Ip_y %le %le\n",M_xSum,M_ySum,M_zSum,Iap_xSum,Ian_xSum,Iap_ySum,Ian_ySum);
+   if(visflg)  PetscPrintf(PETSC_COMM_WORLD, "Mdpdn_x,Mdpdn_y,Mdpdn_z SI, %le %le %le\n",Mdpdn_xSum,Mdpdn_ySum,Mdpdn_zSum);
   if (fish)
   PetscPrintf(PETSC_COMM_WORLD, "eff,P_sid,PThrust,PDrag, %le %le %le %le %le\n",efficiency,Pw_sideSum,Pw_xSum,ThrustSum,DragSum);
 

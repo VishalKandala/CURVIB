@@ -4074,7 +4074,7 @@ PetscErrorCode ImplicitMomentumSolver(UserCtx *user, IBMNodes *ibm,
 	 
 	  KSPSolve(ksp, RB[bi], Ucont_i[bi]);
 	 
-	  KSPMonitorTrueResidualNorm(ksp, N, norm, PETSC_NULL);
+	  if(visflg) KSPMonitorTrueResidualNorm(ksp, N, norm, PETSC_NULL);
 
 	
 
