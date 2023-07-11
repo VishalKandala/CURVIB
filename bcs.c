@@ -111,7 +111,7 @@ PetscErrorCode InflowFlux(UserCtx *user)
 {
   PetscInt     i, j, k,rank;
   PetscReal    FluxIn,r, uin0, uin, xc, yc,zc,***RR ;
-  PetscReal    lAreaIn,AreaSumIn;
+  PetscReal    lAreaIn,AreaSumIn,Re;
   Vec          Coor;
   Cmpnts       ***ucont, ***ubcs, ***ucat, ***coor, ***csi, ***eta, ***zet, ***cent;  
   
@@ -161,8 +161,10 @@ PetscErrorCode InflowFlux(UserCtx *user)
 
   
     // S-Calc uin
+//  PetscPrintf(PETSC_COMM_WORLD,"Inletprofile : %d \n",inletprofile);  
   if (inletprofile == 1) {
-      uin=1.78;
+    PetscOptionsGetReal(PETSC_NULL, "-uin", &uin, PETSC_NULL);
+//      PetscPrintf(PETSC_COMM_WORLD,"Inlet Velocity : %f \n",uin);  
   }     
  //------------------------------------------------------------------------------
   else {
@@ -171,7 +173,7 @@ PetscErrorCode InflowFlux(UserCtx *user)
   }
   // E-Calc uin
   //fn is face number which is 0 to 5
-  if(visflg)  PetscPrintf(PETSC_COMM_WORLD,"Inlet Velocity : %le \n",uin);  
+  if(visflg)  PetscPrintf(PETSC_COMM_WORLD,"Inlet Velocity : %f \n",uin);  
   PetscInt fn;PetscReal d;
   FluxIn=0.0;
   lAreaIn=0.0;

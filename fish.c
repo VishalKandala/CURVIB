@@ -303,7 +303,7 @@ PetscErrorCode ibm_read_fish(IBMNodes *ibm,PetscReal cl)
 
     char filen[80];
    
-    sprintf(filen, "surface%3.3d.stl",ti);
+    sprintf(filen, "results/surface%3.3d.stl",ti);
     fd = fopen(filen, "w");
     PetscPrintf(PETSC_COMM_WORLD, "fish nf!\n"); 
 
@@ -330,7 +330,7 @@ PetscErrorCode ibm_read_fish(IBMNodes *ibm,PetscReal cl)
     fclose(fd);
 
     FILE *f;
-    sprintf(filen, "surface_nf%3.3d.dat",ti);
+    sprintf(filen, "results/surface_nf%3.3d.dat",ti);
     f = fopen(filen, "w");
     PetscFPrintf(PETSC_COMM_WORLD, f, "Variables=x,y,z\n");
     PetscFPrintf(PETSC_COMM_WORLD, f, "ZONE T='TRIANGLES', N=%d, E=%d, F=FEBLOCK, ET=TRIANGLE, VARLOCATION=([1-3]=NODAL)\n", n_v, n_elmt);

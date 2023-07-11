@@ -223,7 +223,7 @@ PetscErrorCode Ucont_P_Binary_Output(UserCtx *user, PetscInt bi)
   
   MPI_Comm_rank(PETSC_COMM_WORLD, &rank);
   
-  sprintf(filen, "vfield%5.5d_%1.1d.dat", ti, user->_this);
+  sprintf(filen, "results/vfield%5.5d_%1.1d.dat", ti, user->_this);
   
   PetscViewerBinaryOpen(PETSC_COMM_WORLD, filen, FILE_MODE_WRITE, &viewer);
   
@@ -232,7 +232,7 @@ PetscErrorCode Ucont_P_Binary_Output(UserCtx *user, PetscInt bi)
   PetscViewerDestroy(&viewer);
 
   
-  sprintf(filen, "ufield%5.5d_%1.1d.dat", ti, user->_this);
+  sprintf(filen, "results/ufield%5.5d_%1.1d.dat", ti, user->_this);
   
   PetscViewerBinaryOpen(PETSC_COMM_WORLD, filen, FILE_MODE_WRITE, &viewer);
   
@@ -240,14 +240,14 @@ PetscErrorCode Ucont_P_Binary_Output(UserCtx *user, PetscInt bi)
   
   PetscViewerDestroy(&viewer);
   
-  sprintf(filen, "pfield%5.5d_%1.1d.dat", ti, user->_this);
+  sprintf(filen, "results/pfield%5.5d_%1.1d.dat", ti, user->_this);
   
   PetscViewerBinaryOpen(PETSC_COMM_WORLD, filen, FILE_MODE_WRITE, &viewer);
   
   VecView(user->P, viewer);
   PetscViewerDestroy(&viewer);
 
-  sprintf(filen, "nvfield%5.5d_%1.1d.dat", ti, user->_this);
+  sprintf(filen, "results/nvfield%5.5d_%1.1d.dat", ti, user->_this);
 
   PetscViewerBinaryOpen(PETSC_COMM_WORLD, filen, FILE_MODE_WRITE, &viewer);
   
@@ -698,7 +698,7 @@ int main(int argc, char **argv) {
   PetscOptionsGetString(PETSC_NULL, "-g_orient", gridrotorient,sizeof(orient),PETSC_NULL);   
   
   PetscReal compute_time,time_start,time_end;
-  if(visflg)  PetscPrintf(PETSC_COMM_WORLD, "Data is output for ever  %d timesteps; Implicit Solver Tolerances: Absolute-%le; Relative- %le\n",tiout, imp_atol,imp_rtol);
+  if(visflg)  PetscPrintf(PETSC_COMM_WORLD, "Data is output for every %d timesteps; Implicit Solver Tolerances: Absolute-%le; Relative- %le\n",tiout, imp_atol,imp_rtol);
   PetscTime(&time_start);
 
 // ------------- SETUP PARAMETERS ---------------------------------
@@ -1019,7 +1019,7 @@ int main(int argc, char **argv) {
       VecNorm(Error,NORM_INFINITY,&error);
       // error=error/(user[bi].IM*user[bi].JM*user[bi].KM);
       //  if (error<epsilon) goto nextp;
-    if(visflg)    PetscPrintf(PETSC_COMM_WORLD, "Ucat l_infinity error is  %le \n", error);
+    //  if(visflg)    PetscPrintf(PETSC_COMM_WORLD, "Ucat l_infinity error is  %le \n", error);
       VecDestroy(&Error);
     } // bi
     /*---save location of immersed boundary and at time ti--*/
@@ -1073,7 +1073,7 @@ int main(int argc, char **argv) {
 /* ==================================================================================             */
   PetscTime(&time_end);
   compute_time=time_end-time_start;
-  PetscPrintf(PETSC_COMM_WORLD, "start time: %le , end time:%le ,compute time: %le \n",time_start,time_end,compute_time);
+  PetscPrintf(PETSC_COMM_WORLD, "compute time: %le \n",compute_time);
   MG_Finalize(&usermg); // Finalize (Destroy) grid fda, da and other data structures.
   PetscFinalize();
   return(0);

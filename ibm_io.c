@@ -13,7 +13,7 @@ PetscErrorCode ibm_surface_out(IBMNodes *ibm, PetscInt ti,
     if (ti == ti) {
       FILE *f;
       char filen[80];
-      sprintf(filen, "surface%3.3d_%2.2d.dat",ti,ibi);
+      sprintf(filen, "results/surface%3.3d_%2.2d.dat",ti,ibi);
       f = fopen(filen, "w");
       PetscFPrintf(PETSC_COMM_WORLD, f, "Variables=x,y,z,u_x,u_y,u_z,n_x,n_y,n_z,nt_x,nt_y,nt_z\n");
       PetscFPrintf(PETSC_COMM_WORLD, f, "ZONE T='TRIANGLES', N=%d, E=%d, F=FEBLOCK, ET=TRIANGLE, VARLOCATION=([1-6]=NODAL,[7-12]=CELLCENTERED)\n", ibm->n_v, ibm->n_elmt);
@@ -72,7 +72,7 @@ PetscErrorCode ibm_surface_VTKOut(IBMNodes *ibm, PetscInt ibi, PetscInt ti)
   if (!rank) {
     FILE *f;
     char filen[80];
-    sprintf(filen, "surface%2.2d_%5.5d.vtk", ibi,ti);
+    sprintf(filen, "results/surface%2.2d_%5.5d.vtk", ibi,ti);
     f = fopen(filen, "w"); // open file
 
     PetscFPrintf(PETSC_COMM_WORLD, f, "# vtk DataFile Version 2.0\n");
@@ -1234,7 +1234,7 @@ MPI_Comm_rank(PETSC_COMM_WORLD, &rank);
     MPI_Bcast(ibm->cent_z, n_elmt, MPIU_REAL, 0, PETSC_COMM_WORLD);
 
     PetscInt ti=0;
-    sprintf(filen, "surface_nf%3.3d_%2.2d.dat",ti,nt);
+    sprintf(filen, "results/surface_nf%3.3d_%2.2d.dat",ti,nt);
     fd = fopen(filen, "w");
     PetscFPrintf(PETSC_COMM_WORLD, fd, "Variables=x,y,z,n_x,n_y,n_z,nt_x,nt_y,nt_z,ns_x,ns_y,ns_z\n");
     PetscFPrintf(PETSC_COMM_WORLD, fd, "ZONE T='TRIANGLES', N=%d, E=%d, F=FEBLOCK, ET=TRIANGLE, VARLOCATION=([1-3]=NODAL,[4-12]=CELLCENTERED)\n", n_v, n_elmt);
@@ -1462,7 +1462,7 @@ PetscErrorCode ibm_placement(IBMNodes *ibm, FSInfo *fsi,
     MPI_Bcast(ibm->y_bp_o, n_v, MPIU_REAL, 0, PETSC_COMM_WORLD);
     MPI_Bcast(ibm->z_bp_o, n_v, MPIU_REAL, 0, PETSC_COMM_WORLD);
     
-    sprintf(filen, "surface_nf%3.3d_%2.2d.dat",ti,ibi);
+    sprintf(filen, "results/surface_nf%3.3d_%2.2d.dat",ti,ibi);
     f = fopen(filen, "w");
     PetscFPrintf(PETSC_COMM_WORLD, f, "Variables=x,y,z,n_x,n_y,n_z,nt_x,nt_y,nt_z,ns_x,ns_y,ns_z\n");
     PetscFPrintf(PETSC_COMM_WORLD, f, "ZONE T='TRIANGLES', N=%d, E=%d, F=FEBLOCK, ET=TRIANGLE, VARLOCATION=([1-3]=NODAL,[4-12]=CELLCENTERED)\n", n_v, n_elmt);
@@ -1834,7 +1834,7 @@ PetscErrorCode ibm_read_ucd(IBMNodes *ibm, PetscInt ibi)
     PetscInt ti=0;
     FILE *f;
     //char filen[80];
-    sprintf(filen, "surface_nf%3.3d_%2.2d.dat",ti,ibi);
+    sprintf(filen, "results/surface_nf%3.3d_%2.2d.dat",ti,ibi);
     f = fopen(filen, "w");
     PetscFPrintf(PETSC_COMM_WORLD, f, "Variables=x,y,z,n_x,n_y,n_z,nt_x,nt_y,nt_z,ns_x,ns_y,ns_z\n");
     PetscFPrintf(PETSC_COMM_WORLD, f, "ZONE T='TRIANGLES', N=%d, E=%d, F=FEBLOCK, ET=TRIANGLE, VARLOCATION=([1-3]=NODAL,[4-12]=CELLCENTERED)\n", n_v, n_elmt);
@@ -2917,7 +2917,7 @@ PetscErrorCode ibm_read_Ansys(IBMNodes *ibm, PetscInt ibi)
     PetscPrintf(PETSC_COMM_WORLD, "cop nf!\n"); 
 
 // write the surface
-    sprintf(filen, "surface_nf%3.3d_%2.2d.dat",0,ibi);
+    sprintf(filen, "results/surface_nf%3.3d_%2.2d.dat",0,ibi);
     fd = fopen(filen, "w");
     PetscFPrintf(PETSC_COMM_WORLD, fd, "Variables=x,y,z,n_x,n_y,n_z,nt_x,nt_y,nt_z,ns_x,ns_y,ns_z\n");
     PetscFPrintf(PETSC_COMM_WORLD, fd, "ZONE T='TRIANGLES', N=%d, E=%d, F=FEBLOCK, ET=TRIANGLE, VARLOCATION=([1-3]=NODAL,[4-12]=CELLCENTERED)\n", n_v, n_elmt);
@@ -3343,7 +3343,7 @@ PetscErrorCode ibm_read_Ansys_vol(IBMVNodes *ibmv, PetscInt ibi)// added by Qipi
     PetscPrintf(PETSC_COMM_WORLD, "cop mmmmmnf!\n"); //in order to determine location
 
 // write the surface
-    sprintf(filen, "surface_nf%3.3d_%2.2d.dat",0,ibi);
+    sprintf(filen, "results/surface_nf%3.3d_%2.2d.dat",0,ibi);
     fd = fopen(filen, "w");
     PetscFPrintf(PETSC_COMM_WORLD, fd, "Variables=x,y,z\n");
     PetscFPrintf(PETSC_COMM_WORLD, fd, "ZONE T='TRIANGLES', N=%d, E=%d, F=FEBLOCK, ET=TRIANGLE, VARLOCATION=([1-3]=NODAL,[4-12]=CELLCENTERED)\n", n_v, n_elmt);
@@ -3738,7 +3738,7 @@ PetscErrorCode ibm_read_Icem(IBMNodes *ibm, PetscInt ibi)
 
 /***********************************************************************/
 // write the surface file.
-    sprintf(filen, "surface_nf%3.3d_%2.2d.dat",0,ibi);
+    sprintf(filen, "results/surface_nf%3.3d_%2.2d.dat",0,ibi);
     fd = fopen(filen, "w");
     PetscFPrintf(PETSC_COMM_WORLD, fd, "Variables=x,y,z,n_x,n_y,n_z,nt_x,nt_y,nt_z,ns_x,ns_y,ns_z\n");
     PetscFPrintf(PETSC_COMM_WORLD, fd, "ZONE T='TRIANGLES', N=%d, E=%d, F=FEBLOCK, ET=TRIANGLE, VARLOCATION=([1-3]=NODAL,[4-12]=CELLCENTERED)\n", n_v, n_elmt);

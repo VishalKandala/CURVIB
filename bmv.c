@@ -144,7 +144,7 @@ PetscErrorCode Elmt_Init_Cyl(IBMNodes *ibm, UserCtx *user)
     if (ti == (ti/tiout)*tiout) {
       FILE *f;
       char filen[80];
-      sprintf(filen, "surface%3.3d.dat",ti);
+      sprintf(filen, "results/surface%3.3d.dat",ti);
       f = fopen(filen, "w");
       PetscFPrintf(PETSC_COMM_WORLD, f, "Variables=x,y,z\n");
       PetscFPrintf(PETSC_COMM_WORLD, f, "ZONE T='TRIANGLES', N=%d, E=%d, F=FEPOINT, ET=TRIANGLE\n", n_v, n_elmt);
@@ -254,7 +254,7 @@ PetscErrorCode Combine_Elmt(IBMNodes *ibm, IBMNodes *ibm0, IBMNodes *ibm1)
     if (ti == (ti/tiout)*tiout) {
       FILE *f;
       char filen[80];
-      sprintf(filen, "surface%3.3d.dat",ti);
+      sprintf(filen, "results/surface%3.3d.dat",ti);
       f = fopen(filen, "w");
       PetscFPrintf(PETSC_COMM_WORLD, f, "Variables=x,y,z\n");
       PetscFPrintf(PETSC_COMM_WORLD, f, "ZONE T='TRIANGLES', N=%d, E=%d, F=FEPOINT, ET=TRIANGLE\n", n_v, n_elmt);

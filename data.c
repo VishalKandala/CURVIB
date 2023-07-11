@@ -26,6 +26,8 @@ PetscInt   tiout = 10;
 PetscInt   STRONG_COUPLING=0, wallfunction=0;
 PetscInt   fish=0, eel=0,rheology=0,pizza=0,sediment=0;
 PetscInt   radi=10,tistart,Ddata=0,qv=0,unorm=0,vx=0,nudata=1,averaging,max_angle;
+PetscInt   visflg=0;
+char       orient[] = "xx00";
 /* typedef struct { */
 /*   PetscReal t, f; */
 /* } FlowWave; */
@@ -572,7 +574,7 @@ PetscErrorCode VTKOut(UserCtx *user) {
       cdim=3; //dimension of the grid
       //////////////////////
       char filen[80];
-      sprintf(filen, "Result%2.2d_%5.5d.vts", bi,ti);
+      sprintf(filen, "results/Result%2.2d_%5.5d.vts", bi,ti);
       
       PetscFOpen(MPI_COMM_WORLD,filen,"wb",&fp);
       PetscFPrintf(MPI_COMM_WORLD,fp,"<?xml version=\"1.0\"?>\n");
@@ -1836,7 +1838,7 @@ PetscErrorCode VTKOutQ_Binary(UserCtx *user)
 
     // vtk file name
     char filen[80];
-    sprintf(filen, "QCriteria%2.2d_%5.5d.vtk", bi,ti);
+    sprintf(filen, "results/QCriteria%2.2d_%5.5d.vtk", bi,ti);
 
     f = fopen(filen, "wb"); // open file
      
@@ -3945,7 +3947,7 @@ PetscErrorCode Ucont_P_Binary_Input(UserCtx *user)
   char filen2[90];
 
   PetscOptionsClearValue("-vecload_block_size");
-  sprintf(filen2, "pfield%5.5d_%1.1d.dat", ti, user->_this);
+  sprintf(filen2, "results/pfield%5.5d_%1.1d.dat", ti, user->_this);
 
   PetscViewer	pviewer;
   Vec temp;
@@ -3965,7 +3967,7 @@ PetscErrorCode Ucont_P_Binary_Input(UserCtx *user)
 
   VecDestroy(&temp);
 
-  sprintf(filen2, "nvfield%5.5d_%1.1d.dat", ti, user->_this);
+  sprintf(filen2, "results/nvfield%5.5d_%1.1d.dat", ti, user->_this);
 
   PetscViewerBinaryOpen(PETSC_COMM_WORLD, filen2, FILE_MODE_READ, &pviewer);
 
@@ -3982,7 +3984,7 @@ PetscErrorCode Ucont_P_Binary_Input1(UserCtx *user, PetscInt flg)
   char filen[90];
   PetscInt bi=user->_this;
   
-  sprintf(filen, "ufield%5.5d_%1.1d.dat", ti, user->_this);
+  sprintf(filen, "results/ufield%5.5d_%1.1d.dat", ti, user->_this);
 
   PetscViewerBinaryOpen(PETSC_COMM_WORLD, filen, FILE_MODE_READ, &viewer);
 
@@ -5231,7 +5233,7 @@ int main(int argc, char **argv) {
   PetscInt rank, bi, ibi,i;
   
   //PetscMalloc(sizeof(IBMNodes), &ibm0);
-  
+   
   MPI_Comm_rank(PETSC_COMM_WORLD, &rank);
   PetscBool fish = PETSC_FALSE;
   PetscOptionsGetInt(PETSC_NULL, "-fish", &fish, PETSC_NULL);
@@ -5265,6 +5267,9 @@ int main(int argc, char **argv) {
   PetscOptionsGetReal(PETSC_NULL, "-x_c", &(CMx_c), PETSC_NULL);
   PetscOptionsGetReal(PETSC_NULL, "-y_c", &(CMy_c), PETSC_NULL);
   PetscOptionsGetReal(PETSC_NULL, "-z_c", &(CMz_c), PETSC_NULL);
+  
+  PetscOptionsGetInt(PETSC_NULL, "-vis_flg", &visflg, PETSC_NULL);
+  PetscOptionsGetString(PETSC_NULL, "-orient", orient,sizeof(orient),PETSC_NULL);
   
   PetscMalloc(NumberOfBodies*sizeof(IBMNodes), &ibm);
   

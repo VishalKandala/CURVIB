@@ -4186,7 +4186,7 @@ PetscErrorCode ImplicitMomentumSolver(UserCtx *user, IBMNodes *ibm,
 	  FILE *f;
 	  char filen[80];
 	 
-	  sprintf(filen, "Converge_dU%1.1d",bi);
+	  sprintf(filen, "results/Converge_dU%1.1d",bi);
 	  f = fopen(filen, "a");
 	  PetscFPrintf(PETSC_COMM_WORLD, f, "%d %d %le %le %le %le %le\n",ti, pseudot, normdU_bk[bi], reldU_bk[bi], normF_bk[bi],normdT, cput);
 	  fclose(f);
@@ -4537,7 +4537,7 @@ PetscErrorCode ImplicitMomentumSolver1(UserCtx *user, IBMNodes *ibm,
 	if (!rank) {
 	  FILE *f;
 	  char filen[80];
-	  sprintf(filen, "Converge_dU%1.1d",dir);
+	  sprintf(filen, "results/Converge_dU%1.1d",dir);
 	  //sprintf(filen, "Converge_dU",dir);
 	  f = fopen(filen, "a");
 	  PetscFPrintf(PETSC_COMM_WORLD, f, "%d %d %le %le %le %le %le\n",ti, pseudot, normdU, reldU, normF,normdT, cput);
@@ -7070,7 +7070,7 @@ PetscErrorCode LineSearch_QNewton(UserCtx *user, IBMNodes *ibm,
 	if (!rank) {
 	  FILE *f;
 	  char filen[80];
-	  sprintf(filen, "Converge_dU%1.1d",dir);
+	  sprintf(filen, "results/Converge_dU%1.1d",dir);
 	  //sprintf(filen, "Converge_dU",dir);
 	  f = fopen(filen, "a");
 	  PetscFPrintf(PETSC_COMM_WORLD, f, "%d %d %le %le %le %le %le\n",ti, pseudot, normdU, reldU, normF,relF, cput);
@@ -7239,7 +7239,7 @@ PetscErrorCode ImpRK(UserCtx *user, IBMNodes *ibm,
 	 FILE *f;
 	 char filen[80];
 	 
-	 sprintf(filen, "Converge_dU%1.1d",bi);
+	 sprintf(filen, "results/Converge_dU%1.1d",bi);
 	 f = fopen(filen, "a");
 	 PetscFPrintf(PETSC_COMM_WORLD, f, "%d %d %le %le %le %le %le\n",ti, pseudot, normdU_bk[bi], reldU_bk[bi], normF_bk[bi],normdT, cput);
 	 fclose(f);
@@ -8943,7 +8943,7 @@ PetscErrorCode Implicit_MatrixFree(UserCtx *user, IBMNodes *ibm, FSInfo *fsi)
   if (!rank) {
     FILE *f;
     char filen[80];
-    sprintf(filen, "Converge_dU");
+    sprintf(filen, "results/Converge_dU");
     f = fopen(filen, "a");
     PetscFPrintf(PETSC_COMM_WORLD, f, "%d(momentum) %.2e(s) %le\n", ti, cput, norm);
     fclose(f);

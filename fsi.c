@@ -9077,20 +9077,20 @@ PetscErrorCode Calc_forces_SI(FSInfo *fsi,UserCtx *user,
   if (!rank) {
     FILE *f;
     char filen[80];
-    sprintf(filen, "Force_Coeff_SI%2.2d_%2.2d",ibi,bi);
+    sprintf(filen, "results/Force_Coeff_SI%2.2d_%2.2d",ibi,bi);
     f = fopen(filen, "a");
     PetscFPrintf(PETSC_COMM_WORLD, f, "%d %le %le %le %le %le %le %le %le %le\n",ti, F_xSum, F_ySum, F_zSum,Cp_xSum,Cp_ySum,Cp_zSum, A_xSum,A_ySum,A_zSum);
 /*     PetscFPrintf(PETSC_COMM_WORLD, f, "%d %le %le %le %le %le %le %le %le %le %le\n",ti,F_ySum, F_zSum,Cp_ySum,Cp_zSum,F_ySum-Cp_ySum,F_zSum-Cp_zSum,A_ySum,F_xSum, M_xSum); */
     fclose(f);
 
-    sprintf(filen, "Momt_Coeff_SI%2.2d_%2.2d",ibi,bi);
+    sprintf(filen, "results/Momt_Coeff_SI%2.2d_%2.2d",ibi,bi);
     f = fopen(filen, "a");
 /*     PetscFPrintf(PETSC_COMM_WORLD, f, "%d %le %le %le %le %le %le %le %le %le\n",ti, F_xSum, F_ySum, F_zSum,Cp_xSum,Cp_ySum,Cp_zSum, A_xSum,A_ySum,A_zSum); */
     PetscFPrintf(PETSC_COMM_WORLD, f, "%d %le %le %le %le %le %le\n",ti, M_xSum, M_ySum, M_zSum, fsi->M_x_old, fsi->M_x_real, fsi->Mdpdn_x);
     fclose(f);
 
     //if (fish) {
-    sprintf(filen, "Power_SI%2.2d_%2.2d",ibi,bi);
+    sprintf(filen, "results/Power_SI%2.2d_%2.2d",ibi,bi);
     f = fopen(filen, "a");
     PetscFPrintf(PETSC_COMM_WORLD, f," %d %le %le %le %le %le %le %le\n",ti, efficiency,Pw_sideSum,Pw_xSum,Pw_ySum,Pw_zSum,F_zSum,A_tSum);
     fclose(f);
@@ -11061,7 +11061,7 @@ PetscErrorCode Projecting_VTKOut(IBMNodes *ibm, PetscInt ibi, PetscInt ti)
   if (!rank) {
     FILE *f;
     char filen[80];
-    sprintf(filen, "surface%2.2d_%5.5d.vtk", ibi,ti);
+    sprintf(filen, "results/surface%2.2d_%5.5d.vtk", ibi,ti);
     f = fopen(filen, "w"); // open file
 
     PetscFPrintf(PETSC_COMM_WORLD, f, "# vtk DataFile Version 2.0\n");

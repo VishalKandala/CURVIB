@@ -104,7 +104,7 @@ PetscErrorCode FSI_DATA_Output(FSInfo *FSinfo, PetscInt ibi)
   if (!rank) {
     FILE *f;
     char filen[80];
-    sprintf(filen, "FSI_position%2.2d",ibi);
+    sprintf(filen, "results/FSI_position%2.2d",ibi);
     f = fopen(filen, "a");
 
     PetscFPrintf(PETSC_COMM_WORLD, f, "%d %le %le %le %le %le %le %le %le %le %le\n",ti, FSinfo->S_new[2],FSinfo->S_new[3],FSinfo->F_y, FSinfo->S_new[4],FSinfo->S_new[5],FSinfo->F_z,FSinfo->S_new[0],FSinfo->S_new[1],FSinfo->F_x, FSinfo->Power);
@@ -112,14 +112,14 @@ PetscErrorCode FSI_DATA_Output(FSInfo *FSinfo, PetscInt ibi)
 
 
 
-    sprintf(filen, "FSI_Agnle%2.2d",ibi);
+    sprintf(filen, "results/FSI_Angle%2.2d",ibi);
     f = fopen(filen, "a");
     if (rheology)  PetscFPrintf(PETSC_COMM_WORLD, f, "%d %le %le %le %le %le %le %le \n",ti,FSinfo->S_ang_n[1],FSinfo->M_x,FSinfo->S_ang_n[3],FSinfo->S_ang_n[5],FSinfo->alpha[0],FSinfo->alpha[1],FSinfo->alpha[2]);
     else
       PetscFPrintf(PETSC_COMM_WORLD, f, "%d %le %le %le %le %le %le %le\n",ti, FSinfo->S_ang_n[0],FSinfo->S_ang_n[1],FSinfo->M_x,FSinfo->S_ang_n[2],FSinfo->S_ang_n[3],FSinfo->S_ang_n[4],FSinfo->S_ang_n[5]);
     fclose(f);
 
-    sprintf(filen, "DATA_FSI%5.5d_%2.2d.dat",ti, ibi);
+    sprintf(filen, "results/DATA_FSI%5.5d_%2.2d.dat",ti, ibi);
     f = fopen(filen, "w");
     PetscFPrintf(PETSC_COMM_WORLD, f, "%le %le %le \n", FSinfo->red_vel, FSinfo->damp, FSinfo->mu_s);	  
     PetscFPrintf(PETSC_COMM_WORLD, f, "%le %le %le \n", FSinfo->x_c, FSinfo->y_c, FSinfo->z_c);	  
@@ -323,13 +323,13 @@ PetscErrorCode Calc_FSI_pos(FSInfo *FSinfo,IBMNodes *ibm,
   if (!rank) {
     FILE *f;
     char filen[80];
-    sprintf(filen, "FSI_position");
+    sprintf(filen, "results/FSI_position");
     f = fopen(filen, "a");
 /*     PetscFPrintf(PETSC_COMM_WORLD, f, "%d %le %le %le %le %le %le %le\n",ti, S_new[4],S_new[5],F_z, S_real[4], S_real[5], S_realm1[4], S_realm1[5]); */
     PetscFPrintf(PETSC_COMM_WORLD, f, "%d %le %le %le %le %le %le %le\n",ti, S_new[2],S_new[3],F_z, S_real[2], S_real[3], S_realm1[2], S_realm1[3]);
     fclose(f);
 
-    sprintf(filen, "DATA_FSI%5.5d.dat",ti);
+    sprintf(filen, "results/DATA_FSI%5.5d.dat",ti);
     f = fopen(filen, "w");
     PetscFPrintf(PETSC_COMM_WORLD, f, "%le %le %le \n", FSinfo->red_vel, FSinfo->damp, FSinfo->mu_s);	  
     PetscFPrintf(PETSC_COMM_WORLD, f, "%le %le %le \n", FSinfo->x_c, FSinfo->y_c, FSinfo->z_c);	  
@@ -1103,7 +1103,7 @@ PetscErrorCode Elmt_Move_FSI_TRANS(FSInfo *FSinfo, IBMNodes *ibm
     if (ti == (ti/tiout)*tiout) {
       FILE *f;
       char filen[80];
-      sprintf(filen, "surface%3.3d_%2.2d.dat",ti,ibi);
+      sprintf(filen, "results/surface%3.3d_%2.2d.dat",ti,ibi);
       //      sprintf(filen, "surface%3.3d.dat",ti);
       f = fopen(filen, "w");
       PetscFPrintf(PETSC_COMM_WORLD, f, "Variables=x,y,z\n");
@@ -1291,7 +1291,7 @@ PetscErrorCode Elmt_Move_FSI_ROT(FSInfo *FSinfo, IBMNodes *ibm,
     if (ti == (ti/tiout)*tiout) {
       FILE *f;
       char filen[80];
-      sprintf(filen, "surface%3.3d_%2.2d.dat",ti,ibi);
+      sprintf(filen, "results/surface%3.3d_%2.2d.dat",ti,ibi);
       f = fopen(filen, "w");
       PetscFPrintf(PETSC_COMM_WORLD, f, "Variables=x,y,z\n");
       PetscFPrintf(PETSC_COMM_WORLD, f, "ZONE T='TRIANGLES', N=%d, E=%d, F=FEPOINT, ET=TRIANGLE\n", n_v, n_elmt);
@@ -2273,7 +2273,7 @@ PetscErrorCode SwingCylinder(FSInfo *fsi, IBMNodes *ibm)
     if (ti == (ti/tiout)*tiout) {
       FILE *f;
       char filen[80];
-      sprintf(filen, "surface%3.3d.dat",ti);
+      sprintf(filen, "results/surface%3.3d.dat",ti);
       f = fopen(filen, "w");
       PetscFPrintf(PETSC_COMM_WORLD, f, "Variables=x,y,z\n");
       PetscFPrintf(PETSC_COMM_WORLD, f, "ZONE T='TRIANGLES', N=%d, E=%d, F=FEPOINT, ET=TRIANGLE\n", n_v, n_elmt);
@@ -2592,7 +2592,7 @@ PetscErrorCode LV_beat(IBMNodes *ibm, PetscReal time
 
   if (!rank) {
     if (ti == (ti/tiout)*tiout) {
-      sprintf(filen, "surface%3.3d_%2.2d.dat",ti,ibi);
+      sprintf(filen, "results/surface%3.3d_%2.2d.dat",ti,ibi);
       f = fopen(filen, "w");
       PetscFPrintf(PETSC_COMM_WORLD, f, "Variables=x,y,z,n_x,n_y,n_z,nt_x,nt_y,nt_z,ns_x,ns_y,ns_z\n");
       PetscFPrintf(PETSC_COMM_WORLD, f, "ZONE T='TRIANGLES', N=%d, E=%d, F=FEBLOCK, ET=TRIANGLE, VARLOCATION=([1-3]=NODAL,[4-12]=CELLCENTERED)\n", n_v, n_elmt);

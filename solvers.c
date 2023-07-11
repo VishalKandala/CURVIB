@@ -3,7 +3,7 @@
 extern PetscInt   block_number, ti, tiout, NumberOfBodies;
 extern PetscInt   movefsi, rotatefsi, moveibm,immersed, STRONG_COUPLING;
 extern PetscInt   implicit, TwoD, fish_c, sediment, wing,rheology,duplicate,turbine;
-extern PetscInt   cop, regime, fish, fishcyl, MHV, LV, moveframe,rotateframe;
+extern PetscInt   cop, regime, fish, fishcyl, MHV, LV,LVAD, moveframe,rotateframe;
 extern PetscReal  max_angle, Flux_in, St_exp, FluxInSum;
 extern PetscInt   les, dynamic_freq, tistart, averaging, poisson,visflg;
 /* // */
@@ -38,7 +38,7 @@ PetscErrorCode Struc_Solver(UserMG *usermg,IBMNodes *ibm,
   /*     Store old values to determine SC convergence */
   /* ==================================================================================             */
   
-  if (movefsi || rotatefsi || MHV || fish || cop || fish_c || rheology) {
+  if (movefsi || rotatefsi || MHV || fish || cop || fish_c || rheology || LVAD) {
     for (ibi=0;ibi<NumberOfBodies;ibi++) {
       for (i=0;i<6;i++){
 	fsi[ibi].S_old[i] = fsi[ibi].S_new[i];
@@ -89,7 +89,7 @@ PetscErrorCode Struc_Solver(UserMG *usermg,IBMNodes *ibm,
       
       /* Corrector step! start from the same solution  */
       
-      if ((MHV || movefsi || rotatefsi || cop || fish || rheology) && itr_sc>1) {
+      if ((MHV || movefsi || rotatefsi || cop || fish || rheology || LVAD) && itr_sc>1) {
 	PetscPrintf(PETSC_COMM_WORLD, "Corrector Step itr # %d\n", itr_sc);
 	
 	VecCopy(user[bi].Ucont_o, user[bi].Ucont);

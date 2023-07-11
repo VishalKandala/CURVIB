@@ -1633,7 +1633,7 @@ PetscErrorCode cop_swim(IBMNodes *ibm, PetscReal time
      if (!rank) {
        if (ti == (ti/tiout)*tiout) {
 
-	 sprintf(filen, "surface%3.3d_%2.2d.dat",ti,ibi);
+	 sprintf(filen, "results/surface%3.3d_%2.2d.dat",ti,ibi);
 	 f  = fopen(filen, "w");
 	 PetscFPrintf(PETSC_COMM_WORLD, f, "Variables=x,y,z,n_x,n_y,n_z,nt_x,nt_y,nt_z,ns_x,ns_y,ns_z\n");
 	 PetscFPrintf(PETSC_COMM_WORLD, f, "ZONE T='TRIANGLES', N=%d, E=%d, F=FEBLOCK, ET=TRIANGLE, VARLOCATION=([1-3]=NODAL,[4-12]=CELLCENTERED)\n", ibm[ibi].n_v, ibm[ibi].n_elmt);
