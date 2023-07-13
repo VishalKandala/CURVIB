@@ -2,7 +2,7 @@
 #include "stdlib.h"
 #include "time.h"
 extern PetscInt thin, block_number,invicid, sediment,visflg;
-extern PetscInt NumberOfBodies, moveframe, wallfunction;
+extern PetscInt NumberOfBodies, moveframe, wallfunction,tistart;
 
 PetscErrorCode BoundingSphere(IBMNodes *ibm);
 PetscErrorCode nearestcell1(Cmpnts p, IBMNodes *ibm, IBMInfo *ibminfo);
@@ -241,8 +241,9 @@ PetscErrorCode ibm_search_advanced(UserCtx *user, IBMNodes *ibm,
  for (k=lzs; k<lze; k++) {
     for (j=lys; j<lye; j++) {
       for (i=lxs; i<lxe; i++) {
-	if (ibi==0 && nvert[k][j][i]<5.) nvert[k][j][i] = 0; //reset nvert if new search
-
+        if(tistart==0){
+	  if (ibi==0 && nvert[k][j][i]<5.) nvert[k][j][i] = 0; //reset nvert if new search
+          }
 	if (coor[k][j][i].x > xbp_min && coor[k][j][i].x < xbp_max &&     
 	    coor[k][j][i].y > ybp_min && coor[k][j][i].y < ybp_max &&
 	    coor[k][j][i].z > zbp_min && coor[k][j][i].z < zbp_max) {            // Checking whether the grid point(fluid grid) is inside the bounding box.
@@ -709,8 +710,9 @@ PetscErrorCode ibm_search_advanced_rev(UserCtx *user, IBMNodes *ibm,
   for (k=lzs; k<lze; k++) {
     for (j=lys; j<lye; j++) {
       for (i=lxs; i<lxe; i++) {
-		if (ibi==0) nvert[k][j][i] = 0; //reset nvert if new search
-
+        if(tistart==0){
+	  if (ibi==0) nvert[k][j][i] = 0; //reset nvert if new search
+          }
 	if (coor[k][j][i].x > xbp_min && coor[k][j][i].x < xbp_max &&
 	    coor[k][j][i].y > ybp_min && coor[k][j][i].y < ybp_max &&
 	    coor[k][j][i].z > zbp_min && coor[k][j][i].z < zbp_max) {

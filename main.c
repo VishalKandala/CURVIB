@@ -894,11 +894,11 @@ int main(int argc, char **argv) {
   if (immersed) {
     for (level = usermg.mglevels-1; level>=usermg.mglevels-1; level--) {
       user = usermg.mgctx[level].user;
-      for (bi=bis; bi<bie; bi++) {
+      for (bi=bis; bi<bie; bi++) {  // chimera fluid grid blocks.
  
 	user[bi].ibm=ibm;
 
-	for (ibi=0;ibi<NumberOfBodies;ibi++) {
+	for (ibi=0;ibi<NumberOfBodies;ibi++) {  // immersed bodies
 	    if(LVAD){
 	      ibm_search_advanced_rev(&(user[bi]), &ibm[ibi], ibi);  
   	      if(visflg)  PetscPrintf(PETSC_COMM_WORLD, "IBM_SERA REV LVAD  ibi %d bi %d\n", ibi,bi);        
@@ -935,7 +935,7 @@ int main(int argc, char **argv) {
 	InflowFlux(&(user[bi]));
 	FormBCS(&(user[bi]));
       }
-      }
+      } // chimera blocks 
       if (block_number>1) {
 	Block_Interface_U(user);   // If more than one blocks(meshes) are present, setup interface conditions
       }
