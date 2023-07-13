@@ -91,7 +91,7 @@ PetscErrorCode Ucont_P_Binary_Input(UserCtx *user)
   char filen[90];
   
   
-  sprintf(filen, "vfield%5.5d_%1.1d.dat", ti, user->_this);
+  sprintf(filen, "results/vfield%5.5d_%1.1d.dat", ti, user->_this);
 
   PetscViewerBinaryOpen(PETSC_COMM_WORLD, filen, FILE_MODE_READ, &viewer);
   PetscInt N;
@@ -106,13 +106,13 @@ PetscErrorCode Ucont_P_Binary_Input(UserCtx *user)
 
   PetscOptionsClearValue("-vecload_block_size");
 
-  sprintf(filen, "pfield%5.5d_%1.1d.dat", ti, user->_this);
+  sprintf(filen, "results/pfield%5.5d_%1.1d.dat", ti, user->_this);
 
   PetscViewerBinaryOpen(PETSC_COMM_WORLD, filen, FILE_MODE_READ, &viewer);
   VecLoad((user->P),viewer);
   PetscViewerDestroy(&viewer);
 
-  sprintf(filen, "nvfield%5.5d_%1.1d.dat", ti, user->_this);
+  sprintf(filen, "results/nvfield%5.5d_%1.1d.dat", ti, user->_this);
 
   PetscViewerBinaryOpen(PETSC_COMM_WORLD, filen, FILE_MODE_READ, &viewer);
   VecLoad((user->Nvert_o),viewer);
@@ -122,7 +122,7 @@ PetscErrorCode Ucont_P_Binary_Input(UserCtx *user)
   DMGlobalToLocalEnd(user->da, user->Nvert_o, INSERT_VALUES, user->lNvert_o);
 
   if(averaging) {	// Seokkoo Kang
-    sprintf(filen, "su0_%06d_%1d.dat",ti, user->_this);
+    sprintf(filen, "results/su0_%06d_%1d.dat",ti, user->_this);
     FILE *fp=fopen(filen, "r");
     
     VecSet(user->Ucat_sum, 0);
