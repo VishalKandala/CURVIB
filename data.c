@@ -691,6 +691,10 @@ PetscErrorCode VTKOut(UserCtx *user) {
       for (k=0; k<mz-1; k++) {
 	for (j=0; j<my-1; j++) {
 	  for (i=0; i<mx-1; i++) {
+            ucat_o[k][j][i].x = ucat[k][j][i].x;          
+            ucat_o[k][j][i].y = ucat[k][j][i].y;
+            ucat_o[k][j][i].z = ucat[k][j][i].z;
+/* Averaging ucat
 	    ucat_o[k][j][i].x =  0.125 *
 	      (ucat[k][j][i].x + ucat[k][j][i+1].x +
 	       ucat[k][j+1][i].x + ucat[k][j+1][i+1].x +
@@ -707,7 +711,7 @@ PetscErrorCode VTKOut(UserCtx *user) {
 	       ucat[k+1][j][i].z + ucat[k+1][j][i+1].z +
 	       ucat[k+1][j+1][i].z + ucat[k+1][j+1][i+1].z);
 	    //////////
-	    
+*/	    
 	    x=ucat_o[k][j][i].x;
 	    y=ucat_o[k][j][i].y;
 	    

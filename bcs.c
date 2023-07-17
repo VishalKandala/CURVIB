@@ -4469,7 +4469,7 @@ DM            da = user->da, fda = user->fda;
     } // inlet at -y
    else if(inletface==4){ // if inlet at -z
      if(outletface==0 || outletface==2) ratio = (-FluxIn - FluxOutSum)/AreaSum;  // outlet at -x or -y 
-     else ratio = (FluxIn - FluxOutSum)/AreaSum; // outlet at +x,+y,+z
+     else ratio = (FluxIn - FluxOutSumcont)/AreaSum; // outlet at +x,+y,+z
     } // inlet at -z
    } // inlet at -x,-y or -z 
  //-------------------------------------------------------------------------------------------------- 
