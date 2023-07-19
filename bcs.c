@@ -6,11 +6,11 @@
 #include "petsctime.h"
 
 extern PetscInt ti, moveframe, blank;
-extern PetscReal FluxInSum,FluxOutSum;
+extern PetscReal FluxInSum,FluxOutSum,FluxOutSumcont;
 extern PetscReal Flux_in, angle,CMy_c, CMx_c,CMz_c;
 extern PetscInt block_number;
 extern PetscInt inletprofile,visflg;
-extern PetscInt inletface,outletface;
+extern PetscInt inletface,outletface,catcorr;
 PetscReal FluxInSumB[5],FluxOutSumB[5],AreaOutB[5],OFC[5];  // Maximum block number assumed 5,OFC:Outlet Flux Coefficient
 PetscErrorCode Contra2Cart(UserCtx *user);
 PetscErrorCode VTKOut(UserCtx *user);
@@ -401,7 +401,7 @@ PetscErrorCode OutflowFlux(UserCtx *user) {
 
 
   PetscInt      i, j, k;
-  PetscReal     FluxOut;
+  PetscReal     FluxOut,FluxOutcont;
   Cmpnts	***ucont, ***ucat, ***csi, ***eta, ***zet;
   PetscReal     ***nvert;
   DM            da = user->da, fda = user->fda;
@@ -435,7 +435,7 @@ PetscErrorCode OutflowFlux(UserCtx *user) {
   
   //fn is face number which is 0 to 5
   PetscInt fn;
-  FluxOut = 0.0;
+  FluxOut = 0.0, FluxOutcont = 0.0;
   PetscReal lArea=0.0,lAreaSum=0.0;
 //  for (fn=0; fn<6; fn++) {
 //    if (user->bctype[fn] == 4) {
@@ -449,7 +449,11 @@ PetscErrorCode OutflowFlux(UserCtx *user) {
 	  for (k=lzs; k<lze; k++) {
 	    for (j=lys; j<lye; j++) {
               if(nvert[k][j][i+1]<0.1){
-	        FluxOut += ucont[k][j][i].x;
+	        FluxOutcont +=(ucat[k][j][i+1].x*(csi[k][j][i].x) +
+                          ucat[k][j][i+1].y*(csi[k][j][i].y) + 
+                          ucat[k][j][i+1].z*(csi[k][j][i].z));         
+                
+                FluxOut += ucont[k][j][i].x;
 	        lArea += sqrt( (csi[k][j][i].x) * (csi[k][j][i].x) +
 			     (csi[k][j][i].y) * (csi[k][j][i].y) +
 			     (csi[k][j][i].z) * (csi[k][j][i].z));
@@ -467,6 +471,10 @@ PetscErrorCode OutflowFlux(UserCtx *user) {
 	  for (k=lzs; k<lze; k++) {
 	    for (j=lys; j<lye; j++) {
 	      if(nvert[k][j][i]<0.1){
+                FluxOutcont +=(ucat[k][j][i].x*(csi[k][j][i].x) +
+                           ucat[k][j][i].y*(csi[k][j][i].y) +
+                           ucat[k][j][i].z*(csi[k][j][i].z)); 
+ 
                 FluxOut += ucont[k][j][i].x;
 	        lArea += sqrt((csi[k][j][i].x) * (csi[k][j][i].x) +
 			     (csi[k][j][i].y) * (csi[k][j][i].y) +
@@ -484,7 +492,11 @@ PetscErrorCode OutflowFlux(UserCtx *user) {
 	  for (k=lzs; k<lze; k++) {
 	    for (i=lxs; i<lxe; i++) {
               if(nvert[k][j+1][i]<0.1){
-	      FluxOut += ucont[k][j][i].y;
+	      FluxOutcont +=(ucat[k][j+1][i].x*(eta[k][j][i].x) + 
+                         ucat[k][j+1][i].y*(eta[k][j][i].y) + 
+                         ucat[k][j+1][i].z*(eta[k][j][i].z)); 
+              
+              FluxOut += ucont[k][j][i].y;
 	      lArea += sqrt( (eta[k][j][i].x) * (eta[k][j][i].x) +
 			     (eta[k][j][i].y) * (eta[k][j][i].y) +
 			     (eta[k][j][i].z) * (eta[k][j][i].z));
@@ -501,6 +513,10 @@ PetscErrorCode OutflowFlux(UserCtx *user) {
 	  for (k=lzs; k<lze; k++) {
 	    for (i=lxs; i<lxe; i++) {
 	      if(nvert[k][j][i]<0.1){
+                FluxOutcont +=(ucat[k][j][i].x*(eta[k][j][i].x) +
+                           ucat[k][j][i].y*(eta[k][j][i].y) +
+                           ucat[k][j][i].z*(eta[k][j][i].z)); 
+ 
                 FluxOut += ucont[k][j][i].y;
                // PetscPrintf(PETSC_COMM_SELF,"ucont.x,y,z=%le,%le,%le \n",ucont[k][j][i].x,ucont[k][j][i].y,ucont[k][j][i].z);
                 lArea += sqrt( (eta[k][j][i].x) * (eta[k][j][i].x) +
@@ -519,6 +535,10 @@ PetscErrorCode OutflowFlux(UserCtx *user) {
 	  for (j=lys; j<lye; j++) {
 	    for (i=lxs; i<lxe; i++) {
 	     if(nvert[k+1][j][i]<0.1){
+                FluxOutcont +=(ucat[k+1][j][i].x*(zet[k][j][i].x) + 
+                          ucat[k+1][j][i].y*(zet[k][j][i].y) + 
+                          ucat[k+1][j][i].z*(zet[k][j][i].z)); 
+                
                 FluxOut += ucont[k][j][i].z;
                 lArea += sqrt( (zet[k][j][i].x) * (zet[k][j][i].x) +
 			     (zet[k][j][i].y) * (zet[k][j][i].y) +
@@ -536,6 +556,9 @@ PetscErrorCode OutflowFlux(UserCtx *user) {
 	  for (j=lys; j<lye; j++) {
 	    for (i=lxs; i<lxe; i++) {
 	      if(nvert[k][j][i]<0.1){
+                FluxOutcont +=(ucat[k][j][i].x*(zet[k][j][i].x) +
+                           ucat[k][j][i].y*(zet[k][j][i].y) +
+                           ucat[k][j][i].z*(zet[k][j][i].z)); 
                  FluxOut += ucont[k][j][i].z;
                  lArea += sqrt( (zet[k][j][i].x) * (zet[k][j][i].x) +
 			     (zet[k][j][i].y) * (zet[k][j][i].y) +
@@ -552,8 +575,9 @@ PetscErrorCode OutflowFlux(UserCtx *user) {
   
   MPI_Allreduce(&lArea,&lAreaSum,1,MPI_DOUBLE,MPI_SUM,PETSC_COMM_WORLD);
   MPI_Allreduce(&FluxOut,&FluxOutSum,1,MPI_DOUBLE,MPI_SUM,PETSC_COMM_WORLD);
-  if(visflg)  PetscPrintf(PETSC_COMM_WORLD,"Outflow Flux - Area:  %le - %le \n",FluxOutSum,lAreaSum);    
-  user->FluxOutSum = FluxOutSum;
+  MPI_Allreduce(&FluxOutcont,&FluxOutSumcont,1,MPI_DOUBLE,MPI_SUM,PETSC_COMM_WORLD);
+  if(visflg)  PetscPrintf(PETSC_COMM_WORLD,"Outflow Cont Flux - Cart Flux -  Area:  %le - %le - %le \n",FluxOutSum,FluxOutSumcont,lAreaSum);    
+  user->FluxOutSum = FluxOutSum;  // Contravariant sum
   FluxOutSumB[user->_this]=FluxOutSum;
   AreaOutB[user->_this]=lAreaSum;
 
@@ -570,7 +594,7 @@ PetscErrorCode OutflowFlux(UserCtx *user) {
 
 /* 
  INTERFACE TYPE inttype
-   Normal       0
+cont   Normal       0
    Mixed Inlet  1
    Mixed Outlet 2
    Side no flow 3
@@ -3804,7 +3828,7 @@ DM            da = user->da, fda = user->fda;
    Cmpnts	***ucont, ***ubcs, ***ucat, ***coor, ***csi, ***eta, ***zet,***ucont_o;
    Cmpnts	***cent,***centx,***centy,***centz;
   PetscScalar	FluxIn, r, uin, ratio, xc, yc;
-  PetscReal     FluxOut,FluxOutSumcont;
+  PetscReal     FluxOut,FluxOutSumcont,FluxOutSumInside;
   PetscScalar   lArea, AreaSum;
   //  PetscReal     absn, n_x,n_y,n_z;
   PetscScalar   FarFluxIn=0., FarFluxOut=0., FarFluxInSum, FarFluxOutSum;
@@ -3846,7 +3870,7 @@ DM            da = user->da, fda = user->fda;
   DMDAVecGetArray(fda, user->lZet,  &zet);
 
   PetscInt ttemp;
-  for (ttemp=0; ttemp<3; ttemp++) {
+  for (ttemp=0; ttemp<1; ttemp++) {
    
   DMDAVecGetArray(fda, user->lUcat,  &ucat);
   DMDAVecGetArray(fda, user->Ucont, &ucont);
@@ -4445,8 +4469,8 @@ DM            da = user->da, fda = user->fda;
   MPI_Allreduce(&FluxOut2,&FluxOutSumcont,1,MPI_DOUBLE,MPI_SUM,PETSC_COMM_WORLD);
 //  PetscPrintf(PETSC_COMM_WORLD,"FormBCS check 2 \n"); 
   MPI_Allreduce(&lArea,&AreaSum,1,MPI_DOUBLE,MPI_SUM,PETSC_COMM_WORLD);
-  user->FluxOutSum = FluxOutSum;
-  user->AreaOutSum = AreaSum;
+  user->FluxOutSum = FluxOutSumcont; // Contravariant Outflow Sum.
+//  user->AreaOutSum = AreaSum;
    if(visflg) PetscPrintf(PETSC_COMM_WORLD,"FormBCS Pre-correction - Outflow: Cartesian-Flux - %le, Contravariant-Flux - %le, Area - %le \n",FluxOutSum,FluxOutSumcont,AreaSum);
    // Correction 
   FluxIn = FluxInSum + FarFluxInSum + user->FluxIntpSum;
@@ -4455,28 +4479,47 @@ DM            da = user->da, fda = user->fda;
  if(inletface==outletface) PetscPrintf(PETSC_COMM_WORLD,"Inlet and Outlet cannot be at the same surface !!!!!!!!!!!!!!!!!!!!!!!!!");
   
   if(inletface%2!=0){ // Inlet is at +x,+y or +z
-     if((inletface*outletface)%2!=0) ratio = (-FluxIn -FluxOutSum)/AreaSum; // if outlet is also at +x,+y or +z
-     else ratio = (FluxIn - FluxOutSum)/AreaSum; // if outlet is at -x,-y or -z
-   }
+     if((inletface*outletface)%2!=0) {// if outlet is also at +x,+y or +z
+        if(catcorr) ratio = (-FluxIn -FluxOutSum)/AreaSum;
+        else ratio = (-FluxIn -FluxOutSumcont)/AreaSum;
+    } else{ // if outlet is at -x,-y or -z
+       if(catcorr) ratio = (FluxIn - FluxOutSum)/AreaSum;
+       else   ratio = (FluxIn - FluxOutSumcont)/AreaSum;
+    }
+  }// Inlet is at +x,+y or +z
   else{ // if inlet is at -x,-y or -z
    if(inletface==0){ // if inlet at -x 
-     if(outletface==1 || outletface==3 || outletface==5) ratio = (FluxIn - FluxOutSum)/AreaSum; // outlet at +x,+y or +z
-     else ratio = (-FluxIn - FluxOutSum)/AreaSum; // if outlet at -y or -z.
-    } // inlet at -x
-    else if(inletface==2){ // if inlet at -y
-     if(outletface==0 || outletface==4) ratio = (-FluxIn - FluxOutSum)/AreaSum;  // outlet at -x or -z.
-     else ratio = (FluxIn - FluxOutSum)/AreaSum; // outlet at +x,+y or +z.
-    } // inlet at -y
-   else if(inletface==4){ // if inlet at -z
-     if(outletface==0 || outletface==2) ratio = (-FluxIn - FluxOutSum)/AreaSum;  // outlet at -x or -y 
-     else ratio = (FluxIn - FluxOutSumcont)/AreaSum; // outlet at +x,+y,+z
+     if(outletface==1 || outletface==3 || outletface==5) {// outlet at +x,+y or +z
+       if(catcorr) ratio = (FluxIn - FluxOutSum)/AreaSum;
+       else ratio = (FluxIn - FluxOutSumcont)/AreaSum; 
+     } else{ // if outlet at -y or -z
+       if(catcorr)  ratio = (-FluxIn - FluxOutSum)/AreaSum;
+       else   ratio = (-FluxIn - FluxOutSumcont)/AreaSum;  
+     } // if outlet at -y or -z
+    }else if(inletface==2){ // if inlet at -y
+     if(outletface==0 || outletface==4){ // outlet at -x or -z.
+       if(catcorr) ratio = (-FluxIn - FluxOutSum)/AreaSum;
+       else ratio = (-FluxIn - FluxOutSumcont)/AreaSum;    
+     }else{// outlet at +x,+y or +z.
+       if(catcorr)  ratio = (FluxIn - FluxOutSum)/AreaSum;
+       else  ratio = (FluxIn - FluxOutSumcont)/AreaSum;  
+    } // outlet at +x,+y or +z.
+   }else if(inletface==4){ // if inlet at -z
+     if(outletface==0 || outletface==2){  // outlet at -x or -y
+       if(catcorr) ratio = (-FluxIn - FluxOutSum)/AreaSum;
+       else ratio = (-FluxIn - FluxOutSumcont)/AreaSum;   
+     }else{// outlet at +x,+y,+z
+       if(catcorr)  ratio = (FluxIn - FluxOutSum)/AreaSum;
+       else  ratio = (FluxIn - FluxOutSumcont)/AreaSum;  
+     }
     } // inlet at -z
    } // inlet at -x,-y or -z 
  //-------------------------------------------------------------------------------------------------- 
   if(visflg) PetscPrintf(PETSC_COMM_WORLD,"FormBCS Correction Ratio - %le \n",ratio);
   user->FluxOutSum=0.0;
-  FluxOut=0.0;
-  
+  FluxOutSum=0.0,FluxOutSumcont=0.0;
+  FluxOut=0.0,FluxOut2=0;
+  PetscReal FluxOutInside = 0.0; 
 //  for(fn=0;fn<6;fn++){
 //    if(user->bctype[fn]==4){
       switch(outletface){
@@ -4489,14 +4532,25 @@ DM            da = user->da, fda = user->fda;
                 ubcs[k][j][i].x=ucat[k][j][i+1].x;
                 ubcs[k][j][i].y=ucat[k][j][i+1].y;
                 ubcs[k][j][i].z=ucat[k][j][i+1].z;
-                
-                ucont[k][j][i].x = (ubcs[k][j][i].x*(csi[k][j][i].x) +
+ 
+                if(catcorr) ucont[k][j][i].x = (ubcs[k][j][i].x*(csi[k][j][i].x) +
                                       ubcs[k][j][i].y*(csi[k][j][i].y) +
                                       ubcs[k][j][i].z*(csi[k][j][i].z)) + 
                                       ratio*sqrt( (csi[k][j][i].x) * (csi[k][j][i].x) +
 			                          (csi[k][j][i].y) * (csi[k][j][i].y) +
 			                          (csi[k][j][i].z) * (csi[k][j][i].z));
+                
+                else ucont[k][j][i].x = ucont[k][j][i].x + ratio*sqrt( (csi[k][j][i].x) * (csi[k][j][i].x) +
+			                          (csi[k][j][i].y) * (csi[k][j][i].y) +
+			                          (csi[k][j][i].z) * (csi[k][j][i].z));
+                
+
+                FluxOutInside+= ucont[k][j][i+1].x;
+               
                 FluxOut+= ucont[k][j][i].x;
+                FluxOut2+=(ucat[k][j][i+1].x*(csi[k][j][i].x) +
+                           ucat[k][j][i+1].y*(csi[k][j][i].y) +
+                           ucat[k][j][i+1].z*(csi[k][j][i].z));
                }
               }
             }
@@ -4512,13 +4566,22 @@ DM            da = user->da, fda = user->fda;
                 ubcs[k][j][i].y=ucat[k][j][i].y;
                 ubcs[k][j][i].z=ucat[k][j][i].z;
                 
-                ucont[k][j][i].x = (ubcs[k][j][i].x*(csi[k][j][i].x) +
+                if(catcorr) ucont[k][j][i].x = (ubcs[k][j][i].x*(csi[k][j][i].x) +
                                       ubcs[k][j][i].y*(csi[k][j][i].y) +
                                       ubcs[k][j][i].z*(csi[k][j][i].z)) + 
                                       ratio*sqrt( (csi[k][j][i].x) * (csi[k][j][i].x) +
 			                          (csi[k][j][i].y) * (csi[k][j][i].y) +
 			                          (csi[k][j][i].z) * (csi[k][j][i].z));
+                
+                else ucont[k][j][i].x = ucont[k][j][i].x + ratio*sqrt( (csi[k][j][i].x) * (csi[k][j][i].x) +
+			                          (csi[k][j][i].y) * (csi[k][j][i].y) +
+			                          (csi[k][j][i].z) * (csi[k][j][i].z));
+                FluxOutInside+= ucont[k][j][i-1].x;
+               
                 FluxOut+= ucont[k][j][i].x;
+                FluxOut2+=(ucat[k][j][i].x*(csi[k][j][i].x) +
+                           ucat[k][j][i].y*(csi[k][j][i].y) +
+                           ucat[k][j][i].z*(csi[k][j][i].z));
                }
               }
             }
@@ -4535,13 +4598,22 @@ DM            da = user->da, fda = user->fda;
                 ubcs[k][j][i].y=ucat[k][j+1][i].y;
                 ubcs[k][j][i].z=ucat[k][j+1][i].z;
                 
-                ucont[k][j][i].y = (ubcs[k][j][i].x*(eta[k][j][i].x) +
+                if(catcorr) ucont[k][j][i].y = (ubcs[k][j][i].x*(eta[k][j][i].x) +
                                       ubcs[k][j][i].y*(eta[k][j][i].y) +
                                       ubcs[k][j][i].z*(eta[k][j][i].z)) + 
                                       ratio*sqrt( (eta[k][j][i].x) * (eta[k][j][i].x) +
 			                          (eta[k][j][i].y) * (eta[k][j][i].y) +
 			                          (eta[k][j][i].z) * (eta[k][j][i].z));
+                
+                else ucont[k][j][i].y = ucont[k][j][i].y + ratio*sqrt( (eta[k][j][i].x) * (eta[k][j][i].x) +
+			                          (eta[k][j][i].y) * (eta[k][j][i].y) +
+			                          (eta[k][j][i].z) * (eta[k][j][i].z));
+                FluxOutInside+= ucont[k][j+1][i].y;
+
                 FluxOut+= ucont[k][j][i].y;
+                FluxOut2+=(ucat[k][j+1][i].x*(eta[k][j][i].x) +
+                           ucat[k][j+1][i].y*(eta[k][j][i].y) +
+                           ucat[k][j+1][i].z*(eta[k][j][i].z));
                }
               }
             }
@@ -4558,13 +4630,22 @@ DM            da = user->da, fda = user->fda;
                 ubcs[k][j][i].y=ucat[k][j][i].y;
                 ubcs[k][j][i].z=ucat[k][j][i].z;
                 
-                ucont[k][j][i].y = (ubcs[k][j][i].x*(eta[k][j][i].x) +
+                if(catcorr) ucont[k][j][i].y = (ubcs[k][j][i].x*(eta[k][j][i].x) +
                                       ubcs[k][j][i].y*(eta[k][j][i].y) +
                                       ubcs[k][j][i].z*(eta[k][j][i].z)) + 
                                       ratio*sqrt( (eta[k][j][i].x) * (eta[k][j][i].x) +
 			                          (eta[k][j][i].y) * (eta[k][j][i].y) +
 			                          (eta[k][j][i].z) * (eta[k][j][i].z));
+                
+                else ucont[k][j][i].y = ucont[k][j][i].y + ratio*sqrt( (eta[k][j][i].x) * (eta[k][j][i].x) +
+			                          (eta[k][j][i].y) * (eta[k][j][i].y) +
+			                          (eta[k][j][i].z) * (eta[k][j][i].z));
+             
+                FluxOutInside+= ucont[k][j-1][i].y;              
                 FluxOut+= ucont[k][j][i].y;
+                FluxOut2+=(ucat[k][j][i].x*(eta[k][j][i].x) +
+                           ucat[k][j][i].y*(eta[k][j][i].y) +
+                           ucat[k][j][i].z*(eta[k][j][i].z));
                }
               }
             }
@@ -4581,13 +4662,23 @@ DM            da = user->da, fda = user->fda;
                 ubcs[k][j][i].y=ucat[k+1][j][i].y;
                 ubcs[k][j][i].z=ucat[k+1][j][i].z;
                 
-                ucont[k][j][i].z = (ubcs[k][j][i].x*(zet[k][j][i].x) +
+                if(catcorr) ucont[k][j][i].z = (ubcs[k][j][i].x*(zet[k][j][i].x) +
                                       ubcs[k][j][i].y*(zet[k][j][i].y) +
                                       ubcs[k][j][i].z*(zet[k][j][i].z)) + 
                                       ratio*sqrt( (zet[k][j][i].x) * (zet[k][j][i].x) +
 			                          (zet[k][j][i].y) * (zet[k][j][i].y) +
 			                          (zet[k][j][i].z) * (zet[k][j][i].z));
+                
+                else ucont[k][j][i].z = ucont[k][j][i].z + ratio*sqrt( (zet[k][j][i].x) * (zet[k][j][i].x) +
+			                          (zet[k][j][i].y) * (zet[k][j][i].y) +
+			                          (zet[k][j][i].z) * (zet[k][j][i].z));
+                
                 FluxOut+= ucont[k][j][i].z;
+                FluxOutInside+= ucont[k+1][j][i].z;
+
+                FluxOut2+=(ucat[k+1][j][i].x*(zet[k][j][i].x) +
+                           ucat[k+1][j][i].y*(zet[k][j][i].y) +
+                           ucat[k+1][j][i].z*(zet[k][j][i].z));
                }
               }
             }
@@ -4605,13 +4696,26 @@ DM            da = user->da, fda = user->fda;
                 ubcs[k][j][i].y=ucat[k][j][i].y;
                 ubcs[k][j][i].z=ucat[k][j][i].z;
                 
-                ucont[k][j][i].z = (ubcs[k][j][i].x*(zet[k][j][i].x) +
+                if(catcorr) ucont[k][j][i].z = (ubcs[k][j][i].x*(zet[k][j][i].x) +
                                       ubcs[k][j][i].y*(zet[k][j][i].y) +
                                       ubcs[k][j][i].z*(zet[k][j][i].z)) + 
                                       ratio*sqrt( (zet[k][j][i].x) * (zet[k][j][i].x) +
 			                          (zet[k][j][i].y) * (zet[k][j][i].y) +
 			                          (zet[k][j][i].z) * (zet[k][j][i].z));
-                FluxOut+= ucont[k][j][i].z;
+
+                 else ucont[k][j][i].z = ucont[k][j][i].z + ratio*sqrt( (zet[k][j][i].x) * (zet[k][j][i].x) +
+			                          (zet[k][j][i].y) * (zet[k][j][i].y) +
+			                          (zet[k][j][i].z) * (zet[k][j][i].z));
+
+
+               FluxOut+= ucont[k][j][i].z;
+
+               FluxOutInside+= ucont[k-1][j][i].z;
+
+               FluxOut2+=(ucat[k][j][i].x*(zet[k][j][i].x) +
+                           ucat[k][j][i].y*(zet[k][j][i].y) +
+                           ucat[k][j][i].z*(zet[k][j][i].z)); 
+
                }
               }
             }
@@ -4621,11 +4725,13 @@ DM            da = user->da, fda = user->fda;
 //    }  // face check
 //  } // faces loop.
   
-  MPI_Allreduce(&FluxOut,&FluxOutSum,1,MPI_DOUBLE,MPI_SUM,PETSC_COMM_WORLD);
+  MPI_Allreduce(&FluxOut2,&FluxOutSum,1,MPI_DOUBLE,MPI_SUM,PETSC_COMM_WORLD);
+  MPI_Allreduce(&FluxOut,&FluxOutSumcont,1,MPI_DOUBLE,MPI_SUM,PETSC_COMM_WORLD);
+  MPI_Allreduce(&FluxOutInside,&FluxOutSumInside,1,MPI_DOUBLE,MPI_SUM,PETSC_COMM_WORLD);
   MPI_Allreduce(&lArea,&AreaSum,1,MPI_DOUBLE,MPI_SUM,PETSC_COMM_WORLD);
-  user->FluxOutSum = FluxOutSum;
-  user->AreaOutSum = AreaSum;
-  if(visflg) PetscPrintf(PETSC_COMM_WORLD,"FormBCS Post-correction - Outflow: Flux - %le, Area - %le \n",FluxOutSum,AreaSum);
+//  user->FluxOutSum = FluxOutSum;
+//  user->AreaOutSum = AreaSum;
+  if(visflg) PetscPrintf(PETSC_COMM_WORLD,"FormBCS Post-correction - Inside Cont Flux - %le, Outflow: Cart Flux - %le,Cont Flux - %le, Area - %le \n",FluxOutSumInside,FluxOutSum,FluxOutSumcont,AreaSum);
   DMDAVecRestoreArray(fda, user->Ucont, &ucont);
   DMGlobalToLocalBegin(fda, user->Ucont, INSERT_VALUES, user->lUcont);
   DMGlobalToLocalEnd(fda, user->Ucont, INSERT_VALUES, user->lUcont);

@@ -6,7 +6,7 @@ PetscInt ti,tistart=0;
 PetscReal	Flux_in = 4.104388e-04, angle = 0;
 PetscInt tiout = 10;
 PetscInt block_number;
-PetscReal FluxInSum, FluxOutSum;
+PetscReal FluxInSum, FluxOutSum,FluxOutSumcont;
 /* immeresed value>1 determines the type of correction
    1      constant velocity correction
    2      proportional (needs FluxOutSum>0)
@@ -34,7 +34,7 @@ PetscInt fish=0, fish_c=0, eel=0, fishcyl=0, rheology=0, aneurysm=0,turbine=0 , 
 PetscInt wing=0, hydro=0;
 PetscReal St_exp=0.5,wavelength=0.95;
 PetscInt MHV=0,LV=0;
-PetscInt LVAD=0;
+PetscInt LVAD=0,catcorr=0;
 PetscReal max_angle = -54.*3.1415926/180.;// for MHV; min=0
 PetscInt thin=0;
 PetscInt dgf_z=0,dgf_y=1,dgf_x=0;
@@ -614,6 +614,7 @@ int main(int argc, char **argv) {
   PetscOptionsGetInt(PETSC_NULL, "-vis_flg", &visflg, PETSC_NULL);
   PetscOptionsGetInt(PETSC_NULL, "-tio", &tiout, PETSC_NULL);
   PetscOptionsGetInt(PETSC_NULL, "-imm", &immersed, PETSC_NULL);
+  PetscOptionsGetInt(PETSC_NULL, "-catcorr", &catcorr, PETSC_NULL);
   PetscOptionsGetInt(PETSC_NULL, "-inv", &invicid, PETSC_NULL);
   PetscOptionsGetInt(PETSC_NULL, "-rstart", &tistart, &rstart_flg);
   PetscOptionsGetInt(PETSC_NULL,"-rstart_fem",&rstart_fem,PETSC_NULL);
@@ -938,8 +939,7 @@ int main(int argc, char **argv) {
       } // chimera blocks 
       if (block_number>1) {
 	Block_Interface_U(user);   // If more than one blocks(meshes) are present, setup interface conditions
-      }
-
+      } 
       for (bi=0; bi<block_number; bi++) {
       PetscReal normZ, normX, normY;
       VecStrideMax(user[bi].Ucat, 0, PETSC_NULL, &normX);
@@ -949,8 +949,7 @@ int main(int argc, char **argv) {
       } // for bi
     } // for InitialGuessOne
   } // for ti=0
-
-  
+ 
  for (bi=0; bi<block_number; bi++) {
     //VecDuplicate(user[bi].Ucont, &(user[bi].Ucont_o));
     VecCopy(user[bi].Ucont, user[bi].Ucont_o);      // Copy Ucont to Ucont_o for the finest level
@@ -976,12 +975,12 @@ int main(int argc, char **argv) {
   for (ti = tistart; ti<tistart + tisteps; ti++) {
     PetscPrintf(PETSC_COMM_WORLD, "Time level %d\n", ti);   // Print out time-level at the start of every physical time loop.
     /*-----Strong-Coupling (SC) Loop-----*/
-    DoSCLoop= PETSC_TRUE ; itr_sc = 0;
+  DoSCLoop= PETSC_TRUE ; itr_sc = 0;
     while (DoSCLoop) {
       itr_sc++;
       PetscPrintf(PETSC_COMM_WORLD, "SC LOOP itr # %d\n", itr_sc);
       if (immersed){
-      	Struc_Solver(&usermg, ibm, fsi,&cstart, itr_sc,tistart, &DoSCLoop,fem);        //Structral Solver!       
+      	 Struc_Solver(&usermg, ibm, fsi,&cstart, itr_sc,tistart, &DoSCLoop,fem);        //Structral Solver!       
       } else  DoSCLoop = PETSC_FALSE;
       Flow_Solver(&usermg, ibm, fsi);     //Flow Solver!
     }// End of while SC loop
