@@ -39,6 +39,7 @@ PetscInt lidxLocal_matrix(PetscInt i, PetscInt j, PetscInt k,PetscInt blk,PetscI
 #define SYMMETRIC 3
 #define FARFIELD 6
 
+#define FLUX_THRESHOLD 1e-4
 PetscErrorCode InletRead(UserCtx *user)
 {
 
@@ -4323,7 +4324,7 @@ DM            da = user->da, fda = user->fda;
   PetscReal psys=0.273;
   if(visflg) PetscOptionsGetInt(PETSC_NULL, "-period", &period, PETSC_NULL);
   PetscInt fn;
-  PetscReal FluxOut2=0.0;
+  PetscReal FluxOut2=0.0,cellflux=0.0,cellfluxcont=0.0;
   FluxOut=0.0,lArea=0.0,AreaSum=0.0;
 //  for(fn=0;fn<6;fn++){
 //    if(user->bctype[fn]==4){
@@ -4334,15 +4335,21 @@ DM            da = user->da, fda = user->fda;
            for(k=lzs;k<lze;k++){
              for(j=lys;j<lye;j++){
                if(nvert[k][j][i+1]<0.1){
-               FluxOut +=(ucat[k][j][i+1].x*(csi[k][j][i].x) + 
+               cellflux  = (ucat[k][j][i+1].x*(csi[k][j][i].x) + 
                           ucat[k][j][i+1].y*(csi[k][j][i].y) + 
                           ucat[k][j][i+1].z*(csi[k][j][i].z)); 
 
-               FluxOut2 +=ucont[k][j][i].x;
+               cellfluxcont =ucont[k][j][i].x;
+               
+               if(fabs(cellflux)>FLUX_THRESHOLD) FluxOut+=cellflux;
+               if(fabs(cellfluxcont)>FLUX_THRESHOLD) FluxOut2+=cellfluxcont;
 
                lArea += sqrt( (csi[k][j][i].x) * (csi[k][j][i].x) +
 			     (csi[k][j][i].y) * (csi[k][j][i].y) +
 			     (csi[k][j][i].z) * (csi[k][j][i].z));
+               
+               cellflux=0.0;
+               cellfluxcont=0.0;
 
                 }
               }
@@ -4445,16 +4452,22 @@ DM            da = user->da, fda = user->fda;
            for(j=lys;j<lye;j++){
              for(i=lxs;i<lxe;i++){
 	       if(nvert[k][j][i]<0.1){
-                FluxOut +=(ucat[k][j][i].x*(zet[k][j][i].x) +
+                cellflux = (ucat[k][j][i].x*(zet[k][j][i].x) +
                            ucat[k][j][i].y*(zet[k][j][i].y) +
                            ucat[k][j][i].z*(zet[k][j][i].z)); 
+  
+                cellfluxcont = ucont[k][j][i].z;
 
-                
-                FluxOut2 +=ucont[k][j][i].z;
+                if(fabs(cellflux)>FLUX_THRESHOLD) FluxOut+=cellflux;
+                if(fabs(cellfluxcont)>FLUX_THRESHOLD) FluxOut2+=cellfluxcont;
                  
                lArea += sqrt( (zet[k][j][i].x) * (zet[k][j][i].x) +
 			     (zet[k][j][i].y) * (zet[k][j][i].y) +
 			     (zet[k][j][i].z) * (zet[k][j][i].z));
+              
+               cellflux = 0.0;
+               cellfluxcont = 0.0; 
+               
                }
               }
 	   }
@@ -4469,6 +4482,7 @@ DM            da = user->da, fda = user->fda;
   MPI_Allreduce(&FluxOut2,&FluxOutSumcont,1,MPI_DOUBLE,MPI_SUM,PETSC_COMM_WORLD);
 //  PetscPrintf(PETSC_COMM_WORLD,"FormBCS check 2 \n"); 
   MPI_Allreduce(&lArea,&AreaSum,1,MPI_DOUBLE,MPI_SUM,PETSC_COMM_WORLD);
+  if(catcorr) user->FluxOutSum = FluxOutSum;
   user->FluxOutSum = FluxOutSumcont; // Contravariant Outflow Sum.
 //  user->AreaOutSum = AreaSum;
    if(visflg) PetscPrintf(PETSC_COMM_WORLD,"FormBCS Pre-correction - Outflow: Cartesian-Flux - %le, Contravariant-Flux - %le, Area - %le \n",FluxOutSum,FluxOutSumcont,AreaSum);
@@ -4546,7 +4560,7 @@ DM            da = user->da, fda = user->fda;
                 
 
                 FluxOutInside+= ucont[k][j][i+1].x;
-               
+                 
                 FluxOut+= ucont[k][j][i].x;
                 FluxOut2+=(ucat[k][j][i+1].x*(csi[k][j][i].x) +
                            ucat[k][j][i+1].y*(csi[k][j][i].y) +
@@ -4673,12 +4687,17 @@ DM            da = user->da, fda = user->fda;
 			                          (zet[k][j][i].y) * (zet[k][j][i].y) +
 			                          (zet[k][j][i].z) * (zet[k][j][i].z));
                 
-                FluxOut+= ucont[k][j][i].z;
-                FluxOutInside+= ucont[k+1][j][i].z;
+                cellfluxcont= ucont[k][j][i].z;
 
-                FluxOut2+=(ucat[k+1][j][i].x*(zet[k][j][i].x) +
+                cellflux=(ucat[k+1][j][i].x*(zet[k][j][i].x) +
                            ucat[k+1][j][i].y*(zet[k][j][i].y) +
                            ucat[k+1][j][i].z*(zet[k][j][i].z));
+              
+                if(cellflux>FLUX_THRESHOLD) FluxOut+=cellflux;
+                if(cellfluxcont>FLUX_THRESHOLD) FluxOut2+=cellfluxcont;
+                FluxOutInside+= ucont[k+1][j][i].z;
+                cellflux=0.0;
+                cellfluxcont=0.0;
                }
               }
             }
@@ -4708,14 +4727,17 @@ DM            da = user->da, fda = user->fda;
 			                          (zet[k][j][i].z) * (zet[k][j][i].z));
 
 
-               FluxOut+= ucont[k][j][i].z;
+               cellfluxcont= ucont[k][j][i].z;
 
-               FluxOutInside+= ucont[k-1][j][i].z;
-
-               FluxOut2+=(ucat[k][j][i].x*(zet[k][j][i].x) +
+               cellflux=(ucat[k][j][i].x*(zet[k][j][i].x) +
                            ucat[k][j][i].y*(zet[k][j][i].y) +
                            ucat[k][j][i].z*(zet[k][j][i].z)); 
-
+                
+                if(fabs(cellflux)>FLUX_THRESHOLD) FluxOut+=cellflux;
+                if(fabs(cellfluxcont)>FLUX_THRESHOLD) FluxOut2+=cellfluxcont;
+                FluxOutInside+= ucont[k-1][j][i].z;
+                cellflux=0.0;
+                cellfluxcont=0.0;
                }
               }
             }
@@ -4725,12 +4747,13 @@ DM            da = user->da, fda = user->fda;
 //    }  // face check
 //  } // faces loop.
   
-  MPI_Allreduce(&FluxOut2,&FluxOutSum,1,MPI_DOUBLE,MPI_SUM,PETSC_COMM_WORLD);
-  MPI_Allreduce(&FluxOut,&FluxOutSumcont,1,MPI_DOUBLE,MPI_SUM,PETSC_COMM_WORLD);
+  MPI_Allreduce(&FluxOut,&FluxOutSum,1,MPI_DOUBLE,MPI_SUM,PETSC_COMM_WORLD);
+  MPI_Allreduce(&FluxOut2,&FluxOutSumcont,1,MPI_DOUBLE,MPI_SUM,PETSC_COMM_WORLD);
   MPI_Allreduce(&FluxOutInside,&FluxOutSumInside,1,MPI_DOUBLE,MPI_SUM,PETSC_COMM_WORLD);
   MPI_Allreduce(&lArea,&AreaSum,1,MPI_DOUBLE,MPI_SUM,PETSC_COMM_WORLD);
-//  user->FluxOutSum = FluxOutSum;
-//  user->AreaOutSum = AreaSum;
+  if(catcorr) user->FluxOutSum = FluxOutSum;
+  else user->FluxOutSum = FluxOutSumcont;
+  user->AreaOutSum = AreaSum;
   if(visflg) PetscPrintf(PETSC_COMM_WORLD,"FormBCS Post-correction - Inside Cont Flux - %le, Outflow: Cart Flux - %le,Cont Flux - %le, Area - %le \n",FluxOutSumInside,FluxOutSum,FluxOutSumcont,AreaSum);
   DMDAVecRestoreArray(fda, user->Ucont, &ucont);
   DMGlobalToLocalBegin(fda, user->Ucont, INSERT_VALUES, user->lUcont);
