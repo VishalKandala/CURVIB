@@ -4362,16 +4362,23 @@ DM            da = user->da, fda = user->fda;
            for(k=lzs;k<lze;k++){
              for(j=lys;j<lye;j++){
 	       if(nvert[k][j][i]<0.1){
-                FluxOut +=(ucat[k][j][i].x*(csi[k][j][i].x) +
-                           ucat[k][j][i].y*(csi[k][j][i].y) +
-                           ucat[k][j][i].z*(csi[k][j][i].z)); 
+               cellflux  = (ucat[k][j][i].x*(csi[k][j][i].x) + 
+                          ucat[k][j][i].y*(csi[k][j][i].y) + 
+                          ucat[k][j][i].z*(csi[k][j][i].z)); 
 
-                
-                FluxOut2 +=ucont[k][j][i].x;
-                 
-                lArea += sqrt( (csi[k][j][i].x) * (csi[k][j][i].x) +
+               cellfluxcont =ucont[k][j][i].x;
+               
+               if(fabs(cellflux)>FLUX_THRESHOLD) FluxOut+=cellflux;
+               if(fabs(cellfluxcont)>FLUX_THRESHOLD) FluxOut2+=cellfluxcont;
+
+               lArea += sqrt( (csi[k][j][i].x) * (csi[k][j][i].x) +
 			     (csi[k][j][i].y) * (csi[k][j][i].y) +
 			     (csi[k][j][i].z) * (csi[k][j][i].z));
+               
+               cellflux=0.0;
+               cellfluxcont=0.0;
+
+
                }
               }
             }
@@ -4384,17 +4391,23 @@ DM            da = user->da, fda = user->fda;
            for(k=lzs;k<lze;k++){
              for(i=lxs;i<lxe;i++){
                if(nvert[k][j+1][i]<0.1){
-               FluxOut +=(ucat[k][j+1][i].x*(eta[k][j][i].x) + 
+               cellflux  = (ucat[k][j+1][i].x*(eta[k][j][i].x) + 
                           ucat[k][j+1][i].y*(eta[k][j][i].y) + 
                           ucat[k][j+1][i].z*(eta[k][j][i].z)); 
 
-                
-                FluxOut2 +=ucont[k][j][i].y;
-                 
-             
+               cellfluxcont =ucont[k][j][i].y;
+               
+               if(fabs(cellflux)>FLUX_THRESHOLD) FluxOut+=cellflux;
+               if(fabs(cellfluxcont)>FLUX_THRESHOLD) FluxOut2+=cellfluxcont;
+
                lArea += sqrt( (eta[k][j][i].x) * (eta[k][j][i].x) +
 			     (eta[k][j][i].y) * (eta[k][j][i].y) +
 			     (eta[k][j][i].z) * (eta[k][j][i].z));
+               
+               cellflux=0.0;
+               cellfluxcont=0.0;
+
+
                }
               }
             }
@@ -4408,16 +4421,24 @@ DM            da = user->da, fda = user->fda;
            for(k=lzs;k<lze;k++){
              for(i=lxs;i<lxe;i++){
 	       if(nvert[k][j][i]<0.1){
-                FluxOut +=(ucat[k][j][i].x*(eta[k][j][i].x) +
-                           ucat[k][j][i].y*(eta[k][j][i].y) +
-                           ucat[k][j][i].z*(eta[k][j][i].z)); 
+               cellflux  = (ucat[k][j][i].x*(eta[k][j][i].x) + 
+                          ucat[k][j][i].y*(eta[k][j][i].y) + 
+                          ucat[k][j][i].z*(eta[k][j][i].z)); 
 
-                
-                FluxOut2 +=ucont[k][j][i].y;
-                 
+               cellfluxcont =ucont[k][j][i].y;
+               
+               if(fabs(cellflux)>FLUX_THRESHOLD) FluxOut+=cellflux;
+               if(fabs(cellfluxcont)>FLUX_THRESHOLD) FluxOut2+=cellfluxcont;
+
                lArea += sqrt( (eta[k][j][i].x) * (eta[k][j][i].x) +
 			     (eta[k][j][i].y) * (eta[k][j][i].y) +
 			     (eta[k][j][i].z) * (eta[k][j][i].z));
+               
+               cellflux=0.0;
+               cellfluxcont=0.0;
+
+
+
                }
               }
             }
@@ -4430,16 +4451,22 @@ DM            da = user->da, fda = user->fda;
            for(j=lys;j<lye;j++){
              for(i=lxs;i<lxe;i++){
                if(nvert[k+1][j][i]<0.1){
-               FluxOut +=(ucat[k+1][j][i].x*(zet[k][j][i].x) + 
-                          ucat[k+1][j][i].y*(zet[k][j][i].y) + 
-                          ucat[k+1][j][i].z*(zet[k][j][i].z)); 
+                cellflux = (ucat[k+1][j][i].x*(zet[k][j][i].x) +
+                           ucat[k+1][j][i].y*(zet[k][j][i].y) +
+                           ucat[k+1][j][i].z*(zet[k][j][i].z)); 
+  
+                cellfluxcont = ucont[k][j][i].z;
 
-                
-                FluxOut2 +=ucont[k][j][i].z;
+                if(fabs(cellflux)>FLUX_THRESHOLD) FluxOut+=cellflux;
+                if(fabs(cellfluxcont)>FLUX_THRESHOLD) FluxOut2+=cellfluxcont;
                  
                lArea += sqrt( (zet[k][j][i].x) * (zet[k][j][i].x) +
 			     (zet[k][j][i].y) * (zet[k][j][i].y) +
-	      		     (zet[k][j][i].z) * (zet[k][j][i].z));
+			     (zet[k][j][i].z) * (zet[k][j][i].z));
+              
+               cellflux = 0.0;
+               cellfluxcont = 0.0; 
+ 
               } 
              }
             }
@@ -4557,14 +4584,17 @@ DM            da = user->da, fda = user->fda;
                 else ucont[k][j][i].x = ucont[k][j][i].x + ratio*sqrt( (csi[k][j][i].x) * (csi[k][j][i].x) +
 			                          (csi[k][j][i].y) * (csi[k][j][i].y) +
 			                          (csi[k][j][i].z) * (csi[k][j][i].z));
-                
+                 cellfluxcont= ucont[k][j][i].x;
 
-                FluxOutInside+= ucont[k][j][i+1].x;
-                 
-                FluxOut+= ucont[k][j][i].x;
-                FluxOut2+=(ucat[k][j][i+1].x*(csi[k][j][i].x) +
+                cellflux=(ucat[k][j][i+1].x*(csi[k][j][i].x) +
                            ucat[k][j][i+1].y*(csi[k][j][i].y) +
                            ucat[k][j][i+1].z*(csi[k][j][i].z));
+              
+                if(fabs(cellflux)>FLUX_THRESHOLD) FluxOut+=cellflux;
+                if(fabs(cellfluxcont)>FLUX_THRESHOLD) FluxOut2+=cellfluxcont;
+                FluxOutInside+= ucont[k][j][i+1].x;
+                cellflux=0.0;
+                cellfluxcont=0.0;
                }
               }
             }
@@ -4590,12 +4620,18 @@ DM            da = user->da, fda = user->fda;
                 else ucont[k][j][i].x = ucont[k][j][i].x + ratio*sqrt( (csi[k][j][i].x) * (csi[k][j][i].x) +
 			                          (csi[k][j][i].y) * (csi[k][j][i].y) +
 			                          (csi[k][j][i].z) * (csi[k][j][i].z));
-                FluxOutInside+= ucont[k][j][i-1].x;
-               
-                FluxOut+= ucont[k][j][i].x;
-                FluxOut2+=(ucat[k][j][i].x*(csi[k][j][i].x) +
+                 cellfluxcont= ucont[k][j][i].x;
+
+                cellflux=(ucat[k][j][i].x*(csi[k][j][i].x) +
                            ucat[k][j][i].y*(csi[k][j][i].y) +
                            ucat[k][j][i].z*(csi[k][j][i].z));
+              
+                if(fabs(cellflux)>FLUX_THRESHOLD) FluxOut+=cellflux;
+                if(fabs(cellfluxcont)>FLUX_THRESHOLD) FluxOut2+=cellfluxcont;
+                FluxOutInside+= ucont[k][j][i-1].x;
+                cellflux=0.0;
+                cellfluxcont=0.0;
+ 
                }
               }
             }
@@ -4622,12 +4658,18 @@ DM            da = user->da, fda = user->fda;
                 else ucont[k][j][i].y = ucont[k][j][i].y + ratio*sqrt( (eta[k][j][i].x) * (eta[k][j][i].x) +
 			                          (eta[k][j][i].y) * (eta[k][j][i].y) +
 			                          (eta[k][j][i].z) * (eta[k][j][i].z));
-                FluxOutInside+= ucont[k][j+1][i].y;
+                 cellfluxcont= ucont[k][j][i].y;
 
-                FluxOut+= ucont[k][j][i].y;
-                FluxOut2+=(ucat[k][j+1][i].x*(eta[k][j][i].x) +
+                cellflux=(ucat[k][j+1][i].x*(eta[k][j][i].x) +
                            ucat[k][j+1][i].y*(eta[k][j][i].y) +
                            ucat[k][j+1][i].z*(eta[k][j][i].z));
+              
+                if(fabs(cellflux)>FLUX_THRESHOLD) FluxOut+=cellflux;
+                if(fabs(cellfluxcont)>FLUX_THRESHOLD) FluxOut2+=cellfluxcont;
+                FluxOutInside+= ucont[k][j+1][i].y;
+                cellflux=0.0;
+                cellfluxcont=0.0;
+ 
                }
               }
             }
@@ -4654,13 +4696,19 @@ DM            da = user->da, fda = user->fda;
                 else ucont[k][j][i].y = ucont[k][j][i].y + ratio*sqrt( (eta[k][j][i].x) * (eta[k][j][i].x) +
 			                          (eta[k][j][i].y) * (eta[k][j][i].y) +
 			                          (eta[k][j][i].z) * (eta[k][j][i].z));
-             
-                FluxOutInside+= ucont[k][j-1][i].y;              
-                FluxOut+= ucont[k][j][i].y;
-                FluxOut2+=(ucat[k][j][i].x*(eta[k][j][i].x) +
+                 cellfluxcont= ucont[k][j][i].y;
+
+                cellflux=(ucat[k][j][i].x*(eta[k][j][i].x) +
                            ucat[k][j][i].y*(eta[k][j][i].y) +
                            ucat[k][j][i].z*(eta[k][j][i].z));
-               }
+              
+                if(fabs(cellflux)>FLUX_THRESHOLD) FluxOut+=cellflux;
+                if(fabs(cellfluxcont)>FLUX_THRESHOLD) FluxOut2+=cellfluxcont;
+                FluxOutInside+= ucont[k][j-1][i].y;
+                cellflux=0.0;
+                cellfluxcont=0.0;
+             
+              }
               }
             }
           } 
@@ -4693,8 +4741,8 @@ DM            da = user->da, fda = user->fda;
                            ucat[k+1][j][i].y*(zet[k][j][i].y) +
                            ucat[k+1][j][i].z*(zet[k][j][i].z));
               
-                if(cellflux>FLUX_THRESHOLD) FluxOut+=cellflux;
-                if(cellfluxcont>FLUX_THRESHOLD) FluxOut2+=cellfluxcont;
+                if(fabs(cellflux)>FLUX_THRESHOLD) FluxOut+=cellflux;
+                if(fabs(cellfluxcont)>FLUX_THRESHOLD) FluxOut2+=cellfluxcont;
                 FluxOutInside+= ucont[k+1][j][i].z;
                 cellflux=0.0;
                 cellfluxcont=0.0;
