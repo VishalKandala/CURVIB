@@ -39,7 +39,7 @@ PetscInt lidxLocal_matrix(PetscInt i, PetscInt j, PetscInt k,PetscInt blk,PetscI
 #define SYMMETRIC 3
 #define FARFIELD 6
 
-#define FLUX_THRESHOLD 1e-4
+#define FLUX_THRESHOLD 1e-16
 PetscErrorCode InletRead(UserCtx *user)
 {
 

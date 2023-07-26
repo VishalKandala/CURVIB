@@ -4006,6 +4006,7 @@ PetscErrorCode ImplicitMomentumSolver(UserCtx *user, IBMNodes *ibm,
 	//Get the direction 
 	//0==i dir, 1==j dir, 2==k dir
 	for (dir=0;dir<3;dir++){
+          PetscPrintf(PETSC_COMM_WORLD," Implicit Momentum Solver: stage - %d, direction - %d \n",istage,dir);
 	  // Set the LHS	 
 	  ImplicitSolverLHSnew05(&(user[bi]), ibm,  Ucont_i[bi], dir, alfa[istage]);
 	 
@@ -4180,7 +4181,7 @@ PetscErrorCode ImplicitMomentumSolver(UserCtx *user, IBMNodes *ibm,
 	
 	PetscTime(&te);
 	cput=te-ts;
-      if(visflg) PetscPrintf(PETSC_COMM_WORLD, "!!norm of dU %d %d  %le %le %le %le %le\n", pseudot,bi, normdU_bk[bi], reldU_bk[bi],normF_bk[bi], normdT, cput);
+      if(visflg) PetscPrintf(PETSC_COMM_WORLD, "Implicit Momentum Solver: stage - %d; Pseudo-timestep - %d; block - %d; Max dU -%le; Relative dU - %le \n", istage,pseudot,bi, normdU_bk[bi], reldU_bk[bi]);
 
 	if (!rank) {
 	  FILE *f;
@@ -4197,8 +4198,8 @@ PetscErrorCode ImplicitMomentumSolver(UserCtx *user, IBMNodes *ibm,
 	OutflowFlux(&(user[bi]));
 
 
-	 if(visflg)  PetscPrintf(PETSC_COMM_WORLD, "FluxinRK %le\n", user[bi].FluxOutSum);
-	 if(visflg)  PetscPrintf(PETSC_COMM_WORLD, "Inlet flux %le\n",user[bi].FluxInSum);
+	 if(visflg) // PetscPrintf(PETSC_COMM_WORLD, "FluxinRK %le\n", user[bi].FluxOutSum);
+	 if(visflg) // PetscPrintf(PETSC_COMM_WORLD, "Inlet flux %le\n",user[bi].FluxInSum);
 	
 	
 
@@ -4207,7 +4208,7 @@ PetscErrorCode ImplicitMomentumSolver(UserCtx *user, IBMNodes *ibm,
 
 	FormBCS(&(user[bi]));
 
-	 if(visflg)  PetscPrintf(PETSC_COMM_WORLD, "BCS \n");
+//	 if(visflg) // PetscPrintf(PETSC_COMM_WORLD, "BCS \n");
 
       } // istage
             
@@ -4215,7 +4216,7 @@ PetscErrorCode ImplicitMomentumSolver(UserCtx *user, IBMNodes *ibm,
 	for (ibi=0;ibi<NumberOfBodies;ibi++) {
 	  CHKMEMQ;
 	  ibm_interpolation_advanced(&user[bi], &ibm[ibi], ibi,1);
-	 if(visflg)    PetscPrintf(PETSC_COMM_WORLD, "IBM INTP \n");
+	 if(visflg)   // PetscPrintf(PETSC_COMM_WORLD, "IBM INTP \n");
 	  CHKMEMQ;
 	}
 	

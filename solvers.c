@@ -998,30 +998,10 @@ PetscErrorCode Flow_Solver(UserMG *usermg,IBMNodes *ibm,
 
 /* ==================================================================================             */
 /*   Momentum Solver! */
-/* ==================================================================================             */
-  if (turbine){
-    for (bi=0; bi<block_number; bi++) {
-
-      Cmpnts	u_c,omega_c, a_c;
-      u_c.x=0.0;
-      u_c.y=0.0;
-      u_c.z=0.0;
-      
-      a_c.x=0.0;
-      a_c.y=0.0;
-      a_c.z=0.0;
-      
-      omega_c.x=0.0;
-      omega_c.y=0.0;
-      omega_c.z=-1.07;
-      
-      CalcFrameVelocity(&user[bi],u_c,omega_c,a_c);
-      
-    }
-  }
- 
+/* ==================================================================================             */ 
   PetscTime(&tm_s);
   if (implicit==1) {
+    PetscPrintf(PETSC_COMM_WORLD,"Implicit Momentum Solver \n");
     ImplicitMomentumSolver(user, ibm, fsi);
   }else if (implicit==2) {
     ImplicitMomentumSolver1(user, ibm, fsi);

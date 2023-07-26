@@ -1072,7 +1072,7 @@ int main(int argc, char **argv) {
 /* ==================================================================================             */
   PetscTime(&time_end);
   compute_time=time_end-time_start;
-  PetscPrintf(PETSC_COMM_WORLD, "compute time: %le \n",compute_time);
+  PetscPrintf(PETSC_COMM_WORLD, "Total Compute time: %le \n",compute_time);
   MG_Finalize(&usermg); // Finalize (Destroy) grid fda, da and other data structures.
   PetscFinalize();
   return(0);
