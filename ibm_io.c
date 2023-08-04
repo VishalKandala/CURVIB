@@ -80,7 +80,7 @@ PetscErrorCode ibm_surface_VTKOut(IBMNodes *ibm, PetscInt ibi, PetscInt ti)
     PetscFPrintf(PETSC_COMM_WORLD, f, "ASCII\n");
     PetscFPrintf(PETSC_COMM_WORLD, f, "DATASET UNSTRUCTURED_GRID\n");
 //    PetscPrintf(PETSC_COMM_WORLD,"Surface file headers done!\n"); 
-    PetscPrintf(PETSC_COMM_WORLD,"Number of nodes is %d \n",ibm->n_v);
+//    PetscPrintf(PETSC_COMM_WORLD,"Number of nodes is %d \n",ibm->n_v);
     PetscFPrintf(PETSC_COMM_WORLD, f, "POINTS  %d float\n",ibm->n_v);
     for (i=0; i<ibm->n_v; i++) {
       PetscFPrintf(PETSC_COMM_WORLD, f, "%f %f %f\n", ibm->x_bp[i],ibm->y_bp[i],ibm->z_bp[i]);

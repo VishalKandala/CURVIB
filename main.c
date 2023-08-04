@@ -609,6 +609,8 @@ int main(int argc, char **argv) {
   FE	     *fem;
 
   PetscInitialize(&argc, &argv, (char *)0, help);
+
+//  PetscPrintf(PETSC_COMM_WORLD,"Reading control.dat \n");
 // ------- INPUT PARAMETERS ----------------------
   PetscOptionsInsertFile(PETSC_COMM_WORLD, "control.dat", PETSC_TRUE);
   PetscOptionsGetInt(PETSC_NULL, "-vis_flg", &visflg, PETSC_NULL);
@@ -697,7 +699,7 @@ int main(int argc, char **argv) {
 
   PetscOptionsGetString(PETSC_NULL, "-orient", orient,sizeof(orient),PETSC_NULL);
   PetscOptionsGetString(PETSC_NULL, "-g_orient", gridrotorient,sizeof(orient),PETSC_NULL);   
-  
+  if(visflg==5) PetscPrintf(PETSC_COMM_WORLD,"control.dat read \n");  
   PetscReal compute_time,time_start,time_end;
   if(visflg)  PetscPrintf(PETSC_COMM_WORLD, "Data is output for every %d timesteps; Implicit Solver Tolerances: Absolute-%le; Relative- %le\n",tiout, imp_atol,imp_rtol);
   PetscTime(&time_start);
@@ -709,16 +711,16 @@ int main(int argc, char **argv) {
 //    CMz_c=0.;CMy_c=0.;CMx_c=0.;  // Geometric center of immersed   boundary. 
 } 
   else  L_dim=1.; 
-
+  if(visflg==5) PetscPrintf(PETSC_COMM_WORLD,"Ldim setup\n"); 
   if (immersed) {  // If an immersed boundary exists, allocate memory for IBMNodes and FSInfo (data-types), then call the FsiInitialize() function.
     PetscMalloc(NumberOfBodies*sizeof(IBMNodes), &ibm);
     PetscMalloc(NumberOfBodies*sizeof(FSInfo), &fsi);
     for (ibi=0;ibi<NumberOfBodies;ibi++)
          FsiInitialize(0, &fsi[ibi], ibi);     
   }
-
+  if(visflg==5) PetscPrintf(PETSC_COMM_WORLD,"memory allocated for ibmnodes \n"); 
   MG_Initial(&usermg, ibm); // Call the Multi-grid initialize function that creates the grid, also initializes the fda, da and other data structures.
-  
+  if(visflg==5) PetscPrintf(PETSC_COMM_WORLD,"MG_Initial completed \n"); 
   if (immersed) {
     level = usermg.mglevels-1;
     user = usermg.mgctx[level].user;
@@ -733,13 +735,15 @@ int main(int argc, char **argv) {
 //------------------ READ IBM DATA -------------------------------------------------
     ibi = 0;
     ibm_read_Icem(&ibm[ibi],ibi);  // This function reads the grid either from grid.dat or from the cartesian grid setup in the control file. 
+    if(visflg==5) PetscPrintf(PETSC_COMM_WORLD,"IBM Read complete \n"); 
     if(rotatefsi)  Elmt_Move_FSI_ROT(&fsi[ibi], &ibm[ibi],user[bi].dt,ibi); // Rotate the immersed boundary if rotation is turned  on.
     ibm_surface_VTKOut(&ibm[ibi],ibi,0); // This function generates the VTK file that can be used to visualize the immersed boundary surface on ParaVi
+    if(visflg==5)PetscPrintf(PETSC_COMM_WORLD,"IBM Surface Out complete \n");   
     PetscBarrier(PETSC_NULL);   
 //----------------------------------------------------------------------------------
     ti = 0;
     if (rstart_flg) ti = tistart;
-    } // if immersed
+    } // if immersed 
   //--------------- RESTART setup: if Restarting -----------------------------------
   level = usermg.mglevels-1;
   user = usermg.mgctx[level].user;

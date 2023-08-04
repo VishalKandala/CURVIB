@@ -4006,7 +4006,7 @@ PetscErrorCode ImplicitMomentumSolver(UserCtx *user, IBMNodes *ibm,
 	//Get the direction 
 	//0==i dir, 1==j dir, 2==k dir
 	for (dir=0;dir<3;dir++){
-          PetscPrintf(PETSC_COMM_WORLD," Implicit Momentum Solver: stage - %d, direction - %d \n",istage,dir);
+          if(visflg)  PetscPrintf(PETSC_COMM_WORLD," Implicit Momentum Solver: stage - %d, direction - %d \n",istage,dir);
 	  // Set the LHS	 
 	  ImplicitSolverLHSnew05(&(user[bi]), ibm,  Ucont_i[bi], dir, alfa[istage]);
 	 
