@@ -1,0 +1,49 @@
+#!/usr/bin/python3
+# Vishal Indivar Kandala
+################################################################################################
+##################### NLIST AND ELIST CREATION #################################################
+############### Read case .in file from ICEM and create nlist and elist files ##################
+
+import sys
+
+############ Take command line arguments ##################
+###########################################################
+casename = str(sys.argv[1])
+nnodes = int(sys.argv[2])
+nelements = int(sys.argv[3]) ## MAKE SURE TO ENTER NUMBER OF TRI_3 ELEMENTS NOT TOTAL-> Find this by checking Mesh Info in ICEM CFD.
+
+########### Take file ansys.in file input##################
+###########################################################
+input_filename = casename+".in"
+input_file = open(input_filename,'r')
+lines = input_file.readlines()
+
+
+############ Nlist File ###################################
+###########################################################
+# The first 9 lines are standard headers from ansys formnat.
+#print(lines[9]) # confirm file is correct 
+nlist_file = open('nlist00','w')
+nlist_lines = lines[9:nnodes+9]
+nlist_lines.insert(0,str(nnodes)+"\n")
+print("##########################################################")
+print("First Node \n")
+print(nlist_lines[1])
+print("Last Node \n")
+print(nlist_lines[-1])
+nlist_file.writelines(nlist_lines)
+print("nlist00 generated!")
+print("##########################################################")
+############ Elist File ###################################
+###########################################################
+# There are 4 lines of headers/info on ansys.in output files between nlist and elist
+elist_file = open('elist00','w')
+elist_lines = lines[nnodes+9+4:nnodes+9+4+nelements]
+elist_lines.insert(0,str(nelements)+"\n")
+print("First Element \n")
+print(elist_lines[1])
+print("Last Element \n")
+print(elist_lines[-1])
+elist_file.writelines(elist_lines)
+print("elist00 generated!")
+print("##########################################################")
