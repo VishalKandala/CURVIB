@@ -1258,6 +1258,69 @@ PetscInt point_cell_advanced(Cmpnts p, PetscInt ip, PetscInt jp, PetscInt kp,
       }
      }   
     } // if(search_dir == "y")
+    else if(strcmp(search_dir,"x")==0){
+     for (i=ip; i<ncx; i++) {
+      current = cell_trg[k*ncx*ncy+j*ncx+i].head;
+      while (current) {
+	ln_v = current->Node;
+	if (!Element_Searched[ln_v]) {
+	  Element_Searched[ln_v] = PETSC_TRUE;
+	  n1e = nv1[ln_v]; n2e = nv2[ln_v]; n3e = nv3[ln_v];
+	  nn.x=nf_x[ln_v]; nn.y=nf_y[ln_v]; nn.z=nf_z[ln_v];
+
+	  orig[0] = p.x; orig[1] = p.y, orig[2] = p.z;
+
+	  vert0[0] = x_bp[n1e]; vert0[1] = y_bp[n1e]; vert0[2] = z_bp[n1e];
+	  vert1[0] = x_bp[n2e]; vert1[1] = y_bp[n2e]; vert1[2] = z_bp[n2e];
+	  vert2[0] = x_bp[n3e]; vert2[1] = y_bp[n3e]; vert2[2] = z_bp[n3e];
+            
+	  dirdotn=dir[0]*nn.x+dir[1]*nn.y+dir[2]*nn.z;
+
+	  nvert_l = intsect_triangle(orig, dir, vert0, vert1, vert2, &t, &u, &v);
+	  /*
+	  if (nvert_l>1) {
+	    Singularity=PETSC_TRUE;
+	    break;
+	  }
+	  */
+
+	  if (flg) 
+	    PetscPrintf(PETSC_COMM_SELF, "elm, %d %d %le %le %le %d %d %d %le\n",ln_v,nvert_l,t,u,v,n1e,n2e,n3e,dirdotn);
+	  
+	  if (nvert_l > 0 && t>0) {
+	    dt[nintp] = t;
+	    dnn[nintp].x=nn.x;dnn[nintp].y=nn.y;dnn[nintp].z=nn.z;
+
+	    nintp ++;
+	    PetscInt temp;
+	    for (temp = 0; temp < nintp-1; temp++) {
+	      // Two interception points are the same, this leads to huge
+	      // trouble for crossing number test
+	      // Rather to program for all cases, we use a new line to
+	      // repeat the test
+	      ndotn=dnn[temp].x*nn.x+dnn[temp].y*nn.y+dnn[temp].z*nn.z;	      
+	      
+	      if ((fabs(t-dt[temp]) < epsilon && ndotn>-0.97)){ 
+		  //   || fabs(dirdotn)<eps_tangent) {
+		//if (fabs(t-dt[temp]) < epsilon) {
+		Singularity = PETSC_TRUE;
+	      }
+	    }
+	    if (Singularity) break;
+	  }
+	}
+	if (Singularity) {
+	  break;
+	}
+	else {
+	  current = current->next;
+	}
+	} // Search through the list
+      if (Singularity) {
+	break;
+      }
+     }   
+    } // if(search_dir == "x")
     
     if (flg) 
       PetscPrintf(PETSC_COMM_SELF, " serch itr, %d %le \n",nintp,dirdotn);
