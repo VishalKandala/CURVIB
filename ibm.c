@@ -120,6 +120,38 @@ PetscErrorCode randomdirection_Y(Cmpnts p, PetscInt ip, PetscInt kp,
   return 0;
 }
 
+PetscErrorCode randomdirection_X(Cmpnts p, PetscInt jp, PetscInt kp,
+			       PetscReal ybp_min, PetscReal zbp_min,
+			       PetscReal xbp_max, PetscReal dcy, PetscReal dcz,
+			       PetscReal dir[3],PetscInt seed)
+{
+  Cmpnts endpoint;
+  PetscReal s;
+
+  PetscReal ypc, zpc;  
+  ypc = dcy * (jp+0.5) + ybp_min;
+  zpc = dcz * (kp+0.5) + zbp_min;
+    
+  // init rand()
+  //  srand(time(NULL)+seed);
+  srand(seed);
+  // Generate a random number [-0.5, 0.5)
+  s = rand() / ((double)RAND_MAX + 1) - 0.5;
+  endpoint.y = ypc + s * dcy;
+  endpoint.z = zpc + s * dcz;
+  endpoint.x = xbp_max + 0.2;
+
+  dir[0] = endpoint.x - p.x;
+  dir[1] = endpoint.y - p.y;
+  dir[2] = endpoint.z - p.z;
+
+  s = sqrt(dir[0]*dir[0] + dir[1]*dir[1] + dir[2]*dir[2]);
+  dir[0] /= s;
+  dir[1] /= s;
+  dir[2] /= s;
+  return 0;
+}
+
 PetscErrorCode ibm_search_advanced(UserCtx *user, IBMNodes *ibm, 
 				   PetscInt ibi)
 
@@ -1089,6 +1121,7 @@ PetscInt point_cell_advanced(Cmpnts p, PetscInt ip, PetscInt jp, PetscInt kp,
     nintp = 0 ;
     if(strcmp(search_dir,"z")==0) randomdirection_Z(p, ip, jp, xbp_min, ybp_min, zbp_max, dcx, dcy, dir, searchtimes);
     else if(strcmp(search_dir,"y")==0) randomdirection_Y(p, ip, kp, xbp_min, zbp_min, ybp_max, dcx, dcz, dir, searchtimes);
+    else if(strcmp(search_dir,"x")==0) randomdirection_X(p,jp,kp,ybp_min,zbp_min,xbp_max,dcy,dcz,dir,searchtimes);
     if(visflg == 6) PetscPrintf(PETSC_COMM_SELF,"Randomdirection executed \n");  
     Singularity = PETSC_FALSE;
     if (flg) 
