@@ -148,7 +148,6 @@ PetscErrorCode InflowFlux(UserCtx *user)
   }
   // E-Calc uin
   //fn is face number which is 0 to 5
-  if(visflg)  PetscPrintf(PETSC_COMM_WORLD,"Inlet Velocity : %f \n",uin);  
   PetscInt fn;PetscReal d;
   FluxIn=0.0;
   lAreaIn=0.0;
@@ -164,11 +163,21 @@ PetscErrorCode InflowFlux(UserCtx *user)
        	i = xs;
 	for (k=lzs; k<lze; k++) {
 	  for (j=lys; j<lye; j++) {
+              if(nvert[k][j][i+1]<0.1){
+                 d=sqrt(csi[k][j][i].z*csi[k][j][i].z + csi[k][j][i].y*csi[k][j][i].y + csi[k][j][i].x*csi[k][j][i].x);
+                 lAreaIn+=d;
+              }
+          }
+        }
+        if(inletprofile==3) uin = Pulsatile_Plug_Inlet_Flux(user,lAreaIn);
+        if(visflg)  PetscPrintf(PETSC_COMM_WORLD,"Inlet Velocity : %f \n",uin);   
+        for (k=lzs; k<lze; k++) {
+	  for (j=lys; j<lye; j++) {
 	    //S-Calc covarient velocity componenet if it is inside
 	    if (nvert[k][j][i+1]<0.1) {
 	      d=sqrt(csi[k][j][i].z*csi[k][j][i].z + csi[k][j][i].y*csi[k][j][i].y + csi[k][j][i].x*csi[k][j][i].x);
-              lAreaIn+=d;
-              if(inletprofile==3) uin = Pulsatile_Plug_Inlet_Flux(user,d); 
+//              lAreaIn+=d;
+//              if(inletprofile==3) uin = Pulsatile_Plug_Inlet_Flux(user,d); 
               ucont[k][j][i].x = uin*d;
 	      ubcs[k][j][i].x = uin*csi[k][j][i].x/d;
 	      ubcs[k][j][i].y = uin*csi[k][j][i].y/d;
@@ -190,6 +199,18 @@ PetscErrorCode InflowFlux(UserCtx *user)
       if (xe==mx) {
 //	PetscPrintf(PETSC_COMM_SELF,"Case 1 entered \n");
 	i = mx-2;
+	for (k=lzs; k<lze; k++) {
+	  for (j=lys; j<lye; j++) {
+              if(nvert[k][j][i]<0.1){
+                 d=sqrt(csi[k][j][i].z*csi[k][j][i].z + csi[k][j][i].y*csi[k][j][i].y + csi[k][j][i].x*csi[k][j][i].x);
+                 lAreaIn+=d;
+              }
+          }
+        }
+        
+        if(inletprofile==3) uin = Pulsatile_Plug_Inlet_Flux(user,lAreaIn);
+        if(visflg)  PetscPrintf(PETSC_COMM_WORLD,"Inlet Velocity : %f \n",uin);
+
 	for (k=lzs; k<lze; k++) {
 	  for (j=lys; j<lye; j++) {
 	    //S-Calc covarient velocity componenet if it is inside
@@ -226,7 +247,18 @@ PetscErrorCode InflowFlux(UserCtx *user)
     case 2:
       if (ys==0) {
 	j = 0;
-	for (k=lzs; k<lze; k++) {
+        for (k=lzs; k<lze; k++) {
+	  for (i=lxs; i<lxe; i++) {
+              if(nvert[k][j+1][i]<0.1){
+                 d=sqrt(csi[k][j][i].z*csi[k][j][i].z + csi[k][j][i].y*csi[k][j][i].y + csi[k][j][i].x*csi[k][j][i].x);
+                 lAreaIn+=d;
+              }
+          }
+        }
+        if(inletprofile==3) uin = Pulsatile_Plug_Inlet_Flux(user,lAreaIn);
+        if(visflg)  PetscPrintf(PETSC_COMM_WORLD,"Inlet Velocity : %f \n",uin);
+        
+        for (k=lzs; k<lze; k++) {
 	  for (i=lxs; i<lxe; i++) {
 	    //S-Calc covarient velocity componenet if it is inside
 	    if (nvert[k][j+1][i]<0.1) {
@@ -253,6 +285,17 @@ PetscErrorCode InflowFlux(UserCtx *user)
       if (ye==my) {
 
 	j = my-2;
+        for (k=lzs; k<lze; k++) {
+	  for (i=lxs; i<lxe; i++) {
+              if(nvert[k][j][i]<0.1){
+                 d=sqrt(csi[k][j][i].z*csi[k][j][i].z + csi[k][j][i].y*csi[k][j][i].y + csi[k][j][i].x*csi[k][j][i].x);
+                 lAreaIn+=d;
+              }
+          }
+        }
+        if(inletprofile==3) uin = Pulsatile_Plug_Inlet_Flux(user,lAreaIn);
+        if(visflg)  PetscPrintf(PETSC_COMM_WORLD,"Inlet Velocity : %f \n",uin);
+        
 	for (k=lzs; k<lze; k++) {
 	  for (i=lxs; i<lxe; i++) {
 	    //S-Calc covarient velocity componenet if it is inside
@@ -280,13 +323,22 @@ PetscErrorCode InflowFlux(UserCtx *user)
       if (zs==0) {
 	
 	k = 0;
+        for (j=lys; j<lye; j++) {
+	  for (i=lxs; i<lxe; i++) {
+              if(nvert[k+1][j][i]<0.1){
+                 d=sqrt(csi[k][j][i].z*csi[k][j][i].z + csi[k][j][i].y*csi[k][j][i].y + csi[k][j][i].x*csi[k][j][i].x);
+                 lAreaIn+=d;
+              }
+          }
+        }
+        if(inletprofile==3) uin = Pulsatile_Plug_Inlet_Flux(user,lAreaIn);
+        if(visflg)  PetscPrintf(PETSC_COMM_WORLD,"Inlet Velocity : %f \n",uin);
+        
 	for (j=lys; j<lye; j++) {
 	  for (i=lxs; i<lxe; i++) {
 	    //S-Calc covarient velocity componenet if it is inside
 	    if (nvert[k+1][j][i]<0.1) {
 	      d=sqrt(zet[k][j][i].z*zet[k][j][i].z + zet[k][j][i].y*zet[k][j][i].y + zet[k][j][i].x*zet[k][j][i].x);
-	      lAreaIn+=d;
-              if(inletprofile==3) uin = Pulsatile_Plug_Inlet_Flux(user,d);
               ucont[k][j][i].z = uin*d;
 	      ubcs[k][j][i].x = uin*zet[k][j][i].x/d;
 	      ubcs[k][j][i].y = uin*zet[k][j][i].y/d;
@@ -304,16 +356,24 @@ PetscErrorCode InflowFlux(UserCtx *user)
       break;
       // face 5
     case 5:
-      if (ze==mz) {
-	
+      if (ze==mz) {	
 	k = mz-2;
+        for (j=lys; j<lye; j++) {
+	  for (i=lxs; i<lxe; i++) {
+              if(nvert[k][j][i]<0.1){
+                 d=sqrt(csi[k][j][i].z*csi[k][j][i].z + csi[k][j][i].y*csi[k][j][i].y + csi[k][j][i].x*csi[k][j][i].x);
+                 lAreaIn+=d;
+              }
+          }
+        }
+        if(inletprofile==3) uin = Pulsatile_Plug_Inlet_Flux(user,lAreaIn);
+        if(visflg)  PetscPrintf(PETSC_COMM_WORLD,"Inlet Velocity : %f \n",uin);
+        
 	for (j=lys; j<lye; j++) {
 	  for (i=lxs; i<lxe; i++) {
 	    //S-Calc covarient velocity componenet if it is inside
 	    if (nvert[k][j][i]<0.1) {
 	      d=sqrt(zet[k][j][i].z*zet[k][j][i].z + zet[k][j][i].y*zet[k][j][i].y + zet[k][j][i].x*zet[k][j][i].x);
-	      lAreaIn+=d;
-              if(inletprofile==3) uin = Pulsatile_Plug_Inlet_Flux(user,d);
               ucont[k][j][i].z = -uin*d;
 	      ubcs[k+1][j][i].x = -uin*zet[k][j][i].x/d;
 	      ubcs[k+1][j][i].y = -uin*zet[k][j][i].y/d;

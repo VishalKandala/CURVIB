@@ -8,7 +8,7 @@ extern int cpu_size;
 extern char gridrotorient[];
 #include <petsctime.h>
 
-PetscErrorCode InflowWaveFormRead(UserCtx *user);
+//PetscErrorCode InflowWaveFormRead(UserCtx *user);
 PetscErrorCode GridRestriction(PetscInt i, PetscInt j, PetscInt k,
 			       PetscInt *ih, PetscInt *jh, PetscInt *kh,
 			       UserCtx *user);
@@ -614,13 +614,13 @@ PetscErrorCode MG_Initial(UserMG *usermg, IBMNodes *ibm)
   level = usermg->mglevels-1;
   user = mgctx[level].user;
 
-  if (inletprofile==3) {
-  PetscPrintf(PETSC_COMM_WORLD, "READ INFLOW WAVE FORM!!!! mg_init\n");
-  for (bi=0; bi<block_number; bi++) {
-    InflowWaveFormRead(&user[bi]);
-  }
-  PetscPrintf(PETSC_COMM_WORLD, "READ INFLOW WAVE FORM!!!! mg_init\n");
-  }
+//  if (inletprofile==3) {
+//  PetscPrintf(PETSC_COMM_WORLD, "READ INFLOW WAVE FORM!!!! mg_init\n");
+//  for (bi=0; bi<block_number; bi++) {
+//    InflowWaveFormRead(&user[bi]);
+//  }
+//  PetscPrintf(PETSC_COMM_WORLD, "READ INFLOW WAVE FORM!!!! mg_init\n");
+//  }
 
   PetscInt imm[block_number], kmm[block_number], jmm[block_number];
   if (generate_grid) {
