@@ -551,7 +551,9 @@ PetscErrorCode ibm_interpolation_advanced(UserCtx *user,
 					  PetscInt ibi,
 					  PetscInt Add_dUndt);
 
-PetscErrorCode SetInitialGuessToOne(UserCtx *user);
+PetscErrorCode SetInitialGuess(UserCtx *user);
+PetscReal Pulsatile_Plug_Inlet_Flux(UserCtx *user, PetscReal area);
+PetscErrorCode Flux_Waveform_Read(UserCtx *user);
 PetscErrorCode InflowFlux(UserCtx *user);
 PetscErrorCode OutflowFlux(UserCtx *user);
 PetscErrorCode FormBCS(UserCtx *user);
