@@ -806,7 +806,7 @@ PetscErrorCode ibm_search_advanced_rev(UserCtx *user, IBMNodes *ibm,
     }
   }
   
-  if(visflg==4) PetscPrintf(PETSC_COMM_SELF, "Search undertaken for fluid and solid grid points. %d \n",rank);
+  if(visflg==4) PetscPrintf(PETSC_COMM_SELF, "Search undertaken for fluid and solid grid points. Processor: %d \n",rank);
   DMDAVecRestoreArray(da, user->Nvert, &nvert);
 
 /*   if (user->thislevel < user->mglevels-1) { */

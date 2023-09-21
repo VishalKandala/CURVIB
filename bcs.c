@@ -49,10 +49,11 @@ PetscErrorCode Flux_Waveform_Read(UserCtx *user)
   PetscOptionsGetInt(PETSC_NULL,"-ts_p_cycle",&ts_p_cycle,PETSC_NULL); 
   MPI_Comm_rank(PETSC_COMM_WORLD, &rank);
   PetscMalloc(ts_p_cycle*sizeof(PetscReal),&Flux_waveform);
+  PetscPrintf(PETSC_COMM_WORLD,"Reading flux waveform from inlet.dat");
   if (!rank) {
   FILE *fd;
   fd = fopen("inlet.dat", "r");
-  for(i=0;i<ts_p_cycle;i++){
+  for(i=1;i<=ts_p_cycle;i++){
   fscanf(fd, "%le", &(Flux_waveform[i])); 
    }
    fclose(fd);
@@ -67,17 +68,55 @@ PetscErrorCode Flux_Waveform_Read(UserCtx *user)
 
 PetscReal Pulsatile_Plug_Inlet_Flux(UserCtx *user, PetscReal area)
 {
-  PetscReal uin;
+  PetscReal uin,flux_vel_switch;
   
   PetscInt tstep,cycle;
  
   cycle = ((PetscInt)(ti / ts_p_cycle)); 
   tstep = ti - cycle*ts_p_cycle;
+  FILE *fd;
+  fscanf(fd, "%i",&flux_vel_switch);  // Read the first line of inlet.dat, to get whether inflow is flux or velocity.
   PetscPrintf(PETSC_COMM_WORLD, "Cycle: %d; step: %d \n",cycle,tstep);
-  uin = Flux_waveform[tstep]/area;
+  if(flux_vel_switch) uin = Flux_waveform[tstep]/area;
+  else uin = Flux_waveform[tstep];
   return (uin);
 } 
 
+Cmpnts InflowCenter(UserCtx *user)
+{
+  PetscInt i,j,k,rank; 
+  Cmpnts center,***cent,***coor;
+  Vec Coor;
+  DM       da = user->da, fda = user->fda;
+  DMDALocalInfo	info = user->info;
+  PetscInt	xs = info.xs, xe = info.xs + info.xm;
+  PetscInt  	ys = info.ys, ye = info.ys + info.ym;
+  PetscInt	zs = info.zs, ze = info.zs + info.zm;
+  PetscInt	mx = info.mx, my = info.my, mz = info.mz;
+  PetscInt	lxs, lxe, lys, lye, lzs, lze;
+  PetscReal	***nvert; //local working array
+  MPI_Comm_rank(MPI_COMM_WORLD,&rank);
+  VecDuplicate(user->lNvert,&user->RFC);
+//  PetscPrintf(PETSC_COMM_SELF,"xs,xe,mx,rank: %d,%d,%d,%d \n",xs,xe,mx,rank);
+  // PetscMalloc(block_number*sizeof(PetscReal), &FluxInSumB);
+  lxs = xs; lxe = xe;
+  lys = ys; lye = ye;
+  lzs = zs; lze = ze;
+  
+  if (xs==0) lxs = xs+1;
+  if (ys==0) lys = ys+1;
+  if (zs==0) lzs = zs+1;
+  
+  if (xe==mx) lxe = xe-1;
+  if (ye==my) lye = ye-1;
+  if (ze==mz) lze = ze-1;
+
+  //DMDAGetGhostedCoordinates(da, &Coor);
+  DMGetCoordinatesLocal(da, &Coor);
+//  DMDAVecGetArray(da, user->RFC, &RR);
+  DMDAVecGetArray(fda, user->Cent, &cent);
+  
+}
 PetscErrorCode InflowFlux(UserCtx *user) 
 {
   PetscInt     i, j, k,rank;
@@ -136,9 +175,10 @@ PetscErrorCode InflowFlux(UserCtx *user)
   if (inletprofile == 1) {
     PetscOptionsGetReal(PETSC_NULL, "-uin", &uin, PETSC_NULL);
 //      PetscPrintf(PETSC_COMM_WORLD,"Inlet Velocity : %f \n",uin);  
-  }     
+//  }else if(inletprofile=2) // Fully Developed flow
+        
  //------------------------------------------------------------------------------
-  else if(inletprofile==3){ // LVAD Pulsatile plug flow inlet
+  }else if(inletprofile==3){ // LVAD Pulsatile plug flow inlet
     Flux_Waveform_Read(user);
     uin=0.;
   }
