@@ -49,7 +49,7 @@ PetscErrorCode Flux_Waveform_Read(UserCtx *user)
   PetscOptionsGetInt(PETSC_NULL,"-ts_p_cycle",&ts_p_cycle,PETSC_NULL); 
   MPI_Comm_rank(PETSC_COMM_WORLD, &rank);
   PetscMalloc(ts_p_cycle*sizeof(PetscReal),&Flux_waveform);
-  PetscPrintf(PETSC_COMM_WORLD,"Reading flux waveform from inlet.dat");
+  PetscPrintf(PETSC_COMM_WORLD,"Reading flux waveform from inlet.dat \n");
   if (!rank) {
   FILE *fd;
   fd = fopen("inlet.dat", "r");
@@ -62,22 +62,25 @@ PetscErrorCode Flux_Waveform_Read(UserCtx *user)
   else { 
    MPI_Bcast(Flux_waveform, ts_p_cycle, MPIU_REAL, 0, PETSC_COMM_WORLD);
   }
-  PetscPrintf(PETSC_COMM_WORLD, "Waveform Read for %d timesteps per cycle\n",ts_p_cycle);
+  PetscPrintf(PETSC_COMM_WORLD, "Waveform Read for %d timesteps per cycle \n",ts_p_cycle);
  return(0);
 }
 
 PetscReal Pulsatile_Plug_Inlet_Flux(UserCtx *user, PetscReal area)
 {
-  PetscReal uin,flux_vel_switch;
+  PetscReal uin;
   
-  PetscInt tstep,cycle;
-   
+  PetscInt tstep,cycle,flux_vel_switch;
+    
   cycle = ((PetscInt)(ti / ts_p_cycle)); 
   tstep = ti - cycle*ts_p_cycle;
+  cycle=cycle+1;
   FILE *fd;
-  fscanf(fd, "%i",&flux_vel_switch);  // Read the first line of inlet.dat, to get whether inflow is flux or velocity.
-  PetscPrintf(PETSC_COMM_WORLD,"inlet.dat read, flux/vel: %d",flux_vel_switch);
-  PetscPrintf(PETSC_COMM_WORLD, "Cycle: %d; step: %d \n",cycle,tstep);
+  fd = fopen("inlet.dat","r");
+  if(fd) fscanf(fd,"%i",&flux_vel_switch);  // Read the first line of inlet.dat, to get whether inflow is flux or velocity.
+  fclose(fd);
+  PetscPrintf(PETSC_COMM_WORLD,"inlet.dat read, vel(0)/flux(1): %d \n",flux_vel_switch);
+  PetscPrintf(PETSC_COMM_WORLD, "Cycle: %d step: %d \n",cycle,tstep);
   if(flux_vel_switch) uin = Flux_waveform[tstep]/area;
   else uin = Flux_waveform[tstep];
   return (uin);
@@ -217,7 +220,7 @@ PetscErrorCode InflowFlux(UserCtx *user)
 	    //S-Calc covarient velocity componenet if it is inside
 	    if (nvert[k][j][i+1]<0.1) {
 	      d=sqrt(csi[k][j][i].z*csi[k][j][i].z + csi[k][j][i].y*csi[k][j][i].y + csi[k][j][i].x*csi[k][j][i].x);
-//              lAreaIn+=d;
+              lAreaIn+=d;
 //              if(inletprofile==3) uin = Pulsatile_Plug_Inlet_Flux(user,d); 
               ucont[k][j][i].x = uin*d;
 	      ubcs[k][j][i].x = uin*csi[k][j][i].x/d;
@@ -238,7 +241,6 @@ PetscErrorCode InflowFlux(UserCtx *user)
       // face 1
     case 1:
       if (xe==mx) {
-//	PetscPrintf(PETSC_COMM_SELF,"Case 1 entered \n");
 	i = mx-2;
 	for (k=lzs; k<lze; k++) {
 	  for (j=lys; j<lye; j++) {
@@ -248,17 +250,16 @@ PetscErrorCode InflowFlux(UserCtx *user)
               }
           }
         }
-        
         if(inletprofile==3) uin = Pulsatile_Plug_Inlet_Flux(user,lAreaIn);
-        if(visflg)  PetscPrintf(PETSC_COMM_WORLD,"Inlet Velocity : %f \n",uin);
-
+        if(visflg){
+          PetscPrintf(PETSC_COMM_SELF,"Inlet Velocity : %f \n",uin);
+        }
 	for (k=lzs; k<lze; k++) {
 	  for (j=lys; j<lye; j++) {
 	    //S-Calc covarient velocity componenet if it is inside
 	    if (nvert[k][j][i]<0.1) {
               d=sqrt(csi[k][j][i].z*csi[k][j][i].z + csi[k][j][i].y*csi[k][j][i].y + csi[k][j][i].x*csi[k][j][i].x);
 	      lAreaIn+=d;
-              if(inletprofile==3) uin = Pulsatile_Plug_Inlet_Flux(user,d);
               ucont[k][j][i].x = -uin*d;
 	      ubcs[k][j][i+1].x = -uin*csi[k][j][i].x/d;
 	      ubcs[k][j][i+1].y = -uin*csi[k][j][i].y/d;
@@ -291,7 +292,7 @@ PetscErrorCode InflowFlux(UserCtx *user)
         for (k=lzs; k<lze; k++) {
 	  for (i=lxs; i<lxe; i++) {
               if(nvert[k][j+1][i]<0.1){
-                 d=sqrt(csi[k][j][i].z*csi[k][j][i].z + csi[k][j][i].y*csi[k][j][i].y + csi[k][j][i].x*csi[k][j][i].x);
+                 d=sqrt(eta[k][j][i].z*eta[k][j][i].z + eta[k][j][i].y*eta[k][j][i].y + eta[k][j][i].x*eta[k][j][i].x);
                  lAreaIn+=d;
               }
           }
@@ -305,7 +306,6 @@ PetscErrorCode InflowFlux(UserCtx *user)
 	    if (nvert[k][j+1][i]<0.1) {
 	      d=sqrt(eta[k][j][i].z*eta[k][j][i].z + eta[k][j][i].y*eta[k][j][i].y + eta[k][j][i].x*eta[k][j][i].x);
               lAreaIn+=d;
-               if(inletprofile==3) uin = Pulsatile_Plug_Inlet_Flux(user,d);
               ucont[k][j][i].y = uin*d;
 	      ubcs[k][j][i].x = uin*eta[k][j][i].x/d;
 	      ubcs[k][j][i].y = uin*eta[k][j][i].y/d;
@@ -329,7 +329,7 @@ PetscErrorCode InflowFlux(UserCtx *user)
         for (k=lzs; k<lze; k++) {
 	  for (i=lxs; i<lxe; i++) {
               if(nvert[k][j][i]<0.1){
-                 d=sqrt(csi[k][j][i].z*csi[k][j][i].z + csi[k][j][i].y*csi[k][j][i].y + csi[k][j][i].x*csi[k][j][i].x);
+                 d=sqrt(eta[k][j][i].z*eta[k][j][i].z + eta[k][j][i].y*eta[k][j][i].y + eta[k][j][i].x*eta[k][j][i].x);
                  lAreaIn+=d;
               }
           }
@@ -343,7 +343,6 @@ PetscErrorCode InflowFlux(UserCtx *user)
 	    if (nvert[k][j][i]<0.1) {
  	      d=sqrt(eta[k][j][i].z*eta[k][j][i].z + eta[k][j][i].y*eta[k][j][i].y + eta[k][j][i].x*eta[k][j][i].x);   
 	      lAreaIn+=d;
-              if(inletprofile==3) uin = Pulsatile_Plug_Inlet_Flux(user,d);
               ucont[k][j][i].y = -1.0*uin*d;
 	      ubcs[k][j+1][i].x = -uin*eta[k][j][i].x/d;
 	      ubcs[k][j+1][i].y = -uin*eta[k][j][i].y/d;
@@ -367,7 +366,7 @@ PetscErrorCode InflowFlux(UserCtx *user)
         for (j=lys; j<lye; j++) {
 	  for (i=lxs; i<lxe; i++) {
               if(nvert[k+1][j][i]<0.1){
-                 d=sqrt(csi[k][j][i].z*csi[k][j][i].z + csi[k][j][i].y*csi[k][j][i].y + csi[k][j][i].x*csi[k][j][i].x);
+                 d=sqrt(zet[k][j][i].z*zet[k][j][i].z + zet[k][j][i].y*zet[k][j][i].y + zet[k][j][i].x*zet[k][j][i].x);
                  lAreaIn+=d;
               }
           }
@@ -402,7 +401,7 @@ PetscErrorCode InflowFlux(UserCtx *user)
         for (j=lys; j<lye; j++) {
 	  for (i=lxs; i<lxe; i++) {
               if(nvert[k][j][i]<0.1){
-                 d=sqrt(csi[k][j][i].z*csi[k][j][i].z + csi[k][j][i].y*csi[k][j][i].y + csi[k][j][i].x*csi[k][j][i].x);
+                 d=sqrt(zet[k][j][i].z*zet[k][j][i].z + zet[k][j][i].y*zet[k][j][i].y + zet[k][j][i].x*zet[k][j][i].x);
                  lAreaIn+=d;
               }
           }
