@@ -71,11 +71,12 @@ PetscReal Pulsatile_Plug_Inlet_Flux(UserCtx *user, PetscReal area)
   PetscReal uin,flux_vel_switch;
   
   PetscInt tstep,cycle;
- 
+   
   cycle = ((PetscInt)(ti / ts_p_cycle)); 
   tstep = ti - cycle*ts_p_cycle;
   FILE *fd;
   fscanf(fd, "%i",&flux_vel_switch);  // Read the first line of inlet.dat, to get whether inflow is flux or velocity.
+  PetscPrintf(PETSC_COMM_WORLD,"inlet.dat read, flux/vel: %d",flux_vel_switch);
   PetscPrintf(PETSC_COMM_WORLD, "Cycle: %d; step: %d \n",cycle,tstep);
   if(flux_vel_switch) uin = Flux_waveform[tstep]/area;
   else uin = Flux_waveform[tstep];
