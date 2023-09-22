@@ -220,7 +220,7 @@ PetscErrorCode InflowFlux(UserCtx *user)
 	    //S-Calc covarient velocity componenet if it is inside
 	    if (nvert[k][j][i+1]<0.1) {
 	      d=sqrt(csi[k][j][i].z*csi[k][j][i].z + csi[k][j][i].y*csi[k][j][i].y + csi[k][j][i].x*csi[k][j][i].x);
-              lAreaIn+=d;
+//              lAreaIn+=d;
 //              if(inletprofile==3) uin = Pulsatile_Plug_Inlet_Flux(user,d); 
               ucont[k][j][i].x = uin*d;
 	      ubcs[k][j][i].x = uin*csi[k][j][i].x/d;
@@ -259,7 +259,7 @@ PetscErrorCode InflowFlux(UserCtx *user)
 	    //S-Calc covarient velocity componenet if it is inside
 	    if (nvert[k][j][i]<0.1) {
               d=sqrt(csi[k][j][i].z*csi[k][j][i].z + csi[k][j][i].y*csi[k][j][i].y + csi[k][j][i].x*csi[k][j][i].x);
-	      lAreaIn+=d;
+//	      lAreaIn+=d;
               ucont[k][j][i].x = -uin*d;
 	      ubcs[k][j][i+1].x = -uin*csi[k][j][i].x/d;
 	      ubcs[k][j][i+1].y = -uin*csi[k][j][i].y/d;
@@ -305,7 +305,7 @@ PetscErrorCode InflowFlux(UserCtx *user)
 	    //S-Calc covarient velocity componenet if it is inside
 	    if (nvert[k][j+1][i]<0.1) {
 	      d=sqrt(eta[k][j][i].z*eta[k][j][i].z + eta[k][j][i].y*eta[k][j][i].y + eta[k][j][i].x*eta[k][j][i].x);
-              lAreaIn+=d;
+//              lAreaIn+=d;
               ucont[k][j][i].y = uin*d;
 	      ubcs[k][j][i].x = uin*eta[k][j][i].x/d;
 	      ubcs[k][j][i].y = uin*eta[k][j][i].y/d;
@@ -342,7 +342,7 @@ PetscErrorCode InflowFlux(UserCtx *user)
 	    //S-Calc covarient velocity componenet if it is inside
 	    if (nvert[k][j][i]<0.1) {
  	      d=sqrt(eta[k][j][i].z*eta[k][j][i].z + eta[k][j][i].y*eta[k][j][i].y + eta[k][j][i].x*eta[k][j][i].x);   
-	      lAreaIn+=d;
+//	      lAreaIn+=d;
               ucont[k][j][i].y = -1.0*uin*d;
 	      ubcs[k][j+1][i].x = -uin*eta[k][j][i].x/d;
 	      ubcs[k][j+1][i].y = -uin*eta[k][j][i].y/d;
