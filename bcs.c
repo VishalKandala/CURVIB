@@ -52,17 +52,23 @@ PetscErrorCode Flux_Waveform_Read(UserCtx *user)
   PetscPrintf(PETSC_COMM_WORLD,"Reading flux waveform from inlet.dat \n");
   if (!rank) {
   FILE *fd;
+  char string[128];
   fd = fopen("inlet.dat", "r");
-  for(i=1;i<=ts_p_cycle;i++){
+  i=0;
+  fgets(string, 128, fd);//skip one line 
+  //    while(fgets(string, 128, fd)) {
+  //	itr = 0;	
+  while (i<ts_p_cycle) {
+   i++; 
   fscanf(fd, "%le", &(Flux_waveform[i])); 
    }
    fclose(fd);
    MPI_Bcast(Flux_waveform, ts_p_cycle, MPIU_REAL, 0, PETSC_COMM_WORLD);
+   if(visflg) PetscPrintf(PETSC_COMM_WORLD, "Waveform Read for %d timesteps per cycle \n",ts_p_cycle); 
   }
   else { 
    MPI_Bcast(Flux_waveform, ts_p_cycle, MPIU_REAL, 0, PETSC_COMM_WORLD);
   }
-  PetscPrintf(PETSC_COMM_WORLD, "Waveform Read for %d timesteps per cycle \n",ts_p_cycle);
  return(0);
 }
 
@@ -81,15 +87,15 @@ PetscReal Pulsatile_Plug_Inlet_Flux(UserCtx *user, PetscReal area)
   fclose(fd);
   PetscPrintf(PETSC_COMM_WORLD,"inlet.dat read, vel(0)/flux(1): %d \n",flux_vel_switch);
   PetscPrintf(PETSC_COMM_WORLD, "Cycle: %d step: %d \n",cycle,tstep);
-  if(flux_vel_switch) uin = Flux_waveform[tstep]/area;
-  else uin = Flux_waveform[tstep];
+  if(flux_vel_switch) uin = Flux_waveform[tstep]/area; // inlet.dat file has flux as input.  (flux_vel_switch=1)
+  else uin = Flux_waveform[tstep]; // inlet.dat file  has velocity as input.  (flux_vel_switch=0)
   return (uin);
 } 
 
 Cmpnts InflowCenter(UserCtx *user)
 {
   PetscInt i,j,k,rank; 
-  Cmpnts center,***cent,***coor;
+  Cmpnts center,***coor;
   Vec Coor;
   DM       da = user->da, fda = user->fda;
   DMDALocalInfo	info = user->info;
@@ -98,11 +104,8 @@ Cmpnts InflowCenter(UserCtx *user)
   PetscInt	zs = info.zs, ze = info.zs + info.zm;
   PetscInt	mx = info.mx, my = info.my, mz = info.mz;
   PetscInt	lxs, lxe, lys, lye, lzs, lze;
-  PetscReal	***nvert; //local working array
+  PetscReal	temp1,temp2,xim_max,xim_min,yim_max,yim_min,zim_max,zim_min, ***nvert; //local working array
   MPI_Comm_rank(MPI_COMM_WORLD,&rank);
-  VecDuplicate(user->lNvert,&user->RFC);
-//  PetscPrintf(PETSC_COMM_SELF,"xs,xe,mx,rank: %d,%d,%d,%d \n",xs,xe,mx,rank);
-  // PetscMalloc(block_number*sizeof(PetscReal), &FluxInSumB);
   lxs = xs; lxe = xe;
   lys = ys; lye = ye;
   lzs = zs; lze = ze;
@@ -114,20 +117,64 @@ Cmpnts InflowCenter(UserCtx *user)
   if (xe==mx) lxe = xe-1;
   if (ye==my) lye = ye-1;
   if (ze==mz) lze = ze-1;
-
-  //DMDAGetGhostedCoordinates(da, &Coor);
   DMGetCoordinatesLocal(da, &Coor);
-//  DMDAVecGetArray(da, user->RFC, &RR);
-  DMDAVecGetArray(fda, user->Cent, &cent);
-  
+  DMDAVecGetArray(fda, Coor, &coor);
+  DMDAVecGetArray(da, user->lNvert,&nvert); 
+  PetscInt fn; // fn is face number (0-5)
+  xim_min = 1.e23; xim_max = -1.e23;
+  yim_min = 1.e23; yim_max = -1.e23;
+  zim_min = 1.e23; zim_max = -1.e23;
+
+  for(fn=0;fn<6;fn++){
+   if(user->bctype[fn]==INLET){
+    PetscPrintf(PETSC_COMM_WORLD,"Inlet detected at face %d \n",fn);
+    switch(fn){
+      case 0:
+       PetscPrintf(PETSC_COMM_WORLD,"NYI \n"); 
+      case 1:
+        PetscPrintf(PETSC_COMM_WORLD,"NYI \n");
+      case 2:
+        PetscPrintf(PETSC_COMM_WORLD,"NYI \n");
+      case 3:
+        PetscPrintf(PETSC_COMM_WORLD,"NYI \n"); 
+      case 4:
+       if(zs==0){
+        k=0;
+        center.z=0.0;
+        center.y=0.0;
+        center.x=0.0;         
+        for(i=lxs;i<lxe;i++){          
+         if(nvert[k+1][j][i]<0.1){
+          PetscPrintf(PETSC_COMM_SELF,"i - %d \n",i);          
+           xim_min = PetscMin(xim_min,coor[k][j][i].x);
+           PetscPrintf(PETSC_COMM_SELF,"rank,xmin: %le \n",rank,xim_min);
+  //         if((coor[k][j][i].x-xim_min)<=0.0) temp1=coor[k][j][i].y;       
+           xim_max = PetscMax(xim_max,coor[k][j][i].x);
+   //        if((xim_max-coor[k][j][i].x)<=0.0) temp2=coor[k][j][i].y;  
+           }          
+         }
+//         PetscPrintf(PETSC_COMM_WORLD,"xmax and xmin calculated \n");
+      //   if((PetscAbsReal(temp1-temp2))<1e-3) center.y = temp1;
+         center.x = xim_max - xim_min;
+       }
+       break;
+      case 5:
+        PetscPrintf(PETSC_COMM_WORLD,"NYI \n"); 
+    }
+   }
+  }
+DMDAVecRestoreArray(fda, Coor, &coor);
+DMDAVecRestoreArray(da, user->lNvert, &nvert);
+return center;
 }
+
 PetscErrorCode InflowFlux(UserCtx *user) 
 {
   PetscInt     i, j, k,rank;
-  PetscReal    FluxIn,r, uin0, uin, xc, yc,zc,***RR ;
+  PetscReal    FluxIn,r, uin0, uin, xc, yc,zc,dx,dy,dz,***RR ;
   PetscReal    lAreaIn,AreaSumIn,Re;
   Vec          Coor;
-  Cmpnts       ***ucont, ***ubcs, ***ucat, ***coor, ***csi, ***eta, ***zet, ***cent;  
+  Cmpnts       flow_center,***ucont, ***ubcs, ***ucat, ***coor, ***csi, ***eta, ***zet, ***cent;  
   
   
   DM            da = user->da, fda = user->fda;
@@ -155,8 +202,7 @@ PetscErrorCode InflowFlux(UserCtx *user)
   if (ze==mz) lze = ze-1;
 
   //DMDAGetGhostedCoordinates(da, &Coor);
-  DMGetCoordinatesLocal(da, &Coor);
-
+  DMGetCoordinatesLocal(da, &Coor); 
   DMDAVecGetArray(fda, Coor, &coor);
   DMDAVecGetArray(fda, user->Ucont, &ucont);
   DMDAVecGetArray(fda, user->Bcs.Ubcs, &ubcs);
@@ -175,12 +221,43 @@ PetscErrorCode InflowFlux(UserCtx *user)
 
   
     // S-Calc uin
-//  PetscPrintf(PETSC_COMM_WORLD,"Inletprofile : %d \n",inletprofile);  
+  PetscPrintf(PETSC_COMM_WORLD,"Inletprofile : %d \n",inletprofile);
+  flow_center = InflowCenter(user);
+  if(visflg>4) PetscPrintf(PETSC_COMM_WORLD,"Flow Center : x - %le,y - %le,z - %le \n",flow_center.x,flow_center.y,flow_center.z);  
   if (inletprofile == 1) {
     PetscOptionsGetReal(PETSC_NULL, "-uin", &uin, PETSC_NULL);
 //      PetscPrintf(PETSC_COMM_WORLD,"Inlet Velocity : %f \n",uin);  
-//  }else if(inletprofile=2) // Fully Developed flow
-        
+  }else if(inletprofile=2){ // Fully Developed flow
+     PetscOptionsGetReal(PETSC_NULL, "-uin", &uin, PETSC_NULL); // Get the maximum velocity.          
+     if(zs==0){
+     k=0;
+     if(visflg>5)  PetscPrintf(PETSC_COMM_SELF,"i,j,k--xc,yc,zc--cent.x,cent.y,cent.z \n");
+     for(j=lys;j<lye;j++){
+      for(i=lxs;i<lxe;i++){
+
+/*
+	    xc = (coor[k][j][i  ].x + coor[k][j-1][i  ].x +
+		  coor[k][j][i-1].x + coor[k][j-1][i-1].x) * 0.25-CMx_c;
+	    yc = (coor[k][j][i  ].y + coor[k][j-1][i  ].y +
+		  coor[k][j][i-1].y + coor[k][j-1][i-1].y) * 0.25-CMy_c;
+	    zc = (coor[k][j][i  ].z + coor[k][j-1][i  ].z +
+		  coor[k][j][i-1].z + coor[k][j-1][i-1].z) * 0.25-CMz_c;
+*/          
+            
+            dz = 0.5*(coor[k+1][j][i].z-coor[k][j][i].z);
+            xc = cent[k+1][j][i].x-CMx_c;
+            yc = cent[k+1][j][i].y-CMy_c;
+            zc = cent[k+1][j][i].z-CMz_c - dz;
+ 
+	    RR[k][j][i] = sqrt((xc-CMx_c)*(xc-CMx_c)+(yc-CMy_c)*(yc-CMy_c)+(zc-CMz_c-dz)*(zc-CMz_c-dz));
+
+            PetscPrintf(PETSC_COMM_SELF,"i,j,Radius:%d,%d,%le \n",i,j,RR[k][j][i]);
+            if(visflg>5)  PetscPrintf(PETSC_COMM_SELF,"%d,%d,%d--%le,%le,%le--%le,%le,%le \n",i,j,k,xc,yc,zc,cent[k+1][j][i].x-CMx_c,cent[k+1][j][i].y-CMy_c,cent[k+1][j][i].z-CMz_c-0.5*(coor[k+1][j][i].z-coor[k][j][i].z));
+            // Cent.x,y,z calculation is done before moving the immersed body (translation and rotation) ahd hence has to be offset sufficiently.
+
+        }
+      }
+     }
  //------------------------------------------------------------------------------
   }else if(inletprofile==3){ // LVAD Pulsatile plug flow inlet
     Flux_Waveform_Read(user);
@@ -371,6 +448,7 @@ PetscErrorCode InflowFlux(UserCtx *user)
               }
           }
         }
+        
         if(inletprofile==3) uin = Pulsatile_Plug_Inlet_Flux(user,lAreaIn);
         if(visflg)  PetscPrintf(PETSC_COMM_WORLD,"Inlet Velocity : %f \n",uin);
         
@@ -379,6 +457,7 @@ PetscErrorCode InflowFlux(UserCtx *user)
 	    //S-Calc covarient velocity componenet if it is inside
 	    if (nvert[k+1][j][i]<0.1) {
 	      d=sqrt(zet[k][j][i].z*zet[k][j][i].z + zet[k][j][i].y*zet[k][j][i].y + zet[k][j][i].x*zet[k][j][i].x);
+              if(inletprofile==4) uin = uin*(1-4*RR[k][j][i]*RR[k][j][i]); // uin=umax*(1-(r/R)^2)
               ucont[k][j][i].z = uin*d;
 	      ubcs[k][j][i].x = uin*zet[k][j][i].x/d;
 	      ubcs[k][j][i].y = uin*zet[k][j][i].y/d;
