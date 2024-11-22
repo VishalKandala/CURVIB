@@ -54,13 +54,15 @@ PetscErrorCode Flux_Waveform_Read(UserCtx *user)
   FILE *fd;
   char string[128];
   fd = fopen("inlet.dat", "r");
-  i=0;
+  i=-1;
   fgets(string, 128, fd);//skip one line 
   //    while(fgets(string, 128, fd)) {
   //	itr = 0;	
-  while (i<ts_p_cycle) {
+  //PetscPrintf(PETSC_COMM_WORLD,"Flux Waveform: %d,%le \n",i,Flux_waveform[i]);
+  while (i+1<ts_p_cycle) {
    i++; 
   fscanf(fd, "%le", &(Flux_waveform[i])); 
+  if(visflg==7) PetscPrintf(PETSC_COMM_WORLD," Flux Waveform : %d,%le \n",i,Flux_waveform[i]);
    }
    fclose(fd);
    MPI_Bcast(Flux_waveform, ts_p_cycle, MPIU_REAL, 0, PETSC_COMM_WORLD);
@@ -222,12 +224,12 @@ PetscErrorCode InflowFlux(UserCtx *user)
   
     // S-Calc uin
   PetscPrintf(PETSC_COMM_WORLD,"Inletprofile : %d \n",inletprofile);
-  flow_center = InflowCenter(user);
-  if(visflg>4) PetscPrintf(PETSC_COMM_WORLD,"Flow Center : x - %le,y - %le,z - %le \n",flow_center.x,flow_center.y,flow_center.z);  
+//  flow_center = InflowCenter(user);
+//  if(visflg>4) PetscPrintf(PETSC_COMM_WORLD,"Flow Center : x - %le,y - %le,z - %le \n",flow_center.x,flow_center.y,flow_center.z);  
   if (inletprofile == 1) {
     PetscOptionsGetReal(PETSC_NULL, "-uin", &uin, PETSC_NULL);
 //      PetscPrintf(PETSC_COMM_WORLD,"Inlet Velocity : %f \n",uin);  
-  }else if(inletprofile=2){ // Fully Developed flow
+  }else if(inletprofile==2){ // Fully Developed flow
      PetscOptionsGetReal(PETSC_NULL, "-uin", &uin, PETSC_NULL); // Get the maximum velocity.          
      if(zs==0){
      k=0;

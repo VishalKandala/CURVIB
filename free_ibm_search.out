@@ -1,0 +1,219 @@
+#fsi.c#:3843:  PetscFree(P);
+#fsi.c#:3844:  PetscFree(n_P);
+#fsi.c#:3845:  PetscFree(Tow_ws);
+#fsi.c#:3846:  PetscFree(Tow_wt);
+#fsi.c#:3847:  PetscFree(Tow_wn);
+#fsi.c#:10757:      PetscFree(NIB);
+#fsi.c#:10783:  PetscFree(rec);
+#fsi.c#:10784:  PetscFree(dis);
+#fsi.c#:10785:  PetscFree(stride);
+#fsi.c#:10787:  PetscFree(current_element);
+#fsi.c#:10788:  PetscFree(current_tau0);
+#fsi.c#:10789:  PetscFree(current_tauN);
+#fsi.c#:10790:  PetscFree(current_pres);
+#fsi.c#:10791:  PetscFree(current_uvel);
+#fsi.c#:10792:  PetscFree(current_vvel);
+#fsi.c#:10793:  PetscFree(current_wvel);
+#fsi.c#:10794:  PetscFree(element_buffer);
+#fsi.c#:10795:  PetscFree(tau0_buffer);
+#fsi.c#:10796:  PetscFree(tauN_buffer);
+#fsi.c#:10797:  PetscFree(pres_buffer);
+#fsi.c#:10798:  PetscFree(uvel_buffer);
+#fsi.c#:10799:  PetscFree(vvel_buffer);
+#fsi.c#:10800:  PetscFree(wvel_buffer);
+itfcsearch.c:267:	PetscFree(Element_Searched);
+itfcsearch.c:271:	PetscFree(Element_Searched);
+itfcsearch.c:276:  PetscFree(Element_Searched);
+itfcsearch.c:508:  PetscFree(cell_trg);
+itfcsearch.c:1439:    PetscFree(gc);
+variables.c:35:    PetscFree(ilist->head);
+variables.c:58:    PetscFree(ilist->head);
+poisson.c:1640:    PetscFree(Blocked);
+poisson.c:2001:      if (immersed) PetscFree(user[bi].KSKE);
+poisson.c:2259:	PetscFree(user[bi].KSKE);
+poisson.c:2273:  PetscFree(mgksp);
+poisson.c:2274:  PetscFree(mgpc);
+bcs.c:6316:/*   PetscFree(ltogs); */
+bcs.c:6730:/*   PetscFree(dgl_start);PetscFree(dg_start);PetscFree(dl_start_blk0); PetscFree(dl_start_blk1);  PetscFree(dl_start_blk2); */
+bcs.c:6731:/*   PetscFree(cpu_lxs11);PetscFree(cpu_lys11);PetscFree(cpu_lzs11);PetscFree(cpu_lxm11);PetscFree(cpu_lym11);PetscFree(cpu_lzm11); */
+bcs.c:6732:/*   PetscFree(cpu_xs11);PetscFree(cpu_ys11);PetscFree(cpu_zs11);PetscFree(cpu_xm11);PetscFree(cpu_ym11);PetscFree(cpu_zm11); */
+bcs.c:6733:/*   PetscFree(cpu_lxs22);PetscFree(cpu_lys22);PetscFree(cpu_lzs22);PetscFree(cpu_lxm22);PetscFree(cpu_lym22);PetscFree(cpu_lzm22); */
+bcs.c:6734:/*   PetscFree(cpu_xs22);PetscFree(cpu_ys22);PetscFree(cpu_zs22);PetscFree(cpu_xm22);PetscFree(cpu_ym22);PetscFree(cpu_zm22); */
+bcs.c:6735:/*   PetscFree(cpu_lxs33);PetscFree(cpu_lys33);PetscFree(cpu_lzs33);PetscFree(cpu_lxm33);PetscFree(cpu_lym33);PetscFree(cpu_lzm33); */
+bcs.c:6736:/*   PetscFree(cpu_xs33);PetscFree(cpu_ys33);PetscFree(cpu_zs33);PetscFree(cpu_xm33);PetscFree(cpu_ym33);PetscFree(cpu_zm33); */
+cstart.c:348:  PetscFree(dx);      PetscFree(dy); 
+cstart.c:349:  PetscFree(ubar);    PetscFree(ut);
+cstart.c:350:  PetscFree(x_midp);  PetscFree(y_midp);
+cstart.c:351:  PetscFree(x_midt);  PetscFree(y_midt);
+ibm.c:632:  PetscFree(cell_trg);
+ibm.c:633:  PetscFree(ibm->qvec);
+ibm.c:634:  PetscFree(ibm->radvec); 
+ibm.c:1067:  PetscFree(cell_trg);
+ibm.c:1068:  PetscFree(ibm->qvec);
+ibm.c:1069:  PetscFree(ibm->radvec); 
+ibm.c:1331:	PetscFree(Element_Searched);
+ibm.c:1335:	PetscFree(Element_Searched);
+ibm.c:1340:  PetscFree(Element_Searched);
+ibm.c:1391:	  PetscFree(Element_Searched);
+ibm.c:1396:	  PetscFree(Element_Searched);
+ibm.c:1401:	  PetscFree(Element_Searched);
+ibm.c:1406:	  PetscFree(Element_Searched);
+ibm.c:1417:  PetscFree(Element_Searched);  
+fsi.c:3843:  PetscFree(P);
+fsi.c:3844:  PetscFree(n_P);
+fsi.c:3845:  PetscFree(Tow_ws);
+fsi.c:3846:  PetscFree(Tow_wt);
+fsi.c:3847:  PetscFree(Tow_wn);
+fsi.c:10757:      PetscFree(NIB);
+fsi.c:10783:  PetscFree(rec);
+fsi.c:10784:  PetscFree(dis);
+fsi.c:10785:  PetscFree(stride);
+fsi.c:10787:  PetscFree(current_element);
+fsi.c:10788:  PetscFree(current_tau0);
+fsi.c:10789:  PetscFree(current_tauN);
+fsi.c:10790:  PetscFree(current_pres);
+fsi.c:10791:  PetscFree(current_uvel);
+fsi.c:10792:  PetscFree(current_vvel);
+fsi.c:10793:  PetscFree(current_wvel);
+fsi.c:10794:  PetscFree(element_buffer);
+fsi.c:10795:  PetscFree(tau0_buffer);
+fsi.c:10796:  PetscFree(tauN_buffer);
+fsi.c:10797:  PetscFree(pres_buffer);
+fsi.c:10798:  PetscFree(uvel_buffer);
+fsi.c:10799:  PetscFree(vvel_buffer);
+fsi.c:10800:  PetscFree(wvel_buffer);
+Binary file data matches
+Binary file testt matches
+#data.c#:268:    PetscFree(gc);
+#data.c#:745:      PetscFree2(array,array2);
+#data.c#:1031:    PetscFree2(array,array2);
+#data.c#:1489:    PetscFree2(array,array2);
+#data.c#:2232:/*     PetscFree(x); */
+#data.c#:2668:/*     PetscFree(x); */
+#data.c#:2903:/*     PetscFree(x); */
+#data.c#:3052:/*     PetscFree(x); */
+#data.c#:4563:/*   PetscFree(shear); */
+#data.c#:4564:/*   PetscFree(shear_x); */
+#data.c#:4565:/*   PetscFree(shear_y); */
+#data.c#:4566:/*   PetscFree(shear_z); */
+#data.c#:4567:/*   PetscFree(vx); */
+#data.c#:4568:/*   PetscFree(vy); */
+#data.c#:4569:/*   PetscFree(vz); */
+#data.c#:4570:/*   PetscFree(pressure); */
+#data.c#:4580:/*   PetscFree(cell_trg); */
+data_ibm.c~:444:  PetscFree(cell_trg);
+data_ibm.c~:445:  PetscFree(ibm->qvec);
+data_ibm.c~:446:  PetscFree(ibm->radvec); 
+data_ibm.c~:857:  PetscFree(cell_trg);
+data_ibm.c~:858:  PetscFree(ibm->qvec);
+data_ibm.c~:859:  PetscFree(ibm->radvec); 
+data_ibm.c~:971:	PetscFree(Element_Searched);
+data_ibm.c~:975:	PetscFree(Element_Searched);
+data_ibm.c~:980:  PetscFree(Element_Searched);
+ibm_io.c:1828: /*    PetscFree(dA); */
+ibm_io.c:1829:/*     PetscFree(nf_x);PetscFree(nf_y);PetscFree(nf_z); */
+ibm_io.c:1830:/*     PetscFree(nt_x);PetscFree(nt_y);PetscFree(nt_z); */
+ibm_io.c:1831:/*     PetscFree(ns_x);PetscFree(ns_y);PetscFree(ns_z); */
+ibm_io.c:1832:/*     PetscFree(nv1);PetscFree(nv2);PetscFree(nv3); */
+ibm_io.c:1833:/*     PetscFree(x_bp);PetscFree(y_bp);PetscFree(z_bp); */
+implicitsolver.c:10644:  PetscFree(shell);
+implicitsolver.c:10711:  PetscFree(ltogs);
+implicitsolver.c:10949:  PetscFree(is);
+fish.c:297: /*    PetscFree(dA); */
+fish.c:298:/*     PetscFree(nf_x);PetscFree(nf_y);PetscFree(nf_z); */
+fish.c:299:/*     PetscFree(nt_x);PetscFree(nt_y);PetscFree(nt_z); */
+fish.c:300:/*     PetscFree(ns_x);PetscFree(ns_y);PetscFree(ns_z); */
+fish.c:301:/*     PetscFree(nv1);PetscFree(nv2);PetscFree(nv3); */
+fish.c:302:/*     PetscFree(x_bp);PetscFree(y_bp);PetscFree(z_bp); */
+data_ibm.c:508:  PetscFree(cell_trg);
+data_ibm.c:509:  PetscFree(ibm->qvec);
+data_ibm.c:510:  PetscFree(ibm->radvec); 
+data_ibm.c:942:  PetscFree(cell_trg);
+data_ibm.c:943:  PetscFree(ibm->qvec);
+data_ibm.c:944:  PetscFree(ibm->radvec); 
+data_ibm.c:1206:	PetscFree(Element_Searched);
+data_ibm.c:1210:	PetscFree(Element_Searched);
+data_ibm.c:1215:  PetscFree(Element_Searched);
+data.c:268:    PetscFree(gc);
+data.c:745:      PetscFree2(array,array2);
+data.c:1031:    PetscFree2(array,array2);
+data.c:1489:    PetscFree2(array,array2);
+data.c:2232:/*     PetscFree(x); */
+data.c:2668:/*     PetscFree(x); */
+data.c:2903:/*     PetscFree(x); */
+data.c:3052:/*     PetscFree(x); */
+data.c:4563:/*   PetscFree(shear); */
+data.c:4564:/*   PetscFree(shear_x); */
+data.c:4565:/*   PetscFree(shear_y); */
+data.c:4566:/*   PetscFree(shear_z); */
+data.c:4567:/*   PetscFree(vx); */
+data.c:4568:/*   PetscFree(vy); */
+data.c:4569:/*   PetscFree(vz); */
+data.c:4570:/*   PetscFree(pressure); */
+data.c:4580:/*   PetscFree(cell_trg); */
+misc/list.h:42:    PetscFree(ilist->head);
+misc/list.h:80:    PetscFree(ilist->head);
+misc/src/implicitsolver_backup.c:10643:  PetscFree(shell);
+misc/src/implicitsolver_backup.c:10710:  PetscFree(ltogs);
+misc/src/implicitsolver_backup.c:10948:  PetscFree(is);
+misc/src/bcs_backup.c:6343:/*   PetscFree(ltogs); */
+misc/src/bcs_backup.c:6757:/*   PetscFree(dgl_start);PetscFree(dg_start);PetscFree(dl_start_blk0); PetscFree(dl_start_blk1);  PetscFree(dl_start_blk2); */
+misc/src/bcs_backup.c:6758:/*   PetscFree(cpu_lxs11);PetscFree(cpu_lys11);PetscFree(cpu_lzs11);PetscFree(cpu_lxm11);PetscFree(cpu_lym11);PetscFree(cpu_lzm11); */
+misc/src/bcs_backup.c:6759:/*   PetscFree(cpu_xs11);PetscFree(cpu_ys11);PetscFree(cpu_zs11);PetscFree(cpu_xm11);PetscFree(cpu_ym11);PetscFree(cpu_zm11); */
+misc/src/bcs_backup.c:6760:/*   PetscFree(cpu_lxs22);PetscFree(cpu_lys22);PetscFree(cpu_lzs22);PetscFree(cpu_lxm22);PetscFree(cpu_lym22);PetscFree(cpu_lzm22); */
+misc/src/bcs_backup.c:6761:/*   PetscFree(cpu_xs22);PetscFree(cpu_ys22);PetscFree(cpu_zs22);PetscFree(cpu_xm22);PetscFree(cpu_ym22);PetscFree(cpu_zm22); */
+misc/src/bcs_backup.c:6762:/*   PetscFree(cpu_lxs33);PetscFree(cpu_lys33);PetscFree(cpu_lzs33);PetscFree(cpu_lxm33);PetscFree(cpu_lym33);PetscFree(cpu_lzm33); */
+misc/src/bcs_backup.c:6763:/*   PetscFree(cpu_xs33);PetscFree(cpu_ys33);PetscFree(cpu_zs33);PetscFree(cpu_xm33);PetscFree(cpu_ym33);PetscFree(cpu_zm33); */
+misc/src/timeadvancing.c:888:  PetscFree(PseudoSteps);
+misc/src/init_test.c:295:    PetscFree(lx);PetscFree(ly);PetscFree(lz);  
+misc/src/init_test.c:296:    PetscFree(lxSum);PetscFree(lySum);PetscFree(lzSum);  
+misc/src/init_test.c:780:    PetscFree(gc);
+misc/src/init_test.c:1215:    PetscFree(user);
+misc/src/init_test.c:1217:  PetscFree(usermg->mgctx);
+misc/src/init_test.c:1218:  //  PetscFree(usermg);
+misc/src/init_test.c:1680:  PetscFree(dgl_start);PetscFree(dg_start);PetscFree(dl_start_blk0); PetscFree(dl_start_blk1);
+misc/src/init_test.c:1681:  PetscFree(cpu_lxs11);PetscFree(cpu_lys11);PetscFree(cpu_lzs11);PetscFree(cpu_lxm11);PetscFree(cpu_lym11);PetscFree(cpu_lzm11);
+misc/src/init_test.c:1682:  PetscFree(cpu_lxs11);PetscFree(cpu_ys11);PetscFree(cpu_zs11);PetscFree(cpu_xm11);PetscFree(cpu_ym11);PetscFree(cpu_zm11);
+misc/src/init_test.c:1683:  PetscFree(cpu_lxs22);PetscFree(cpu_lys22);PetscFree(cpu_lzs22);PetscFree(cpu_lxm22);PetscFree(cpu_lym22);PetscFree(cpu_lzm22);
+misc/src/init_test.c:1684:  PetscFree(cpu_lxs22);PetscFree(cpu_ys22);PetscFree(cpu_zs22);PetscFree(cpu_xm22);PetscFree(cpu_ym22);PetscFree(cpu_zm22);
+misc/src/Shear_Projection.c:952:       PetscFree(nIB);    
+misc/src/Shear_Projection.c:958:    PetscFree(current_element);
+misc/src/Shear_Projection.c:959:    PetscFree(Txx_a);
+misc/src/Shear_Projection.c:960:    PetscFree(Tyx_a);
+misc/src/Shear_Projection.c:961:    PetscFree(Tzx_a);
+misc/src/Shear_Projection.c:962:    PetscFree(Tyy_a);
+misc/src/Shear_Projection.c:963:    PetscFree(Tzz_a);
+misc/src/Shear_Projection.c:964:    PetscFree(Tzy_a);
+misc/src/Shear_Projection.c:966:    PetscFree(element_buffer);
+misc/src/Shear_Projection.c:967:    PetscFree(Txx_buffer);
+misc/src/Shear_Projection.c:968:    PetscFree(Tyx_buffer);
+misc/src/Shear_Projection.c:969:    PetscFree(Tzx_buffer);
+misc/src/Shear_Projection.c:970:    PetscFree(Tyy_buffer);
+misc/src/Shear_Projection.c:971:    PetscFree(Tzz_buffer);
+misc/src/Shear_Projection.c:972:    PetscFree(Tzy_buffer);
+misc/src/Shear_Projection.c:975:    PetscFree(Cs_x_a);
+misc/src/Shear_Projection.c:976:    PetscFree(Cs_y_a);
+misc/src/Shear_Projection.c:977:    PetscFree(Cs_z_a);
+misc/src/Shear_Projection.c:980:    PetscFree(Cs_x_buffer);
+misc/src/Shear_Projection.c:981:    PetscFree(Cs_y_buffer);
+misc/src/Shear_Projection.c:982:    PetscFree(Cs_z_buffer);
+misc/src/implicitsolver_2block.c:10386:  PetscFree(shell);
+misc/src/implicitsolver_2block.c:10689:  PetscFree(is);
+copepod.c:296: /*    PetscFree(dA); */
+copepod.c:297:/*     PetscFree(nf_x);PetscFree(nf_y);PetscFree(nf_z); */
+copepod.c:298:/*     PetscFree(nt_x);PetscFree(nt_y);PetscFree(nt_z); */
+copepod.c:299:/*     PetscFree(ns_x);PetscFree(ns_y);PetscFree(ns_z); */
+copepod.c:300:/*     PetscFree(nv1);PetscFree(nv2);PetscFree(nv3); */
+copepod.c:301:/*     PetscFree(x_bp);PetscFree(y_bp);PetscFree(z_bp); */
+poisson_hypre.c:1313:  PetscFree(indices);PetscFree(values);
+poisson_hypre.c:1342:  PetscFree(indices);PetscFree(values);
+poisson_hypre.c:1367:  PetscFree(nz_p);
+init.c:298:    PetscFree(lx);PetscFree(ly);PetscFree(lz);  
+init.c:299:    PetscFree(lxSum);PetscFree(lySum);PetscFree(lzSum);  
+init.c:877:    PetscFree(gc);
+init.c:1299:	PetscFree(user[bi].itfcI);PetscFree(user[bi].itfcJ);PetscFree(user[bi].itfcK);
+init.c:1300:	PetscFree(user[bi].itfchostI);PetscFree(user[bi].itfchostJ);PetscFree(user[bi].itfchostK);PetscFree(user[bi].itfchostB);
+init.c:1301:	PetscFree(user[bi].itfchostx);PetscFree(user[bi].itfchosty);PetscFree(user[bi].itfchostz);
+init.c:1313:    PetscFree(user);
+init.c:1315:  PetscFree(usermg->mgctx);
+init.c:1316:  //  PetscFree(usermg);

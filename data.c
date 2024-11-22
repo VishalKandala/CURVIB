@@ -14,6 +14,7 @@ PetscReal  FluxInSum, FluxOutSum;
 PetscInt   ti, block_number, Flux_in;
 PetscReal  angle;
 PetscInt   invicid = 0;
+PetscInt   large = 0;
 PetscInt   thin=0;
 PetscInt   wing=0, cop=0, rotateframe=0;
 PetscReal  CMx_c=0., CMy_c=0., CMz_c=0.;
@@ -615,6 +616,7 @@ PetscErrorCode VTKOut(UserCtx *user) {
       for (k=0; k<mz-1; k++) {
 	for (j=0; j<my-1; j++) {
 	  for (i=0; i<mx-1; i++) {
+          if(large==1 && i%2==0 && j%2==0 k%2==0){
 	    PetscInt Iloc = i+(mx-1)*(j+(my-1)*k);
 	    
 	    x=coor[k][j][i].x;
@@ -629,7 +631,8 @@ PetscErrorCode VTKOut(UserCtx *user) {
 	    array2[Iloc*3+0] = x;
 	    array2[Iloc*3+1] = y;
 	    array2[Iloc*3+2] = coor[k][j][i].z;
-	  }
+	  } 
+         }
 	}
       }
       
@@ -4210,7 +4213,7 @@ PetscErrorCode rotate_force_data(FSInfo *fsi, PetscInt ibi, PetscInt bi)
 /*       pj.y = yc + dpj * nf_y[nv]; */
 /*       pj.z = zc + dpj * nf_z[nv]; */
       
-/*       // pj is one point inside the fluid domain */
+/*       // pj is one point inside the fluid  domain */
       
 /*       // locate point P into control volume number v */
 /*       iv = floor((pj.x - xbp_min) / dcx); */
@@ -5232,7 +5235,7 @@ int main(int argc, char **argv) {
   FSInfo        *fsi;
   
   PetscInitialize(&argc, &argv, (char *)0, help);
-  PetscOptionsInsertFile(PETSC_COMM_WORLD, "control.dat", PETSC_TRUE);
+//  PetscOptionsInsertFile(PETSC_COMM_WORLD, "control.dat", PETSC_TRUE);
   
   PetscInt rank, bi, ibi,i;
   
@@ -5263,7 +5266,7 @@ int main(int argc, char **argv) {
   PetscOptionsGetInt(PETSC_NULL, "-rans", &rans, PETSC_NULL);
   PetscInt vtk=0;
   PetscOptionsGetInt(PETSC_NULL, "-vtk", &vtk, PETSC_NULL);
-  
+  PetscOptionsGetInt(PETSC_NULL," -large",&large,PETSC_NULL); 
   PetscOptionsInsertFile(PETSC_COMM_WORLD, "control.dat", PETSC_TRUE);
   
   PetscOptionsGetInt(PETSC_NULL, "-body", &NumberOfBodies, PETSC_NULL);
@@ -5377,7 +5380,7 @@ int main(int argc, char **argv) {
       /*   if (fish)  fish_swim(&ibm[ibi], (ti)*user[bi].dt, user[bi].dt); */
       /*      PetscPrintf(PETSC_COMM_WORLD, "fish swim %d\n",ti);     */
 
-      ibm_search_advanced(&(user[bi]), &ibm[ibi], ibi);
+      ibm_search_advanced_rev(&(user[bi]), &ibm[ibi], ibi);
       PetscPrintf(PETSC_COMM_WORLD, "ibm search  %d\n",ibi); 
       
       PetscMalloc(NumberOfBodies*sizeof(FSInfo), &fsi);

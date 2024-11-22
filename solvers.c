@@ -851,6 +851,7 @@ PetscErrorCode Struc_Solver(UserMG *usermg,IBMNodes *ibm,
   for (ibi=0;ibi<NumberOfBodies;ibi++) {
     
     if ((movefsi || rotatefsi || regime || MHV) && !(*DoSCLoop)) {
+     if (ti == (ti/tiout) * tiout)// || ti<10)
       FSI_DATA_Output(&fsi[ibi], ibi);
       if (MHV==5 && ibi==0) MomentumJet(&user[0], 189);
     }
